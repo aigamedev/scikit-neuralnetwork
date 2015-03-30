@@ -12,7 +12,7 @@ before_install:
   - conda update --yes conda
 
 install:
-  - conda create --yes -q -n pyenv python=$TRAVIS_PYTHON_VERSION numpy scipy cython nose pyyaml argparse pip
+  - conda create --yes -q -n pyenv python=$TRAVIS_PYTHON_VERSION numpy scipy cython nose pyyaml pip
   - source activate pyenv
   - pip install -q git+https://github.com/Theano/Theano.git@rel-0.7
   - pip install -q git+https://github.com/lisa-lab/pylearn2.git
