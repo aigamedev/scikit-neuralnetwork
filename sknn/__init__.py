@@ -1,4 +1,4 @@
-__author__ = 'ssamot'
+__author__ = 'ssamot, alexjc'
 
 import numpy as np
 import theano
@@ -12,7 +12,7 @@ from pylearn2.training_algorithms.learning_rule import AdaGrad, RMSProp, Momentu
 
 
 
-class sknn():
+class NeuralNetwork(object):
 
     """
     SK-learn like interface for pylearn2
@@ -21,9 +21,8 @@ class sknn():
     you have access all your data upfront
     """
 
-    def __init__(self,dropout=False, input_scaler = None, output_scaler = None,   learning_rate=0.001, verbose=0, optimism = False):
+    def __init__(self, dropout=False, input_scaler=None, output_scaler=None, learning_rate=0.001, verbose=0):
         """
-
         :param layers: List of tuples of types of layers alongside the number of neurons
         :param learning_rate: The learning rate for all layers
         :param verbose: Verbosity level
@@ -43,13 +42,12 @@ class sknn():
         self.learning_rate = learning_rate
         #self.learning_rule = Momentum(0.9)
 
-
         self.input_normaliser = input_scaler
         self.output_normaliser = output_scaler
         self.learning_rule = Momentum(0.9)
         #self.learning_rule = None
         #self.learning_rule = RMSProp()
-        self.optimism = optimism
+
 
     def init_trainer(self):
         return sgd.SGD(learning_rate=self.learning_rate, cost=self.cost, batch_size=1, learning_rule= self.learning_rule)
@@ -77,7 +75,6 @@ class sknn():
         if(self.verbose > 0):
             print "Lazy initialisation"
 
-
         pylearn2mlp_layers = []
         self.units_per_layer = []
         #input layer units
@@ -90,9 +87,7 @@ class sknn():
                     ("RectifiedLinear", self.units_per_layer[0]*20),
                     ("Linear", )]
 
-        print layers
         self.layers = layers
-
 
         for layer in layers[:-1]:
             self.units_per_layer+=[layer[1]]
@@ -102,8 +97,6 @@ class sknn():
 
         if(self.verbose > 0):
             print "Units per layer", str(self.units_per_layer)
-
-
 
         for i, layer in enumerate(layers[:-1]):
 
@@ -187,23 +180,6 @@ class sknn():
         self.trainer.setup(self.mlp, self.ds)
         inputs = self.mlp.get_input_space().make_theano_batch()
         self.f = theano.function([inputs], self.mlp.fprop(inputs))
-        if(self.optimism):
-            self.__optimism()
-
-
-    def __optimism(self):
-
-        ds = self.ds
-        print "Optimism"
-        #for i in range(0,5000):
-        n_examples = 3000
-        dummy_inputs = (2) * np.random.random((n_examples, self.units_per_layer[0])) -1.0
-        ds.X = np.array(dummy_inputs)
-        dummy_outputs = (2) * np.random.random((n_examples, self.units_per_layer[-1]))+1
-        ds.y = np.array(dummy_outputs)
-        self.trainer.train(dataset=ds)
-            #print self.f(ds.X)
-
 
 
     def fit(self, X, y):
@@ -227,6 +203,7 @@ class sknn():
         self.trainer.train(dataset=ds)
 
         return self
+
 
     def predict(self, X, n_out = 1):
         """
@@ -264,84 +241,9 @@ class sknn():
         self.__dict__.update(d)
 
         self.trainer = None
-        #print type(self.learning_rule)
-        print self.learning_rule
+
         inputs = self.mlp.get_input_space().make_theano_batch()
         self.f = theano.function([inputs], self.mlp.fprop(inputs))
-
-
-class ActionSelector():
-    def __init__(self, sknn, n_actions):
-        self.sknn = sknn
-        self.n_actions = n_actions
-
-
-
-
-    def e_greedy(self,inputs, dead_actions, epsilon):
-        r = np.random.random()
-        no = self.sknn.predict(inputs)
-
-        if(r < epsilon):
-
-            preferences = np.random.random(self.n_actions)
-
-        else:
-             preferences = no[0]
-        #preferences = np.array(preferences)
-
-        # for dead_action in dead_actions:
-        #     preferences[dead_action] = -np.infty
-
-        preferences[dead_actions] = -np.infty
-
-        action = preferences.argmax()
-
-        return action, no
-
-
-    def softmax(self,inputs,dead_actions, temperature = 1):
-
-        assert(len(inputs) == 1)
-        no = self.sknn.predict(inputs)
-
-
-        #preferences = self.sknn.predict(inputs)[0]
-        no  = self.sknn.predict(inputs)
-        preferences = no[0]
-        #print preferences
-
-        action_probs = self.__softmax2(preferences, temperature)
-
-        action_probs[dead_actions] = 0.0
-        #print action_probs
-        action_probs = action_probs/action_probs.sum()
-
-        #print action_probs
-        cdf = action_probs.cumsum()
-        #print cdf
-        action = bisect(cdf,np.random.random())
-        #print action
-        return action,no
-
-
-
-
-
-
-    def __softmax2(self, w, temperature):
-        w = np.array(w)
-        maxes = np.amax(w, axis=0)
-        #maxes = maxes.reshape(maxes.shape[0], 0)
-        e = np.exp((w - maxes)/temperature)
-        dist = e / np.sum(e, axis=0)
-
-        return dist
-
-
-
-
-
 
 
 class IncrementalMinMaxScaler():
@@ -353,10 +255,8 @@ class IncrementalMinMaxScaler():
 
 
     def fit(self,X, y = None):
-        #print "fitting"
         self.changed = False
-        self.times+=1;
-        #print "fitting"
+        self.times += 1
         if (not self.init):
             self.min_ = np.array(X[0],dtype = np.float64)
             self.max_ = np.array(X[0],dtype = np.float64)
@@ -364,7 +264,6 @@ class IncrementalMinMaxScaler():
             self.data_max = self.max_
             self.init = True
         else:
-            #print "appednign"
             X = np.array(X,ndmin=2)
             X = np.append(X, [self.data_min], axis = 0)
             X = np.append(X, [self.data_max], axis = 0)
@@ -374,23 +273,19 @@ class IncrementalMinMaxScaler():
         data_max = np.max(X, axis=0)
 
         if not (self.data_min == data_min).all():
-            # print "min changed" # , data_min - self.data_min
             self.changed = True
 
         if not (self.data_max == data_max).all():
-            # print "max changed" # , data_max - self.data_max
             self.changed = True
 
         self.data_min = data_min
         self.data_max = data_max
 
         data_range = data_max - data_min
-        # Do not scale constant features
-        #print data_range
-        #exit()
+
         data_range[data_range == 0.0] = 1.0
         data_range[data_range == 0] = 1.0
-        #print "data range", data_range.dtype, data_max.dtype, data_min.dtype
+
         self.scale_ = (feature_range[1] - feature_range[0]) / data_range
         self.min_ = feature_range[0] - data_min * self.scale_
         self.data_range = data_range
@@ -399,10 +294,8 @@ class IncrementalMinMaxScaler():
 
 
     def transform(self, X):
-        #X *= self.scale_#X += self.min_
         assert (len(X.shape) == 2), X
         transformed =  (X * self.scale_) + self.min_
-        #transformed[:, -1] = 1.0
         return transformed
 
 
