@@ -5,7 +5,9 @@ python:
   - "3.4"
 
 install:
-  - pip install argparse pyyaml scipy numpy cython
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq python-numpy python-scipy
+  - pip install argparse pyyaml cython
   - pip install -r requirements.txt
 
 script:
