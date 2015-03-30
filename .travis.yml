@@ -5,6 +5,7 @@ python:
   - "3.4"
 
 install:
+  - pip install argparse pyyaml scipy numpy cython
   - pip install -r requirements.txt
 
 script:
