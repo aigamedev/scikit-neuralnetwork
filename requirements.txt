@@ -1,2 +1,7 @@
-git+https://github.com/Theano/Theano.git
+argparse
+pyyaml
+scipy>=0.11
+numpy>=1.9
+cython>=0.22
+git+https://github.com/Theano/Theano.git@rel-0.7
 git+https://github.com/lisa-lab/pylearn2.git
