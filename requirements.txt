@@ -1,2 +1,0 @@
-git+https://github.com/Theano/Theano.git@rel-0.7
-git+https://github.com/lisa-lab/pylearn2.git
