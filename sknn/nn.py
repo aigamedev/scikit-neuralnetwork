@@ -169,18 +169,14 @@ class NeuralNetwork(object):
         :return:
         """
 
+        assert X.shape[0] == y.shape[0],\
+            "Expecting same number of input and output samples."
+
         if self.ds is None:
             self.initialize(X, y)
 
-        if self.trainer is None:
-            self.trainer = self.create_trainer()
-            self.trainer.setup(self.mlp, self.ds)
-
-        ds = self.ds
-        ds.X, ds.y = X, y
-        self.trainer.train(dataset=ds)
-
-        return self
+        self.ds.X, self.ds.y = X, y
+        self.trainer.train(dataset=self.ds)
 
     def predict(self, X, n_out=None):
         """
@@ -192,8 +188,7 @@ class NeuralNetwork(object):
         if self.ds is None:
             assert n_out is not None,\
                 "Call initialize() first or specify number of outputs."
-
-            self.initialize(X, np.array([np.zeros(n_out)]))
+            self.initialize(X, np.zeros((1,n_out)))
 
         return self.f(X)
 
