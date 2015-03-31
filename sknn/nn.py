@@ -172,7 +172,7 @@ class NeuralNetwork(BaseEstimator):
     def initialized(self):
         return not (self.ds is None or self.trainer is None or self.f is None)
 
-    def fit(self, X, y, monitor=None):
+    def fit(self, X, y):
         """Fit the neural network to the given data.
 
         Parameters
