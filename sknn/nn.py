@@ -84,27 +84,27 @@ class NeuralNetwork(BaseEstimator):
             batch_size=1,
             learning_rule=self.learning_rule)
 
-    def _create_hidden_layer(self, name, args):
+    def _create_hidden_layer(self, name, args, irange=0.1):
         activation_type = args[0]
         if activation_type == "RectifiedLinear":
             return mlp.RectifiedLinear(
                 dim=args[1],
                 layer_name=name,
-                irange=lim,
+                irange=irange,
                 W_lr_scale=self.weight_scale)
 
         if activation_type == "Sigmoid":
             return mlp.Sigmoid(
                 dim=args[1],
                 layer_name=name,
-                irange=lim,
+                irange=irange,
                 W_lr_scale=self.weight_scale)
 
         if activation_type == "Tanh":
             return mlp.Tanh(
                 dim=args[1],
                 layer_name=name,
-                irange=lim,
+                irange=irange,
                 W_lr_scale=self.weight_scale)
 
         if activation_type == "Maxout":
@@ -112,7 +112,7 @@ class NeuralNetwork(BaseEstimator):
                 num_units=args[1],
                 num_pieces=args[2],
                 layer_name=name,
-                irange=lim,
+                irange=irange,
                 W_lr_scale=self.weight_scale)
 
         raise NotImplementedError(
@@ -160,7 +160,7 @@ class NeuralNetwork(BaseEstimator):
             if i == 0:
                 first_hidden_name = layer_name
 
-            hidden_layer = self._create_hidden_layer(layer[0], layer_name, layers)
+            hidden_layer = self._create_hidden_layer(layer_name, layer, irange=lim)
             mlp_layers.append(hidden_layer)
 
         output_layer_info = list(self.layers[-1])
