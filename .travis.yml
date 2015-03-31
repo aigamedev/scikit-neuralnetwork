@@ -16,7 +16,7 @@ install:
   - source activate pyenv
   - pip install -q git+https://github.com/Theano/Theano.git@rel-0.7
   - pip install -q argparse
-  - pip install git+https://github.com/lisa-lab/pylearn2.git
+  - pip install -e git+https://github.com/lisa-lab/pylearn2.git#egg=pylearn2
 
 script:
   - nosetests -v sknn
