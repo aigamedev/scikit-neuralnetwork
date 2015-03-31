@@ -16,12 +16,8 @@ log = logging.getLogger('sknn')
 
 
 class NeuralNetwork(object):
-
     """
-    SK-learn like interface for pylearn2
-    Notice how training the model and the training algorithm are now part of the same class, which I actually quite like
-    This class is focused a bit on online learning, so you might need to modify it to include other pylearn2 options if
-    you have access all your data upfront
+    A wrapper for PyLearn2 compatible with scikit-learn.
     """
 
     def __init__(
