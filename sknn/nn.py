@@ -63,8 +63,8 @@ class NeuralNetwork(object):
 
     def initialize(self, X, y):
         log.info(
-            "Initializing neural network with %i layers." %
-            (len(self.layers),))
+            "Initializing neural network with %i layers.",
+            len(self.layers))
 
         pylearn2mlp_layers = []
         self.units_per_layer = []
@@ -77,7 +77,7 @@ class NeuralNetwork(object):
         # Output layer units
         self.units_per_layer += [y.shape[1]]
 
-        log.debug("Units per layer: %r." % self.units_per_layer)
+        log.debug("Units per layer: %r.", self.units_per_layer)
 
         for i, layer in enumerate(self.layers[:-1]):
 
@@ -182,7 +182,7 @@ class NeuralNetwork(object):
 
         return self
 
-    def predict(self, X, n_out=1):
+    def predict(self, X, n_out=None):
         """
 
         :param X:
@@ -190,6 +190,9 @@ class NeuralNetwork(object):
         """
 
         if self.ds is None:
+            assert n_out is not None,\
+                "Call initialize() first or specify number of outputs."
+
             self.initialize(X, np.array([np.zeros(n_out)]))
 
         return self.f(X)

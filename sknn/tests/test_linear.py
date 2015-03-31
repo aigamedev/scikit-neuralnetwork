@@ -1,12 +1,24 @@
+import unittest
 import numpy as np
+
+from sklearn.utils.testing import assert_raises, assert_equal
 
 from sknn import NeuralNetwork
 
 
-def test_instantiation():
-    nn = NeuralNetwork(layers=[("Linear",)])
+class TestLinearNetwork(unittest.TestCase):
 
-def test_prediction():
-    nn = NeuralNetwork(layers=[("Linear",)])
-    a_in = np.zeros((8,16))
-    nn.predict(a_in, 4)
+    def setUp(self):
+        self.nn = NeuralNetwork(layers=[("Linear",)])
+
+    def test_LifeCycle(self):
+        del self.nn
+
+    def test_PredictUninitialized(self):
+        a_in = np.zeros((8,16))
+        assert_raises(AssertionError, self.nn.predict, a_in)
+
+    def test_PredictAutoInitialize(self):
+        a_in = np.zeros((8,16))
+        a_out = self.nn.predict(a_in, 4)
+        assert_equal(type(a_out), type(a_in))
