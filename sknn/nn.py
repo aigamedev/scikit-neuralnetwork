@@ -28,12 +28,10 @@ class NeuralNetwork(object):
             self,
             layers,
             dropout=False,
-            learning_rate=0.001,
-            verbose=0):
+            learning_rate=0.001):
         """
         :param layers: List of tuples of types of layers alongside the number of neurons
         :param learning_rate: The learning rate for all layers
-        :param verbose: Verbosity level
         :return:
         """
 
@@ -41,7 +39,7 @@ class NeuralNetwork(object):
 
         self.ds = None
         self.f = None
-        self.verbose = verbose
+
         if dropout:
             self.cost = "Dropout"
             self.weight_scale = None
@@ -64,8 +62,9 @@ class NeuralNetwork(object):
             learning_rule=self.learning_rule)
 
     def linit(self, X, y):
-        if self.verbose > 0:
-            log.info("Initializing neural network with %i layers." % (len(self.layers),))
+        log.info(
+            "Initializing neural network with %i layers." %
+            (len(self.layers),))
 
         pylearn2mlp_layers = []
         self.units_per_layer = []
@@ -78,8 +77,7 @@ class NeuralNetwork(object):
         # Output layer units
         self.units_per_layer += [y.shape[1]]
 
-        if(self.verbose > 0):
-            log.debug("Units per layer", str(self.units_per_layer))
+        log.debug("Units per layer", str(self.units_per_layer))
 
         for i, layer in enumerate(layers[:-1]):
 
