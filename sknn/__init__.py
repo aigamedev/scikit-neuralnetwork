@@ -1,4 +1,4 @@
-from __future__ import (absolute_imports, unicode_literals, print_function)
+from __future__ import (absolute_import, unicode_literals, print_function)
 
 __author__ = 'ssamot, alexjc'
 
