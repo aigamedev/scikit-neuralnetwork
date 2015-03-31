@@ -71,7 +71,8 @@ class NeuralNetwork(BaseEstimator):
         self.weight_scale = None
         self.learning_rate = learning_rate
         
-        self.learning_rule = Momentum(0.9)
+        self.learning_rule = None
+        # self.learning_rule = Momentum(0.9)
         # self.learning_rule = RMSProp()
 
     def _create_trainer(self):
@@ -199,7 +200,7 @@ class NeuralNetwork(BaseEstimator):
         """
         return not (self.ds is None or self.trainer is None or self.f is None)
 
-    def fit(self, X, y):
+    def fit(self, X, y, n_iter=10):
         """Fit the neural network to the given data.
 
         Parameters
@@ -211,6 +212,10 @@ class NeuralNetwork(BaseEstimator):
         y : array-like, shape = [n_samples, n_outputs]
             Target values as real numbers, either as regression targets or
             label probabilities for classification.
+
+        n_iter : int
+            The number of iterations of gradient descent to perform on the
+            neural network's weights.
 
         Returns
         -------
@@ -224,7 +229,8 @@ class NeuralNetwork(BaseEstimator):
             self.initialize(X, y)
 
         self.ds.X, self.ds.y = X, y
-        self.trainer.train(dataset=self.ds)
+        for _ in range(n_iter):
+            self.trainer.train(dataset=self.ds)
 
         return self
 
@@ -261,3 +267,11 @@ class NeuralNetwork(BaseEstimator):
 
         for k in ['ds', 'f', 'trainer']:
             setattr(self, k, None)
+
+class SimpleRegressor(NeuralNetwork):
+
+    def fit(self, X, y, **kwargs):
+        assert len(y.shape) == 1, "Expecting 1D input only."
+
+        ys = y.reshape((y.size, 1))
+        return super(SimpleRegressor, self).fit(X, ys, **kwargs)
