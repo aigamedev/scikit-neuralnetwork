@@ -71,15 +71,15 @@ class NeuralNetwork(object):
         # input layer units
         self.units_per_layer += [X.shape[1]]
 
-        for layer in layers[:-1]:
+        for layer in self.layers[:-1]:
             self.units_per_layer += [layer[1]]
 
         # Output layer units
         self.units_per_layer += [y.shape[1]]
 
-        log.debug("Units per layer", str(self.units_per_layer))
+        log.debug("Units per layer: %r." % self.units_per_layer)
 
-        for i, layer in enumerate(layers[:-1]):
+        for i, layer in enumerate(self.layers[:-1]):
 
             fan_in = self.units_per_layer[i] + 1
             fan_out = self.units_per_layer[i + 1]
@@ -120,7 +120,7 @@ class NeuralNetwork(object):
                     layer[0])
             pylearn2mlp_layers += [hidden_layer]
 
-        output_layer_info = layers[-1]
+        output_layer_info = self.layers[-1]
         output_layer_name = "Output_%s" % output_layer_info[0]
 
         # fan_in = self.units_per_layer[-2] + 1
