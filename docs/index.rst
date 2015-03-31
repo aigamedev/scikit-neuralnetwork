@@ -1,19 +1,15 @@
 Welcome to scikit-neuralnetwork's documentation!
 ================================================
 
-Contents:
+.. autoclass:: sknn.NeuralNetwork
+    :members:
 
 .. toctree::
     :maxdepth: 2
 
-.. autoclass:: sknn.NeuralNetwork
-    :members:
-
-
-Indices and tables
-==================
+Indices & Search
+================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
 
