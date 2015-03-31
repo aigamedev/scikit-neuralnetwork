@@ -53,11 +53,6 @@ class NeuralNetwork(BaseEstimator):
             random_state=None,
             learning_rate=0.001,
             dropout=False):
-        """
-        :param layers: List of tuples of types of layers alongside the number of neurons
-        :param learning_rate: The learning rate for all layers
-        :return:
-        """
 
         self.layers = layers
         self.seed = random_state
@@ -268,10 +263,14 @@ class NeuralNetwork(BaseEstimator):
         for k in ['ds', 'f', 'trainer']:
             setattr(self, k, None)
 
-class SimpleRegressor(NeuralNetwork):
+
+class SimpleNeuralRegressor(NeuralNetwork):
+    """Simplified version of a `NeuralNetwork` that operates on a 1D output
+    array, like most other forms of machine learning.
+    """
 
     def fit(self, X, y, **kwargs):
         assert len(y.shape) == 1, "Expecting 1D input only."
 
         ys = y.reshape((y.size, 1))
-        return super(SimpleRegressor, self).fit(X, ys, **kwargs)
+        return super(SimpleNeuralRegressor, self).fit(X, ys, **kwargs)
