@@ -13,23 +13,24 @@ from sknn.nn import SimpleNeuralRegressor
 
 # Create the dataset
 rng = np.random.RandomState(1)
-X = np.linspace(0, 6, 100)[:, np.newaxis]
-y = np.sin(X).ravel() + np.sin(6 * X).ravel() + rng.normal(0, 0.1, X.shape[0])
+X = np.linspace(0, 1, 100)[:, np.newaxis]
+y = (np.sin(X*6).ravel() + np.sin(X*36).ravel() + rng.normal(0, 0.1, X.shape[0])) / 3.0
 
 # Fit regression model
 clf_1 = DecisionTreeRegressor(max_depth=4)
 clf_2 = AdaBoostRegressor(DecisionTreeRegressor(max_depth=4),
                           n_estimators=300, random_state=rng)
 clf_3 = SimpleNeuralRegressor(layers=[("Linear",)])
-clf_4 = SimpleNeuralRegressor(layers=[("RectifiedLinear",50),("RectifiedLinear",50),
-                                      ("RectifiedLinear",50),("Linear",)],
-                              dropout=False)
+clf_4 = SimpleNeuralRegressor(layers=[("RectifiedLinear",250),("RectifiedLinear",200),
+                                      ("RectifiedLinear",150),("RectifiedLinear",100),
+                                      ("Linear",)],
+                              learning_rate=0.1, dropout=True)
 
 print X.shape, y.shape
 clf_1.fit(X, y)
 clf_2.fit(X, y)
 clf_3.fit(X, y, n_iter=100)
-clf_4.fit(X, y, n_iter=25000)
+clf_4.fit(X, y, n_iter=5000)
 
 # Predict
 y_1 = clf_1.predict(X)
