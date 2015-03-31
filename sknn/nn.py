@@ -24,8 +24,6 @@ class NeuralNetwork(object):
     def __init__(
             self,
             dropout=False,
-            input_scaler=None,
-            output_scaler=None,
             learning_rate=0.001,
             verbose=0):
         """
@@ -48,8 +46,6 @@ class NeuralNetwork(object):
         self.learning_rate = learning_rate
         #self.learning_rule = Momentum(0.9)
 
-        self.input_normaliser = input_scaler
-        self.output_normaliser = output_scaler
         self.learning_rule = Momentum(0.9)
         #self.learning_rule = None
         #self.learning_rule = RMSProp()
@@ -60,24 +56,6 @@ class NeuralNetwork(object):
             cost=self.cost,
             batch_size=1,
             learning_rule=self.learning_rule)
-
-    def __scale(self, X, y):
-        if self.input_normaliser is not None:
-            X_s = self.input_normaliser.fit(X).transform(X)
-        else:
-            X_s = X
-        if self.output_normaliser is not None and y is not None:
-            y_s = self.output_normaliser.fit(y).transform(y)
-        else:
-            y_s = y
-
-        return X_s, y_s
-
-    def __original_y(self, y):
-        if(self.output_normaliser is None):
-            return y
-        else:
-            return self.output_normaliser.inverse_transform(y)
 
     def linit(self, X, y):
         if(self.verbose > 0):
@@ -167,7 +145,6 @@ class NeuralNetwork(object):
                     input_include_probs={
                         first_hidden_name: 1.0}, input_scales={
                         first_hidden_name: 1.})
-                # exit()
 
         if(output_layer_info[0] == "LinearGaussian"):
             output_layer = mlp.LinearGaussian(
@@ -207,9 +184,7 @@ class NeuralNetwork(object):
             self.trainer.setup(self.mlp, self.ds)
 
         ds = self.ds
-        X_s, y_s = self.__scale(X, y)
-        ds.X = X_s
-        ds.y = y_s
+        ds.X, ds.y = X, y
         self.trainer.train(dataset=ds)
 
         return self
@@ -224,11 +199,7 @@ class NeuralNetwork(object):
         if(self.ds is None):
             self.linit(X, np.array([np.zeros(n_out)]))
 
-        X_s, _ = self.__scale(X, None)
-        y = self.f(X_s)
-        y_s = self.__original_y(y)
-
-        return y_s
+        return self.f(X)
 
     def __getstate__(self):
 
