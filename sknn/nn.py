@@ -67,7 +67,7 @@ class NeuralNetwork(BaseEstimator):
         self.learning_rate = learning_rate
         
         self.learning_rule = None
-        # self.learning_rule = Momentum(0.9)
+        #self.learning_rule = Momentum(0.9)
         # self.learning_rule = RMSProp()
 
     def _create_trainer(self):
@@ -116,7 +116,7 @@ class NeuralNetwork(BaseEstimator):
                 W_lr_scale=self.weight_scale)
 
         raise NotImplementedError(
-            "Hidden layer type `%s` is not implemented." % name)
+            "Hidden layer type `%s` is not implemented." % activation_type)
 
     def _create_output_layer(self, name, args):
         activation_type = args[0]
@@ -127,7 +127,7 @@ class NeuralNetwork(BaseEstimator):
                 irange=0.00001,
                 W_lr_scale=self.weight_scale)
 
-        if output_layer_info[0] == "LinearGaussian":
+        if activation_type == "LinearGaussian":
             return mlp.LinearGaussian(
                 init_beta=0.1,
                 min_beta=0.001,
