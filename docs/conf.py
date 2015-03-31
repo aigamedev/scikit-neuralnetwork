@@ -28,7 +28,6 @@ todo_include_todos = False
 
 # -- Options for HTML output ----------------------------------------------
 
-html_theme = 'alabaster'
 html_short_title = 'scikit-neuralnetwork'
 # html_logo = 'img/logo.png'
 # html_favicon = 'img/favicon.ico'
