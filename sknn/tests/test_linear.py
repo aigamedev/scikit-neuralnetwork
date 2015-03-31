@@ -14,6 +14,10 @@ class TestLinearNetwork(unittest.TestCase):
     def test_LifeCycle(self):
         del self.nn
 
+    def test_InitializeManually(self):
+        a_in, a_out = np.zeros((8,16)), np.zeros((8,4))
+        self.nn.initialize(a_in, a_out)
+
     def test_PredictUninitialized(self):
         a_in = np.zeros((8,16))
         assert_raises(AssertionError, self.nn.predict, a_in)
