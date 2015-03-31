@@ -8,6 +8,8 @@ try:
     import numpy as np
     import theano
 
+    import sklearn.base
+
     from pylearn2.datasets import DenseDesignMatrix
     from pylearn2.training_algorithms import sgd, bgd
     from pylearn2.models import mlp, maxout
@@ -19,7 +21,7 @@ except:
 
 
 
-class NeuralNetwork(object):
+class NeuralNetwork(sklearn.base.BaseEstimator):
     """
     A wrapper for PyLearn2 compatible with scikit-learn.
     """
@@ -169,13 +171,24 @@ class NeuralNetwork(object):
     def initialized(self):
         return not (self.ds is None or self.trainer is None or self.f is None)
 
-    def fit(self, X, y):
-        """
-        :param X: Training data
-        :param y:
-        :return:
-        """
+    def fit(self, X, y, monitor=None):
+        """Fit the neural network to the given data.
 
+        Parameters
+        ----------
+        X : array-like, shape = [n_samples, n_inputs]
+        Training vectors as real numbers, where n_samples is the number of
+        samples and n_inputs is the number of input features.
+
+        y : array-like, shape = [n_samples, n_outputs]
+        Target values as real numbers, either as regression targets or
+        label probabilities for classification.
+
+        Returns
+        -------
+        self : object
+        Returns this instance.
+        """
         assert X.shape[0] == y.shape[0],\
             "Expecting same number of input and output samples."
 
@@ -185,17 +198,23 @@ class NeuralNetwork(object):
         self.ds.X, self.ds.y = X, y
         self.trainer.train(dataset=self.ds)
 
-    def predict(self, X, n_out=None):
-        """
+        return self
 
-        :param X:
-        :return:
-        """
+    def predict(self, X):
+        """Predict class for specified inputs.
 
-        if not self.initialized:
-            assert n_out is not None,\
-                "Call initialize() first or specify number of outputs."
-            self.initialize(X, np.zeros((1,n_out)))
+        Parameters
+        ----------
+        X : array-like of shape = [n_samples, n_inputs]
+        The input samples as real numbers.
+
+        Returns
+        -------
+        y : array of shape = [n_samples, n_outputs]
+        The predicted values as real numebrs.
+        """
+        assert self.initialized,\
+            "The neural network has not been trained."
 
         return self.f(X)
 

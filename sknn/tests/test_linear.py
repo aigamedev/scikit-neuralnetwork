@@ -29,7 +29,8 @@ class TestLinearNetwork(unittest.TestCase):
 
     def test_PredictAutoInitialize(self):
         a_in = np.zeros((8,16))
-        a_out = self.nn.predict(a_in, 4)
+        self.nn.initialize(a_in, a_in)
+        a_out = self.nn.predict(a_in)
         assert_equal(type(a_out), type(a_in))
 
     def test_FitAutoInitialize(self):
