@@ -16,7 +16,7 @@ import sknn
 version = sknn.__version__
 release = sknn.__version__
 
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 'napoleon']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 'numpydoc']
 templates_path = ['_templates']
 source_suffix = '.rst'
 master_doc = 'index'
