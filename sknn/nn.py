@@ -1,6 +1,6 @@
-from __future__ import (absolute_import, unicode_literals, print_function)
+from __future__ import (absolute_import, unicode_literals)
 
-__author__ = 'ssamot, alexjc'
+import logging
 
 import numpy as np
 import theano
@@ -10,6 +10,9 @@ from pylearn2.training_algorithms import sgd, bgd
 from pylearn2.models import mlp, maxout
 from pylearn2.costs.mlp.dropout import Dropout
 from pylearn2.training_algorithms.learning_rule import AdaGrad, RMSProp, Momentum
+
+
+log = logging.getLogger('sknn')
 
 
 class NeuralNetwork(object):
@@ -23,6 +26,7 @@ class NeuralNetwork(object):
 
     def __init__(
             self,
+            layers,
             dropout=False,
             learning_rate=0.001,
             verbose=0):
@@ -32,6 +36,8 @@ class NeuralNetwork(object):
         :param verbose: Verbosity level
         :return:
         """
+
+        self.layers = layers
 
         self.ds = None
         self.f = None
@@ -58,22 +64,13 @@ class NeuralNetwork(object):
             learning_rule=self.learning_rule)
 
     def linit(self, X, y):
-        if(self.verbose > 0):
-            print("Lazy initialisation")
+        if self.verbose > 0:
+            log.info("Initializing neural network with %i layers." % (len(self.layers),))
 
         pylearn2mlp_layers = []
         self.units_per_layer = []
         # input layer units
         self.units_per_layer += [X.shape[1]]
-
-        layers = [
-            #("RectifiedLinear", 200),
-            #("RectifiedLinear", self.units_per_layer[0]*self.units_per_layer[0]),
-            #("RectifiedLinear", self.units_per_layer[0]*20),
-            ("RectifiedLinear", self.units_per_layer[0] * 20),
-            ("Linear", )]
-
-        self.layers = layers
 
         for layer in layers[:-1]:
             self.units_per_layer += [layer[1]]
@@ -82,7 +79,7 @@ class NeuralNetwork(object):
         self.units_per_layer += [y.shape[1]]
 
         if(self.verbose > 0):
-            print("Units per layer", str(self.units_per_layer))
+            log.debug("Units per layer", str(self.units_per_layer))
 
         for i, layer in enumerate(layers[:-1]):
 
