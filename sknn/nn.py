@@ -1,18 +1,22 @@
 from __future__ import (absolute_import, unicode_literals)
 
 import logging
-
-import numpy as np
-import theano
-
-from pylearn2.datasets import DenseDesignMatrix
-from pylearn2.training_algorithms import sgd, bgd
-from pylearn2.models import mlp, maxout
-from pylearn2.costs.mlp.dropout import Dropout
-from pylearn2.training_algorithms.learning_rule import AdaGrad, RMSProp, Momentum
-
-
 log = logging.getLogger('sknn')
+
+
+try:
+    import numpy as np
+    import theano
+
+    from pylearn2.datasets import DenseDesignMatrix
+    from pylearn2.training_algorithms import sgd, bgd
+    from pylearn2.models import mlp, maxout
+    from pylearn2.costs.mlp.dropout import Dropout
+    from pylearn2.training_algorithms.learning_rule import AdaGrad, RMSProp, Momentum
+except:
+    # Documentation builds don't have all dependencies installed.
+    pass
+
 
 
 class NeuralNetwork(object):
