@@ -9,6 +9,9 @@ import os
 project = u'scikit-neuralnetwork'
 copyright = u'2015, scikit-neuralnetwork developers (BSD License)' 
 
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 import sknn
 version = sknn.__version__
 release = sknn.__version__
