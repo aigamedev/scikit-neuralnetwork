@@ -67,13 +67,14 @@ class NeuralNetwork(BaseEstimator):
         self.learning_rate = learning_rate
         
         self.learning_rule = None
-        #self.learning_rule = Momentum(0.9)
+        # self.learning_rule = Momentum(0.9)
         # self.learning_rule = RMSProp()
 
     def _create_trainer(self):
         sgd.log.setLevel(logging.WARNING)
 
         if self.cost == "Dropout":
+            first_hidden_name = "Hidden_0_"+self.layers[0][0]
             self.cost = Dropout(
                 input_include_probs={first_hidden_name: 1.0},
                 input_scales={first_hidden_name: 1.})
@@ -157,9 +158,6 @@ class NeuralNetwork(BaseEstimator):
             lim = np.sqrt(6) / (np.sqrt(fan_in + fan_out))
 
             layer_name = "Hidden_%i_%s" % (i, layer[0])
-            if i == 0:
-                first_hidden_name = layer_name
-
             hidden_layer = self._create_hidden_layer(layer_name, layer, irange=lim)
             mlp_layers.append(hidden_layer)
 
