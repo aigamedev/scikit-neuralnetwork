@@ -52,7 +52,7 @@ class NeuralNetwork(object):
         self.learning_rule = Momentum(0.9)
         # self.learning_rule = RMSProp()
 
-    def create_trainer(self):
+    def _create_trainer(self):
         sgd.log.setLevel(logging.WARNING)
 
         if self.cost == "Dropout":
@@ -66,11 +66,7 @@ class NeuralNetwork(object):
             batch_size=1,
             learning_rule=self.learning_rule)
 
-    def initialize(self, X, y):
-        log.info(
-            "Initializing neural network with %i layers.",
-            len(self.layers))
-
+    def _create_mlp(self, X, y):
         pylearn2mlp_layers = []
         self.units_per_layer = []
         # input layer units
@@ -152,13 +148,25 @@ class NeuralNetwork(object):
                 W_lr_scale=self.weight_scale)
 
         pylearn2mlp_layers += [output_layer]
+        return mlp.MLP(pylearn2mlp_layers, nvis=self.units_per_layer[0], seed=self.seed)
 
-        self.mlp = mlp.MLP(pylearn2mlp_layers, nvis=self.units_per_layer[0], seed=self.seed)
+    def initialize(self, X, y):
+        log.info(
+            "Initializing neural network with %i layers.",
+            len(self.layers))
+
+        if self.mlp is None:
+            self.mlp = self._create_mlp(X, y)
+
         self.ds = DenseDesignMatrix(X=X, y=y)
-        self.trainer = self.create_trainer()
+        self.trainer = self._create_trainer()
         self.trainer.setup(self.mlp, self.ds)
         inputs = self.mlp.get_input_space().make_theano_batch()
         self.f = theano.function([inputs], self.mlp.fprop(inputs))
+
+    @property
+    def initialized(self):
+        return not (self.ds is None or self.trainer is None or self.f is None)
 
     def fit(self, X, y):
         """
@@ -170,7 +178,7 @@ class NeuralNetwork(object):
         assert X.shape[0] == y.shape[0],\
             "Expecting same number of input and output samples."
 
-        if self.ds is None:
+        if not self.initialized:
             self.initialize(X, y)
 
         self.ds.X, self.ds.y = X, y
@@ -183,7 +191,7 @@ class NeuralNetwork(object):
         :return:
         """
 
-        if self.ds is None:
+        if not self.initialized:
             assert n_out is not None,\
                 "Call initialize() first or specify number of outputs."
             self.initialize(X, np.zeros((1,n_out)))
@@ -203,5 +211,5 @@ class NeuralNetwork(object):
     def __setstate__(self, d):
         self.__dict__.update(d)
 
-        inputs = self.mlp.get_input_space().make_theano_batch()
-        self.f = theano.function([inputs], self.mlp.fprop(inputs))
+        for k in ['ds', 'f', 'trainer']:
+            setattr(self, k, None)

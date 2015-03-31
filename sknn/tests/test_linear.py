@@ -1,7 +1,7 @@
 import unittest
 
+import io
 import pickle
-import tempfile
 import numpy as np
 
 from nose.tools import (assert_is_not_none)
@@ -40,17 +40,38 @@ class TestLinearNetwork(unittest.TestCase):
         a_in, a_out = np.zeros((7,16)), np.zeros((9,4))
         assert_raises(AssertionError, self.nn.fit, a_in, a_out)
 
+
+class TestSerialization(unittest.TestCase):
+
+    def setUp(self):
+        self.nn = NeuralNetwork(layers=[("Linear",)])
+
     def test_SerializeFail(self):
-        _, filename = tempfile.mkstemp()
-        assert_raises(AssertionError, pickle.dump, self.nn, open(filename, 'wb'))
+        buf = io.BytesIO()
+        assert_raises(AssertionError, pickle.dump, self.nn, buf)
 
     def test_SerializeCorrect(self):
         a_in, a_out = np.zeros((8,16)), np.zeros((8,4))
         self.nn.initialize(a_in, a_out)
 
-        _, filename = tempfile.mkstemp()
-        pickle.dump(self.nn, open(filename, 'wb'))
+        buf = io.BytesIO()
+        pickle.dump(self.nn, buf)
 
-        nn = pickle.load(open(filename, 'rb'))
+        buf.seek(0)
+        nn = pickle.load(buf)
+
         assert_is_not_none(nn.mlp)
         assert_equal(nn.layers, self.nn.layers)
+
+
+class TestSerializedNetwork(TestLinearNetwork):
+
+    def setUp(self):
+        self.original = NeuralNetwork(layers=[("Linear",)])
+        a_in, a_out = np.zeros((8,16)), np.zeros((8,4))
+        self.original.initialize(a_in, a_out)
+
+        buf = io.BytesIO()
+        pickle.dump(self.original, buf)
+        buf.seek(0)
+        self.nn = pickle.load(buf)
