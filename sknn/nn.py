@@ -8,20 +8,21 @@ try:
     import numpy as np
     import theano
 
-    import sklearn.base
+    from sklearn.base import BaseEstimator
 
     from pylearn2.datasets import DenseDesignMatrix
     from pylearn2.training_algorithms import sgd, bgd
     from pylearn2.models import mlp, maxout
     from pylearn2.costs.mlp.dropout import Dropout
     from pylearn2.training_algorithms.learning_rule import AdaGrad, RMSProp, Momentum
+
 except:
     # Documentation builds don't have all dependencies installed.
-    pass
+    BaseEstimator = object
 
 
 
-class NeuralNetwork(sklearn.base.BaseEstimator):
+class NeuralNetwork(BaseEstimator):
     """
     A wrapper for PyLearn2 compatible with scikit-learn.
     """
