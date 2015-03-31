@@ -54,14 +54,14 @@ class NeuralNetwork(object):
         #self.learning_rule = None
         #self.learning_rule = RMSProp()
 
-    def init_trainer(self):
+    def create_trainer(self):
         return sgd.SGD(
             learning_rate=self.learning_rate,
             cost=self.cost,
             batch_size=1,
             learning_rule=self.learning_rule)
 
-    def linit(self, X, y):
+    def initialize(self, X, y):
         log.info(
             "Initializing neural network with %i layers." %
             (len(self.layers),))
@@ -86,7 +86,7 @@ class NeuralNetwork(object):
             lim = np.sqrt(6) / (np.sqrt(fan_in + fan_out))
             layer_name = "Hidden_%i_%s" % (i, layer[0])
             activate_type = layer[0]
-            if(i == 0):
+            if i == 0:
                 first_hidden_name = layer_name
             if activate_type == "RectifiedLinear":
                 hidden_layer = mlp.RectifiedLinear(
@@ -127,23 +127,21 @@ class NeuralNetwork(object):
         # fan_out = self.units_per_layer[-1]
         # lim = np.sqrt(6) / (np.sqrt(fan_in + fan_out))
 
-        if(output_layer_info[0] == "Linear"):
+        if output_layer_info[0] == "Linear":
             output_layer = mlp.Linear(
                 dim=self.units_per_layer[-1],
                 layer_name=output_layer_name,
                 irange=0.00001,
                 W_lr_scale=self.weight_scale)
 
-        if(self.cost is not None):
-            if(self.cost == "Dropout"):
+        if self.cost is not None:
+            if self.cost == "Dropout":
                 self.cost = Dropout(
-                    input_include_probs={
-                        first_hidden_name: 1.0}, input_scales={
-                        first_hidden_name: 1.})
+                    input_include_probs={first_hidden_name: 1.0},
+                    input_scales={first_hidden_name: 1.})
 
-        if(output_layer_info[0] == "LinearGaussian"):
+        if output_layer_info[0] == "LinearGaussian":
             output_layer = mlp.LinearGaussian(
-
                 init_beta=0.1,
                 min_beta=0.001,
                 max_beta=1000,
@@ -159,7 +157,7 @@ class NeuralNetwork(object):
 
         self.mlp = mlp.MLP(pylearn2mlp_layers, nvis=self.units_per_layer[0])
         self.ds = DenseDesignMatrix(X=X, y=y)
-        self.trainer = self.init_trainer()
+        self.trainer = self.create_trainer()
         self.trainer.setup(self.mlp, self.ds)
         inputs = self.mlp.get_input_space().make_theano_batch()
         self.f = theano.function([inputs], self.mlp.fprop(inputs))
@@ -171,11 +169,11 @@ class NeuralNetwork(object):
         :return:
         """
 
-        if(self.ds is None):
-            self.linit(X, y)
+        if self.ds is None:
+            self.initialize(X, y)
 
-        if(self.trainer is None):
-            self.trainer = self.init_trainer()
+        if self.trainer is None:
+            self.trainer = self.create_trainer()
             self.trainer.setup(self.mlp, self.ds)
 
         ds = self.ds
@@ -191,8 +189,8 @@ class NeuralNetwork(object):
         :return:
         """
 
-        if(self.ds is None):
-            self.linit(X, np.array([np.zeros(n_out)]))
+        if self.ds is None:
+            self.initialize(X, np.array([np.zeros(n_out)]))
 
         return self.f(X)
 
