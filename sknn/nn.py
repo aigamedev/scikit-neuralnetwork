@@ -27,6 +27,7 @@ class NeuralNetwork(object):
     def __init__(
             self,
             layers,
+            seed=None,
             dropout=False,
             learning_rate=0.001):
         """
@@ -36,25 +37,29 @@ class NeuralNetwork(object):
         """
 
         self.layers = layers
+        self.seed = seed
 
+        self.mlp = None
         self.ds = None
+        self.trainer = None
         self.f = None
 
-        if dropout:
-            self.cost = "Dropout"
-            self.weight_scale = None
-        else:
-            self.cost = None
-            self.weight_scale = None
-
+        self.cost = "Dropout" if dropout else None
+        self.weight_scale = None
         self.learning_rate = learning_rate
-        #self.learning_rule = Momentum(0.9)
-
+        
+        # self.learning_rule = None
         self.learning_rule = Momentum(0.9)
-        #self.learning_rule = None
-        #self.learning_rule = RMSProp()
+        # self.learning_rule = RMSProp()
 
     def create_trainer(self):
+        sgd.log.setLevel(logging.WARNING)
+
+        if self.cost == "Dropout":
+            self.cost = Dropout(
+                input_include_probs={first_hidden_name: 1.0},
+                input_scales={first_hidden_name: 1.})
+
         return sgd.SGD(
             learning_rate=self.learning_rate,
             cost=self.cost,
@@ -80,10 +85,10 @@ class NeuralNetwork(object):
         log.debug("Units per layer: %r.", self.units_per_layer)
 
         for i, layer in enumerate(self.layers[:-1]):
-
             fan_in = self.units_per_layer[i] + 1
             fan_out = self.units_per_layer[i + 1]
             lim = np.sqrt(6) / (np.sqrt(fan_in + fan_out))
+
             layer_name = "Hidden_%i_%s" % (i, layer[0])
             activate_type = layer[0]
             if i == 0:
@@ -113,10 +118,9 @@ class NeuralNetwork(object):
                     layer_name=layer_name,
                     irange=lim,
                     W_lr_scale=self.weight_scale)
-
             else:
                 raise NotImplementedError(
-                    "Layer of type %s are not implemented yet" %
+                    "Layer type `%s` is not implemented." %
                     layer[0])
             pylearn2mlp_layers += [hidden_layer]
 
@@ -134,12 +138,6 @@ class NeuralNetwork(object):
                 irange=0.00001,
                 W_lr_scale=self.weight_scale)
 
-        if self.cost is not None:
-            if self.cost == "Dropout":
-                self.cost = Dropout(
-                    input_include_probs={first_hidden_name: 1.0},
-                    input_scales={first_hidden_name: 1.})
-
         if output_layer_info[0] == "LinearGaussian":
             output_layer = mlp.LinearGaussian(
                 init_beta=0.1,
@@ -155,7 +153,7 @@ class NeuralNetwork(object):
 
         pylearn2mlp_layers += [output_layer]
 
-        self.mlp = mlp.MLP(pylearn2mlp_layers, nvis=self.units_per_layer[0])
+        self.mlp = mlp.MLP(pylearn2mlp_layers, nvis=self.units_per_layer[0], seed=self.seed)
         self.ds = DenseDesignMatrix(X=X, y=y)
         self.trainer = self.create_trainer()
         self.trainer.setup(self.mlp, self.ds)
@@ -193,20 +191,17 @@ class NeuralNetwork(object):
         return self.f(X)
 
     def __getstate__(self):
+        assert self.mlp is not None,\
+            "The neural network has not been initialized."
 
-        self.ds.X = self.ds.X[0:2]
-        self.ds.y = self.ds.y[0:2]
-
-        d = dict(self.__dict__)
-        del d['f']
-        del d['trainer']
-
+        d = self.__dict__.copy()
+        for k in ['ds', 'f', 'trainer']:
+            if k in d:
+                del d[k]
         return d
 
     def __setstate__(self, d):
         self.__dict__.update(d)
-
-        self.trainer = None
 
         inputs = self.mlp.get_input_space().make_theano_batch()
         self.f = theano.function([inputs], self.mlp.fprop(inputs))

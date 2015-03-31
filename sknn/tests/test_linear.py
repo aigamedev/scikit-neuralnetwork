@@ -1,7 +1,12 @@
 import unittest
+
+import pickle
+import tempfile
 import numpy as np
 
-from sklearn.utils.testing import assert_raises, assert_equal
+from nose.tools import (assert_is_not_none)
+from sklearn.utils.testing import (assert_raises, assert_equal)
+
 
 from sknn import NeuralNetwork
 
@@ -34,3 +39,18 @@ class TestLinearNetwork(unittest.TestCase):
     def test_FitWrongSize(self):
         a_in, a_out = np.zeros((7,16)), np.zeros((9,4))
         assert_raises(AssertionError, self.nn.fit, a_in, a_out)
+
+    def test_SerializeFail(self):
+        _, filename = tempfile.mkstemp()
+        assert_raises(AssertionError, pickle.dump, self.nn, open(filename, 'wb'))
+
+    def test_SerializeCorrect(self):
+        a_in, a_out = np.zeros((8,16)), np.zeros((8,4))
+        self.nn.initialize(a_in, a_out)
+
+        _, filename = tempfile.mkstemp()
+        pickle.dump(self.nn, open(filename, 'wb'))
+
+        nn = pickle.load(open(filename, 'rb'))
+        assert_is_not_none(nn.mlp)
+        assert_equal(nn.layers, self.nn.layers)
