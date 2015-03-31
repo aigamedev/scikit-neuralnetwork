@@ -66,91 +66,92 @@ class NeuralNetwork(object):
             batch_size=1,
             learning_rule=self.learning_rule)
 
-    def _create_mlp(self, X, y):
-        pylearn2mlp_layers = []
-        self.units_per_layer = []
-        # input layer units
-        self.units_per_layer += [X.shape[1]]
+    def _create_hidden_layer(self, name, args):
+        activation_type = args[0]
+        if activation_type == "RectifiedLinear":
+            return mlp.RectifiedLinear(
+                dim=args[1],
+                layer_name=name,
+                irange=lim,
+                W_lr_scale=self.weight_scale)
+        if activation_type == "Sigmoid":
+            return mlp.Sigmoid(
+                dim=args[1],
+                layer_name=name,
+                irange=lim,
+                W_lr_scale=self.weight_scale)
+        if activation_type == "Tanh":
+            return mlp.Tanh(
+                dim=args[1],
+                layer_name=name,
+                irange=lim,
+                W_lr_scale=self.weight_scale)
+        if activation_type == "Maxout":
+            return maxout.Maxout(
+                num_units=args[1],
+                num_pieces=args[2],
+                layer_name=name,
+                irange=lim,
+                W_lr_scale=self.weight_scale)
+        raise NotImplementedError(
+            "Hidden layer type `%s` is not implemented." % name)
 
+    def _create_output_layer(self, name, args):
+        activation_type = args[0]
+        if activation_type == "Linear":
+            return mlp.Linear(
+                dim=args[1],
+                layer_name=name,
+                irange=0.00001,
+                W_lr_scale=self.weight_scale)
+        if output_layer_info[0] == "LinearGaussian":
+            return mlp.LinearGaussian(
+                init_beta=0.1,
+                min_beta=0.001,
+                max_beta=1000,
+                beta_lr_scale=None,
+                dim=args[1],
+                layer_name=name,
+                irange=0.1,
+                W_lr_scale=self.weight_scale)
+        raise NotImplementedError(
+            "Output layer type `%s` is not implemented." % name)
+
+    def _create_mlp(self, X, y):
+        # Calculate and store all layer sizes.
+        self.units_per_layer = [X.shape[1]]
         for layer in self.layers[:-1]:
             self.units_per_layer += [layer[1]]
-
-        # Output layer units
         self.units_per_layer += [y.shape[1]]
 
         log.debug("Units per layer: %r.", self.units_per_layer)
 
+        mlp_layers = []
         for i, layer in enumerate(self.layers[:-1]):
             fan_in = self.units_per_layer[i] + 1
             fan_out = self.units_per_layer[i + 1]
             lim = np.sqrt(6) / (np.sqrt(fan_in + fan_out))
 
             layer_name = "Hidden_%i_%s" % (i, layer[0])
-            activate_type = layer[0]
             if i == 0:
                 first_hidden_name = layer_name
-            if activate_type == "RectifiedLinear":
-                hidden_layer = mlp.RectifiedLinear(
-                    dim=layer[1],
-                    layer_name=layer_name,
-                    irange=lim,
-                    W_lr_scale=self.weight_scale)
-            elif activate_type == "Sigmoid":
-                hidden_layer = mlp.Sigmoid(
-                    dim=layer[1],
-                    layer_name=layer_name,
-                    irange=lim,
-                    W_lr_scale=self.weight_scale)
-            elif activate_type == "Tanh":
-                hidden_layer = mlp.Tanh(
-                    dim=layer[1],
-                    layer_name=layer_name,
-                    irange=lim,
-                    W_lr_scale=self.weight_scale)
-            elif activate_type == "Maxout":
-                hidden_layer = maxout.Maxout(
-                    num_units=layer[1],
-                    num_pieces=layer[2],
-                    layer_name=layer_name,
-                    irange=lim,
-                    W_lr_scale=self.weight_scale)
-            else:
-                raise NotImplementedError(
-                    "Layer type `%s` is not implemented." %
-                    layer[0])
-            pylearn2mlp_layers += [hidden_layer]
 
-        output_layer_info = self.layers[-1]
+            hidden_layer = self._create_hidden_layer(layer[0], layer_name, layers)
+            mlp_layers.append(hidden_layer)
+
+        output_layer_info = list(self.layers[-1])
+        output_layer_info.append(self.units_per_layer[-1])
+
         output_layer_name = "Output_%s" % output_layer_info[0]
+        output_layer = self._create_output_layer(output_layer_name, output_layer_info)
+        mlp_layers.append(output_layer)
 
-        # fan_in = self.units_per_layer[-2] + 1
-        # fan_out = self.units_per_layer[-1]
-        # lim = np.sqrt(6) / (np.sqrt(fan_in + fan_out))
-
-        if output_layer_info[0] == "Linear":
-            output_layer = mlp.Linear(
-                dim=self.units_per_layer[-1],
-                layer_name=output_layer_name,
-                irange=0.00001,
-                W_lr_scale=self.weight_scale)
-
-        if output_layer_info[0] == "LinearGaussian":
-            output_layer = mlp.LinearGaussian(
-                init_beta=0.1,
-                min_beta=0.001,
-                max_beta=1000,
-                beta_lr_scale=None,
-
-                dim=self.units_per_layer[-1],
-                layer_name=output_layer_name,
-                irange=0.1,
-
-                W_lr_scale=self.weight_scale)
-
-        pylearn2mlp_layers += [output_layer]
-        return mlp.MLP(pylearn2mlp_layers, nvis=self.units_per_layer[0], seed=self.seed)
+        return mlp.MLP(mlp_layers, nvis=self.units_per_layer[0], seed=self.seed)
 
     def initialize(self, X, y):
+        assert not self.initialized,\
+            "This neural network has already been initialized."
+
         log.info(
             "Initializing neural network with %i layers.",
             len(self.layers))
