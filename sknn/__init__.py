@@ -1,3 +1,5 @@
+from __future__ import (absolute_imports, unicode_literals, print_function)
+
 __author__ = 'ssamot, alexjc'
 
 import numpy as np
@@ -79,7 +81,7 @@ class NeuralNetwork(object):
 
     def linit(self, X, y):
         if(self.verbose > 0):
-            print "Lazy initialisation"
+            print("Lazy initialisation")
 
         pylearn2mlp_layers = []
         self.units_per_layer = []
@@ -102,7 +104,7 @@ class NeuralNetwork(object):
         self.units_per_layer += [y.shape[1]]
 
         if(self.verbose > 0):
-            print "Units per layer", str(self.units_per_layer)
+            print("Units per layer", str(self.units_per_layer))
 
         for i, layer in enumerate(layers[:-1]):
 
