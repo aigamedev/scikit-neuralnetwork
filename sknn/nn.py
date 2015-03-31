@@ -25,14 +25,34 @@ except:
 class NeuralNetwork(BaseEstimator):
     """
     A wrapper for PyLearn2 compatible with scikit-learn.
+
+    Parameters
+    ----------
+    layers : list of tuples
+        An iterable sequence of each layer each as a tuple: first with an
+        activation type and then optional parameters such as the number of
+        units.
+
+    random_state : int
+        Seed for the initialization of the neural network parameters (e.g.
+        weights and biases).  This is fully deterministic.
+
+    learning_rate : float
+        Real number indicating the default/starting rate of adjustment for
+        the weights during gradient descent.  Different learning rules may
+        take this into account differently.
+
+    dropout : bool
+        Whether to use drop-out training for the inputs (jittering) and the
+        hidden layers, for each training example.
     """
 
     def __init__(
             self,
             layers,
-            seed=None,
-            dropout=False,
-            learning_rate=0.001):
+            random_state=None,
+            learning_rate=0.001,
+            dropout=False):
         """
         :param layers: List of tuples of types of layers alongside the number of neurons
         :param learning_rate: The learning rate for all layers
@@ -40,7 +60,7 @@ class NeuralNetwork(BaseEstimator):
         """
 
         self.layers = layers
-        self.seed = seed
+        self.seed = random_state
 
         self.mlp = None
         self.ds = None
@@ -51,7 +71,6 @@ class NeuralNetwork(BaseEstimator):
         self.weight_scale = None
         self.learning_rate = learning_rate
         
-        # self.learning_rule = None
         self.learning_rule = Momentum(0.9)
         # self.learning_rule = RMSProp()
 
@@ -77,18 +96,21 @@ class NeuralNetwork(BaseEstimator):
                 layer_name=name,
                 irange=lim,
                 W_lr_scale=self.weight_scale)
+
         if activation_type == "Sigmoid":
             return mlp.Sigmoid(
                 dim=args[1],
                 layer_name=name,
                 irange=lim,
                 W_lr_scale=self.weight_scale)
+
         if activation_type == "Tanh":
             return mlp.Tanh(
                 dim=args[1],
                 layer_name=name,
                 irange=lim,
                 W_lr_scale=self.weight_scale)
+
         if activation_type == "Maxout":
             return maxout.Maxout(
                 num_units=args[1],
@@ -96,6 +118,7 @@ class NeuralNetwork(BaseEstimator):
                 layer_name=name,
                 irange=lim,
                 W_lr_scale=self.weight_scale)
+
         raise NotImplementedError(
             "Hidden layer type `%s` is not implemented." % name)
 
@@ -107,6 +130,7 @@ class NeuralNetwork(BaseEstimator):
                 layer_name=name,
                 irange=0.00001,
                 W_lr_scale=self.weight_scale)
+
         if output_layer_info[0] == "LinearGaussian":
             return mlp.LinearGaussian(
                 init_beta=0.1,
@@ -117,6 +141,7 @@ class NeuralNetwork(BaseEstimator):
                 layer_name=name,
                 irange=0.1,
                 W_lr_scale=self.weight_scale)
+
         raise NotImplementedError(
             "Output layer type `%s` is not implemented." % name)
 
@@ -170,6 +195,8 @@ class NeuralNetwork(BaseEstimator):
 
     @property
     def initialized(self):
+        """Check if the neural network was setup already.
+        """
         return not (self.ds is None or self.trainer is None or self.f is None)
 
     def fit(self, X, y):
@@ -178,17 +205,17 @@ class NeuralNetwork(BaseEstimator):
         Parameters
         ----------
         X : array-like, shape = [n_samples, n_inputs]
-        Training vectors as real numbers, where n_samples is the number of
-        samples and n_inputs is the number of input features.
+            Training vectors as real numbers, where n_samples is the number of
+            samples and n_inputs is the number of input features.
 
         y : array-like, shape = [n_samples, n_outputs]
-        Target values as real numbers, either as regression targets or
-        label probabilities for classification.
+            Target values as real numbers, either as regression targets or
+            label probabilities for classification.
 
         Returns
         -------
         self : object
-        Returns this instance.
+            Returns this instance.
         """
         assert X.shape[0] == y.shape[0],\
             "Expecting same number of input and output samples."
@@ -202,17 +229,17 @@ class NeuralNetwork(BaseEstimator):
         return self
 
     def predict(self, X):
-        """Predict class for specified inputs.
+        """Calculate predictions for specified inputs.
 
         Parameters
         ----------
         X : array-like of shape = [n_samples, n_inputs]
-        The input samples as real numbers.
+            The input samples as real numbers.
 
         Returns
         -------
         y : array of shape = [n_samples, n_outputs]
-        The predicted values as real numebrs.
+            The predicted values as real numbers.
         """
         assert self.initialized,\
             "The neural network has not been trained."
