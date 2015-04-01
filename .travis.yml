@@ -19,4 +19,7 @@ install:
   - pip install -e git+https://github.com/lisa-lab/pylearn2.git#egg=pylearn2
 
 script:
-  - nosetests -v sknn
+  - nosetests --with-coverage --cover-package=sknn -v sknn
+
+after_success:
+  - coveralls
