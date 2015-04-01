@@ -1,6 +1,6 @@
 from __future__ import (absolute_import, unicode_literals)
 
-__all__ = ['MultiLayerPerceptronRegressor']
+__all__ = ['MultiLayerPerceptronRegressor', 'MultiLayerPerceptronClassifier']
 
 
 import logging
@@ -10,6 +10,7 @@ log = logging.getLogger('sknn')
 import numpy
 import theano
 import sklearn.base
+import sklearn.preprocessing
 
 from pylearn2.datasets import DenseDesignMatrix
 from pylearn2.training_algorithms import sgd, bgd
@@ -17,6 +18,7 @@ from pylearn2.models import mlp, maxout
 from pylearn2.costs.mlp.dropout import Dropout
 from pylearn2.training_algorithms.learning_rule import RMSProp, Momentum
 from pylearn2.space import Conv2DSpace
+
 
 
 class BaseMLP(sklearn.base.BaseEstimator):
@@ -168,7 +170,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 irange=0.1)
 
         raise NotImplementedError(
-            "Output layer type `%s` is not implemented." % name)
+            "Output layer type `%s` is not implemented." % activation_type)
 
     def _create_mlp(self, X, y, nvis=None, input_space=None):
         # Create the layers one by one, connecting to previous.
@@ -239,6 +241,8 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
     @property
     def is_convolution(self):
+        """Check whether this neural network includes convolution layers.
+        """
         return "Conv" in self.layers[0][0]
 
     def __getstate__(self):
@@ -266,11 +270,11 @@ class MultiLayerPerceptronRegressor(BaseMLP, sklearn.base.RegressorMixin):
 
         Parameters
         ----------
-        X : array-like, shape = [n_samples, n_inputs]
+        X : array-like, shape (n_samples, n_inputs)
             Training vectors as real numbers, where n_samples is the number of
             samples and n_inputs is the number of input features.
 
-        y : array-like, shape = [n_samples, n_outputs]
+        y : array-like, shape (n_samples, n_outputs)
             Target values as real numbers, either as regression targets or
             label probabilities for classification.
 
@@ -282,7 +286,7 @@ class MultiLayerPerceptronRegressor(BaseMLP, sklearn.base.RegressorMixin):
         assert X.shape[0] == y.shape[0],\
             "Expecting same number of input and output samples."
 
-        if len(y.shape) == 1:
+        if y.ndim == 1:
             y = y.reshape((y.shape[0], 1))
 
         if not self.is_initialized:
@@ -303,12 +307,12 @@ class MultiLayerPerceptronRegressor(BaseMLP, sklearn.base.RegressorMixin):
 
         Parameters
         ----------
-        X : array-like of shape = [n_samples, n_inputs]
+        X : array-like, shape (n_samples, n_inputs)
             The input samples as real numbers.
 
         Returns
         -------
-        y : array of shape = [n_samples, n_outputs]
+        y : array, shape (n_samples, n_outputs)
             The predicted values as real numbers.
         """
 
@@ -318,13 +322,88 @@ class MultiLayerPerceptronRegressor(BaseMLP, sklearn.base.RegressorMixin):
             y = numpy.zeros((X.shape[0], self.unit_counts[-1]))
             self.initialize(X, y)
 
-        if(self.is_convolution):
+        if self.is_convolution:
             X = numpy.array([X]).transpose(1,2,3,0)
 
         return self.f(X)
 
 
 
-class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
+class MultiLayerPerceptronClassifier(MultiLayerPerceptronRegressor, sklearn.base.ClassifierMixin):
 
-    pass
+    def __init__(self, *args, **kwargs):
+        super(MultiLayerPerceptronClassifier, self).__init__(*args, **kwargs)
+        self.label_binarizer = sklearn.preprocessing.LabelBinarizer()
+
+    def fit(self, X, y):
+        # Scan training samples to find all different classes.
+        self.label_binarizer.fit(y)
+        yp = self.label_binarizer.transform(y)
+        # Now train based on a problem transformed into regression.
+        super(MultiLayerPerceptronClassifier, self).fit(X, y)
+
+    def decision_function(self, X):
+        """Decision function of the multi-layer perceptron.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            The input data as a numpy array.
+
+        Returns
+        -------
+        y : array, shape (n_samples, n_classes)
+            The predicted values.
+        """
+        y_scores = super(MultiLayerPerceptronClassifier, self).predict(X)
+        print 'decision', X.shape, y_scores.shape
+        """
+        if self.unit_counts[-1] == 1:
+            # Not tested, ever used?
+            print 'raveling?'
+            return y_scores.ravel()
+        else:
+        """
+        return y_scores
+
+    def predict(self, X):
+        """Predict probabilities by converting the problem to a regression problem.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            The input data.
+
+        Returns
+        -------
+        y : array-like, shape (n_samples,) or (n_samples, n_classes)
+            The predicted classes, or the predicted values.
+        """
+        y_scores = self.decision_function(X)
+        print X.shape, y_scores.shape
+        return self.label_binarizer.inverse_transform(y_scores)
+
+    def predict_proba(self, X):
+        """Calculate probability estimates based on these input features.
+
+        Parameters
+        ----------
+        X : array-like of shape [n_samples, n_features]
+            The input data as a numpy array.
+
+        Returns
+        -------
+        y_prob : array-like of shape [n_samples, n_classes]
+            The predicted probability of the sample for each class in the
+            model, in the same order as the classes.
+        """
+        raise NotImplementedError("Work in progress.")
+        
+        # TODO: Use pre-activation of the final layer?
+        y_scores = self.decision_function(X)
+
+        if y_scores.ndim == 1:
+            y_scores = logistic(y_scores)
+            return numpy.vstack([1 - y_scores, y_scores]).T
+        else:
+            return softmax(y_scores)

@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import AdaBoostRegressor
 
-from sknn.mlp import SimpleNeuralRegressor
+from sknn.mlp import MultiLayerPerceptronRegressor
 
 
 # Preparation.
@@ -20,11 +20,12 @@ y = (np.sin(X*6).ravel() + np.sin(X*36).ravel() + rng.normal(0, 0.1, X.shape[0])
 clf_1 = DecisionTreeRegressor(max_depth=4)
 clf_2 = AdaBoostRegressor(DecisionTreeRegressor(max_depth=4),
                           n_estimators=300, random_state=rng)
-clf_3 = SimpleNeuralRegressor(layers=[("Linear",)], n_iter=100)
-clf_4 = SimpleNeuralRegressor(layers=[("RectifiedLinear",250),("RectifiedLinear",200),
-                                      ("RectifiedLinear",150),("RectifiedLinear",100),
-                                      ("Linear",)],
-                              learning_rate=0.1, dropout=False, n_iter=5000)
+clf_3 = MultiLayerPerceptronRegressor(layers=[("Linear",)], n_iter=100)
+clf_4 = MultiLayerPerceptronRegressor(
+            layers=[("RectifiedLinear",250),("RectifiedLinear",200),
+                    ("RectifiedLinear",150),("RectifiedLinear",100),
+                    ("Linear",)],
+            learning_rate=0.1, dropout=False, n_iter=5000)
 
 # Training.
 clf_1.fit(X, y)

@@ -10,9 +10,8 @@ Deep neural network implementation without the learning cliff!  This is a wrappe
 Upcoming Features
 -----------------
 
-* An example that cover hand written digit recognition from the MNIST dataset.
+* An example that covers hand-written digit recognition from the MNIST dataset.
 * Better error checking for the layer specifications, useful messages otherwise.
-* Explicit support for Classifiers as well as the current Regressors.
 
 
 .. |Build Status| image:: https://travis-ci.org/aigamedev/scikit-neuralnetwork.svg?branch=master
