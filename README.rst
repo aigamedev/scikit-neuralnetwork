@@ -1,7 +1,7 @@
 scikit-neuralnetwork
 ====================
 
-Neural Network wrapper for pylearn2 compatible with scikit-learn.
+Deep neural network implementation without the learning cliff!  This is a wrapper for the powerful ``pylearn2`` library that's compatible with ``scikit-learn`` for a more user-friendly and Pythonic interface.
 
 |Build Status| |Documentation Status|
 
