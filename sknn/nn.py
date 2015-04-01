@@ -14,7 +14,7 @@ try:
     from pylearn2.training_algorithms import sgd, bgd
     from pylearn2.models import mlp, maxout
     from pylearn2.costs.mlp.dropout import Dropout
-    from pylearn2.training_algorithms.learning_rule import AdaGrad, RMSProp, Momentum
+    from pylearn2.training_algorithms.learning_rule import RMSProp, Momentum
 
 except:
     # Documentation builds don't have all dependencies installed.
@@ -54,7 +54,7 @@ class NeuralNetwork(BaseEstimator):
         Number of training samples to group together when performing stochastic
         gradient descent.  By default each sample is treated on its own.
 
-    iterations : int
+    n_iter : int
         The number of iterations of gradient descent to perform on the
         neural network's weights when training with fit().
 
@@ -71,7 +71,7 @@ class NeuralNetwork(BaseEstimator):
             learning_rate=0.01,
             learning_momentum=0.9,
             batch_size=1,
-            iterations=1,
+            n_iter=1,
             dropout=False):
 
         self.layers = layers
@@ -86,7 +86,7 @@ class NeuralNetwork(BaseEstimator):
         self.cost = "Dropout" if dropout else None
         self.learning_rate = learning_rate
         self.batch_size = batch_size
-        self.iterations = iterations
+        self.n_iter = n_iter
 
         if learning_rule == 'default':
             self.learning_rule = None
@@ -240,7 +240,7 @@ class NeuralNetwork(BaseEstimator):
             self.initialize(X, y)
 
         self.ds.X, self.ds.y = X, y
-        for _ in range(self.iterations):
+        for _ in range(self.n_iter):
             self.trainer.train(dataset=self.ds)
 
         return self

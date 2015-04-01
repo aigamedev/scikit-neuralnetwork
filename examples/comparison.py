@@ -11,34 +11,34 @@ from sklearn.ensemble import AdaBoostRegressor
 from sknn.nn import SimpleNeuralRegressor
 
 
-# Create the dataset
+# Preparation.
 rng = np.random.RandomState(1)
 X = np.linspace(0, 1, 100)[:, np.newaxis]
 y = (np.sin(X*6).ravel() + np.sin(X*36).ravel() + rng.normal(0, 0.1, X.shape[0])) / 3.0
 
-# Fit regression model
+# Construction.
 clf_1 = DecisionTreeRegressor(max_depth=4)
 clf_2 = AdaBoostRegressor(DecisionTreeRegressor(max_depth=4),
                           n_estimators=300, random_state=rng)
-clf_3 = SimpleNeuralRegressor(layers=[("Linear",)])
+clf_3 = SimpleNeuralRegressor(layers=[("Linear",)], n_iter=100)
 clf_4 = SimpleNeuralRegressor(layers=[("RectifiedLinear",250),("RectifiedLinear",200),
                                       ("RectifiedLinear",150),("RectifiedLinear",100),
                                       ("Linear",)],
-                              learning_rate=0.1, dropout=True)
+                              learning_rate=0.1, dropout=False, n_iter=5000)
 
-print X.shape, y.shape
+# Training.
 clf_1.fit(X, y)
 clf_2.fit(X, y)
-clf_3.fit(X, y, n_iter=100)
-clf_4.fit(X, y, n_iter=5000)
+clf_3.fit(X, y)
+clf_4.fit(X, y)
 
-# Predict
+# Prediction.
 y_1 = clf_1.predict(X)
 y_2 = clf_2.predict(X)
 y_3 = clf_3.predict(X)
 y_4 = clf_4.predict(X)
 
-# Plot the results
+# Plotting.
 plt.figure()
 plt.scatter(X, y, c="k", label="training samples")
 plt.plot(X, y_1, c="r", label="decision tree", linewidth=2)

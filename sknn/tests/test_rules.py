@@ -21,6 +21,10 @@ class TestLearningRules(unittest.TestCase):
         self._run(NeuralNetwork(layers=[("Linear",)],
                                 learning_rule='rmsprop'))
 
+    def test_unknown(self):
+        assert_raises(NotImplementedError, NeuralNetwork,
+                      layers=[], learning_rule='unknown')
+
     def _run(self, nn):
         a_in, a_out = np.zeros((8,16)), np.zeros((8,4))
         nn.fit(a_in, a_out)
