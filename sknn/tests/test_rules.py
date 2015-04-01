@@ -23,7 +23,7 @@ class TestLearningRules(unittest.TestCase):
 
     def test_rmsprop(self):
         self._run(MLPR(layers=[("Linear",)],
-                       dropout=True)
+                       dropout=True))
 
     def test_unknown(self):
         assert_raises(NotImplementedError, MLPR,
