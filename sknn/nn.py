@@ -230,6 +230,11 @@ class NeuralNetwork(sklearn.base.BaseEstimator):
         assert X.shape[0] == y.shape[0],\
             "Expecting same number of input and output samples."
 
+        if len(y.shape) == 1:
+            print y.shape
+            y = y.reshape((y.shape[0], 1))
+            print y.shape
+
         if not self.initialized:
             self.initialize(X, y)
 
@@ -276,15 +281,3 @@ class NeuralNetwork(sklearn.base.BaseEstimator):
 
         for k in ['ds', 'f', 'trainer']:
             setattr(self, k, None)
-
-
-class SimpleNeuralRegressor(NeuralNetwork):
-    """Simplified version of a `NeuralNetwork` that operates on a 1D output
-    array, like most other forms of machine learning.
-    """
-
-    def fit(self, X, y, **kwargs):
-        assert len(y.shape) == 1, "Expecting 1D input only."
-
-        ys = y.reshape((y.size, 1))
-        return super(SimpleNeuralRegressor, self).fit(X, ys, **kwargs)

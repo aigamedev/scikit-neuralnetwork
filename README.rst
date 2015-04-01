@@ -10,7 +10,6 @@ Deep neural network implementation without the learning cliff!  This is a wrappe
 Upcoming Features
 -----------------
 
-* NeuralNetwork class can handle 1D or N dimensional outputs automatically in same class.
 * An example that cover hand written digit recognition from the MNIST dataset.
 
 
