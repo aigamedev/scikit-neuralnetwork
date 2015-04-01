@@ -40,6 +40,16 @@ class TestLinearNetwork(unittest.TestCase):
         assert_raises(AssertionError, self.nn.fit, a_in, a_out)
 
 
+class TestInputOutputs(unittest.TestCase):
+
+    def setUp(self):
+        self.nn = NeuralNetwork(layers=[("Linear",)])
+
+    def test_FitOneDimensional(self):
+        a_in, a_out = np.zeros((8,16)), np.zeros((8,))
+        self.nn.fit(a_in, a_out)
+
+
 class TestSerialization(unittest.TestCase):
 
     def setUp(self):
