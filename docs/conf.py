@@ -10,6 +10,21 @@ project = u'scikit-neuralnetwork'
 copyright = u'2015, scikit-neuralnetwork developers (BSD License)' 
 
 
+# -- Overrides for modules ----------------------------------------------------
+
+from mock import Mock as MagicMock
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+            return Mock()
+
+MOCK_MODULES = ['numpy', 'theano', 'sklearn', 'pylearn2']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
+
+# -- Configuration of documentation -------------------------------------------
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import sknn
@@ -26,7 +41,7 @@ pygments_style = 'sphinx'
 todo_include_todos = False
 
 
-# -- Options for HTML output ----------------------------------------------
+# -- Options for HTML output --------------------------------------------------
 
 html_title = 'scikit-neuralnetwork documentation'
 # html_logo = 'img/logo.png'

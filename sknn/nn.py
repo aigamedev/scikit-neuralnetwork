@@ -4,25 +4,19 @@ import logging
 log = logging.getLogger('sknn')
 
 
-try:
-    import numpy as np
-    import theano
+import numpy as np
+import theano
+import sklearn.base
 
-    from sklearn.base import BaseEstimator
-
-    from pylearn2.datasets import DenseDesignMatrix
-    from pylearn2.training_algorithms import sgd, bgd
-    from pylearn2.models import mlp, maxout
-    from pylearn2.costs.mlp.dropout import Dropout
-    from pylearn2.training_algorithms.learning_rule import RMSProp, Momentum
-
-except:
-    # Documentation builds don't have all dependencies installed.
-    BaseEstimator = object
+from pylearn2.datasets import DenseDesignMatrix
+from pylearn2.training_algorithms import sgd, bgd
+from pylearn2.models import mlp, maxout
+from pylearn2.costs.mlp.dropout import Dropout
+from pylearn2.training_algorithms.learning_rule import RMSProp, Momentum
 
 
 
-class NeuralNetwork(BaseEstimator):
+class NeuralNetwork(sklearn.base.BaseEstimator):
     """
     A wrapper for PyLearn2 compatible with scikit-learn.
 
