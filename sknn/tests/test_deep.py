@@ -23,7 +23,12 @@ class TestDeepNetwork(test_linear.TestLinearNetwork):
                 ("Linear",),
             ])
 
-    def test_UnknownActivation(self):
+    def test_UnknownOuputActivation(self):
         nn = MLPR(layers=[("Unknown", 8)])
+        a_in = np.zeros((8,16))
+        assert_raises(NotImplementedError, nn.initialize, a_in, a_in)
+
+    def test_UnknownHiddenActivation(self):
+        nn = MLPR(layers=[("Unknown", 8), ("Linear",)])
         a_in = np.zeros((8,16))
         assert_raises(NotImplementedError, nn.initialize, a_in, a_in)
