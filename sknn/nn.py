@@ -4,11 +4,8 @@ import logging
 log = logging.getLogger('sknn')
 
 
-import numpy as np
+import numpy
 import theano
-
-import sys
-print('PATH', sys.path)
 import sklearn.base
 
 from pylearn2.datasets import DenseDesignMatrix
@@ -174,7 +171,7 @@ class NeuralNetwork(sklearn.base.BaseEstimator):
         for i, layer in enumerate(self.layers[:-1]):
             fan_in = self.unit_counts[i] + 1
             fan_out = self.unit_counts[i + 1]
-            lim = np.sqrt(6) / (np.sqrt(fan_in + fan_out))
+            lim = numpy.sqrt(6) / (numpy.sqrt(fan_in + fan_out))
 
             layer_name = "Hidden_%i_%s" % (i, layer[0])
             hidden_layer = self._create_hidden_layer(layer_name, layer, irange=lim)
@@ -259,7 +256,7 @@ class NeuralNetwork(sklearn.base.BaseEstimator):
         if not self.initialized:
             assert self.unit_counts is not None,\
                 "The neural network has not been trained."
-            y = np.zeros((X.shape[0], self.unit_counts[-1]))
+            y = numpy.zeros((X.shape[0], self.unit_counts[-1]))
             self.initialize(X, y)
 
         return self.f(X)

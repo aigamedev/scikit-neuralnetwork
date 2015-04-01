@@ -19,7 +19,10 @@ class Mock(MagicMock):
     def __getattr__(cls, name):
         return Mock()
 
-MOCK_MODULES = ['numpy', 'theano', 'sklearn', 'pylearn2']
+MOCK_MODULES = ['numpy', 'theano', 'sklearn.base', 'pylearn2',
+                'pylearn2.datasets', 'pylearn2.training_algorithms',
+                'pylearn2.models', 'pylearn2.costs.mlp.dropout',
+                'pylearn2.training_algorithms.learning_rule']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 
