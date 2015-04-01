@@ -43,7 +43,6 @@ version = sknn.__version__
 release = sknn.__version__
 
 extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.autosummary',
               'sphinx.ext.coverage',
               'numpydoc']
 templates_path = ['_templates']
