@@ -23,7 +23,7 @@ class Mock(MagicMock):
 
 MOCK_MODULES = ['numpy', 'theano', 'sklearn.base',
                 'pylearn2.datasets', 'pylearn2.training_algorithms',
-                'pylearn2.models', 'pylearn2.costs.mlp.dropout',
+                'pylearn2.models', 'pylearn2.space', 'pylearn2.costs.mlp.dropout',
                 'pylearn2.training_algorithms.learning_rule']
 
 for fullname in MOCK_MODULES:

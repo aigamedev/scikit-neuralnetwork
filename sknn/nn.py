@@ -13,7 +13,7 @@ from pylearn2.training_algorithms import sgd, bgd
 from pylearn2.models import mlp, maxout
 from pylearn2.costs.mlp.dropout import Dropout
 from pylearn2.training_algorithms.learning_rule import RMSProp, Momentum
-
+from pylearn2.space import Conv2DSpace
 
 
 class NeuralNetwork(sklearn.base.BaseEstimator):
@@ -111,28 +111,37 @@ class NeuralNetwork(sklearn.base.BaseEstimator):
         activation_type = args[0]
         if activation_type == "RectifiedLinear":
             return mlp.RectifiedLinear(
-                dim=args[1],
                 layer_name=name,
+                dim=args[1],
                 irange=irange)
 
         if activation_type == "Sigmoid":
             return mlp.Sigmoid(
-                dim=args[1],
                 layer_name=name,
+                dim=args[1],
                 irange=irange)
 
         if activation_type == "Tanh":
             return mlp.Tanh(
-                dim=args[1],
                 layer_name=name,
+                dim=args[1],
                 irange=irange)
 
         if activation_type == "Maxout":
             return maxout.Maxout(
+                layer_name=name,
                 num_units=args[1],
                 num_pieces=args[2],
-                layer_name=name,
                 irange=irange)
+
+        if activation_type == "Convolution":
+            return mlp.ConvRectifiedLinear(
+                layer_name=name,
+                output_channels=args[1],
+                kernel_shape=args[2],
+                pool_shape=(1,1),
+                pool_stride=(1,1),
+                sparse_init=True)
 
         raise NotImplementedError(
             "Hidden layer type `%s` is not implemented." % activation_type)
@@ -158,15 +167,8 @@ class NeuralNetwork(sklearn.base.BaseEstimator):
         raise NotImplementedError(
             "Output layer type `%s` is not implemented." % name)
 
-    def _create_mlp(self, X, y):
-        # Calculate and store all layer sizes.
-        self.unit_counts = [X.shape[1]]
-        for layer in self.layers[:-1]:
-            self.unit_counts += [layer[1]]
-        self.unit_counts += [y.shape[1]]
-
-        log.debug("Units per layer: %r.", self.unit_counts)
-
+    def _create_mlp(self, X, y, nvis=None, input_space=None):
+        # Create the layers one by one, connecting to previous.
         mlp_layers = []
         for i, layer in enumerate(self.layers[:-1]):
             fan_in = self.unit_counts[i] + 1
@@ -177,6 +179,7 @@ class NeuralNetwork(sklearn.base.BaseEstimator):
             hidden_layer = self._create_hidden_layer(layer_name, layer, irange=lim)
             mlp_layers.append(hidden_layer)
 
+        # Deal with output layer as a special case.
         output_layer_info = list(self.layers[-1])
         output_layer_info.append(self.unit_counts[-1])
 
@@ -184,7 +187,11 @@ class NeuralNetwork(sklearn.base.BaseEstimator):
         output_layer = self._create_output_layer(output_layer_name, output_layer_info)
         mlp_layers.append(output_layer)
 
-        return mlp.MLP(mlp_layers, nvis=self.unit_counts[0], seed=self.seed)
+        return mlp.MLP(
+            mlp_layers,
+            nvis=nvis,
+            seed=self.seed,
+            input_space=input_space)
 
     def initialize(self, X, y):
         assert not self.initialized,\
@@ -194,10 +201,28 @@ class NeuralNetwork(sklearn.base.BaseEstimator):
             "Initializing neural network with %i layers.",
             len(self.layers))
 
-        if self.mlp is None:
-            self.mlp = self._create_mlp(X, y)
+        # Calculate and store all layer sizes.
+        self.unit_counts = [X.shape[1]]
+        for layer in self.layers[:-1]:
+            self.unit_counts += [layer[1]]
+        self.unit_counts += [y.shape[1]]
 
-        self.ds = DenseDesignMatrix(X=X, y=y)
+        log.debug("Units per layer %r.", self.unit_counts)
+
+        # Convolution networks need a custom input space.
+        if "Conv" in self.layers[0][0]:
+            nvis = None
+            input_space = Conv2DSpace(shape=X.shape[1:], num_channels=1)
+            view = input_space.get_origin_batch(100)
+            self.ds = DenseDesignMatrix(topo_view=view, y=y)
+        else:
+            nvis = self.unit_counts[0]
+            input_space = None
+            self.ds = DenseDesignMatrix(X=X, y=y)
+
+        if self.mlp is None:
+            self.mlp = self._create_mlp(X, y, input_space=input_space, nvis=nvis)
+
         self.trainer = self._create_trainer()
         self.trainer.setup(self.mlp, self.ds)
         inputs = self.mlp.get_input_space().make_theano_batch()

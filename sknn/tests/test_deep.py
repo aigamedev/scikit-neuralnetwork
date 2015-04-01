@@ -4,12 +4,11 @@ import io
 import pickle
 import numpy as np
 
-from nose.tools import (assert_is_not_none)
-from sklearn.utils.testing import (assert_raises, assert_equal)
+from nose.tools import (assert_is_not_none, assert_raises, assert_equal)
 
 from sknn.nn import NeuralNetwork
-
 from . import test_linear
+
 
 class TestDeepNetwork(test_linear.TestLinearNetwork):
 
