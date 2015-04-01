@@ -21,5 +21,5 @@ Upcoming Features
 .. |Documentation Status| image:: https://readthedocs.org/projects/scikit-neuralnetwork/badge/?version=latest
     :target: http://scikit-neuralnetwork.readthedocs.org/
 
-.. |Code Coverage| image:: https://coveralls.io/repos/aigamedev/scikit-neuralnetwork/badge.svg
-    :target: https://coveralls.io/r/aigamedev/scikit-neuralnetwork
+.. |Code Coverage| image:: https://coveralls.io/repos/aigamedev/scikit-neuralnetwork/badge.svg?branch=master
+    :target: https://coveralls.io/r/aigamedev/scikit-neuralnetwork?branch=master
