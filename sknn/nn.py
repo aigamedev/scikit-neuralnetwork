@@ -6,6 +6,9 @@ log = logging.getLogger('sknn')
 
 import numpy as np
 import theano
+
+import sys
+print('PATH', sys.path)
 import sklearn.base
 
 from pylearn2.datasets import DenseDesignMatrix

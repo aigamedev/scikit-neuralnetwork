@@ -25,8 +25,7 @@ sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # -- Configuration of documentation -------------------------------------------
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-print('PATH', sys.path)
+sys.path.append(os.path.dirname(os.path.dirname(__file__)).encode('utf-8'))
 
 import sknn
 version = sknn.__version__
