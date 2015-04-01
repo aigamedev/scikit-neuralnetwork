@@ -214,7 +214,6 @@ class NeuralNetwork(sklearn.base.BaseEstimator):
             nvis = None
             input_space = Conv2DSpace(shape=X.shape[1:], num_channels=1)
             view = input_space.get_origin_batch(100)
-            #print view.shape
             self.ds = DenseDesignMatrix(topo_view=view, y=y)
         else:
             nvis = self.unit_counts[0]
@@ -268,9 +267,9 @@ class NeuralNetwork(sklearn.base.BaseEstimator):
 
         if self.is_convolution:
             X = numpy.array([X]).transpose(1,2,3,0)
-            self.ds.X, self.ds.y = self.ds.view_converter.topo_view_to_design_mat(X),y
-        else:
-            self.ds.X, self.ds.y = X, y
+            X = self.ds.view_converter.topo_view_to_design_mat(X)
+
+        self.ds.X, self.ds.y = X, y
         for _ in range(self.n_iter):
             self.trainer.train(dataset=self.ds)
 
