@@ -22,3 +22,7 @@ class TestDeepNetwork(test_linear.TestLinearNetwork):
                 ("Tanh", 4),
                 ("Linear",),
             ])
+
+    def test_UnknownActivation(self):
+        assert_raises(NotImplementedError, MLPR,
+                      layers=[("Unknown", 8)])

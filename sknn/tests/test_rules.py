@@ -21,6 +21,10 @@ class TestLearningRules(unittest.TestCase):
         self._run(MLPR(layers=[("Linear",)],
                        learning_rule='rmsprop'))
 
+    def test_rmsprop(self):
+        self._run(MLPR(layers=[("Linear",)],
+                       dropout=True)
+
     def test_unknown(self):
         assert_raises(NotImplementedError, MLPR,
                       layers=[], learning_rule='unknown')
