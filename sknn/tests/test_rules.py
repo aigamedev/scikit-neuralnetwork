@@ -21,9 +21,11 @@ class TestLearningRules(unittest.TestCase):
         self._run(MLPR(layers=[("Linear",)],
                        learning_rule='rmsprop'))
 
-    def test_rmsprop(self):
-        self._run(MLPR(layers=[("Linear",)],
+    def test_dropout(self):
+        self._run(MLPR(layers=[("Sigmoid", 8), ("Linear",)],
                        dropout=True))
+
+    # TODO: Support for dropout on Linear networks.
 
     def test_unknown(self):
         assert_raises(NotImplementedError, MLPR,
