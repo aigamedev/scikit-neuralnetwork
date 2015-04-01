@@ -4,7 +4,7 @@ from nose.tools import (assert_is_not_none, assert_false, assert_raises, assert_
 import numpy as np
 
 
-from sknn.nn import NeuralNetwork
+from sknn.mlp import NeuralNetwork
 
 
 class TestLearningRules(unittest.TestCase):

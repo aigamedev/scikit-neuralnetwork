@@ -8,7 +8,7 @@ import numpy as np
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler
 
-from sknn.nn import NeuralNetwork
+from sknn.mlp import NeuralNetwork
 
 
 class TestPipeline(unittest.TestCase):

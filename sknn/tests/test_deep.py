@@ -6,7 +6,7 @@ import numpy as np
 
 from nose.tools import (assert_is_not_none, assert_raises, assert_equal)
 
-from sknn.nn import NeuralNetwork
+from sknn.mlp import NeuralNetwork
 from . import test_linear
 
 

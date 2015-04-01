@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import AdaBoostRegressor
 
-from sknn.nn import SimpleNeuralRegressor
+from sknn.mlp import SimpleNeuralRegressor
 
 
 # Preparation.

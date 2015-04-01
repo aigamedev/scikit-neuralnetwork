@@ -6,7 +6,7 @@ import pickle
 import numpy as np
 
 
-from sknn.nn import NeuralNetwork
+from sknn.mlp import NeuralNetwork
 
 
 class TestLinearNetwork(unittest.TestCase):
