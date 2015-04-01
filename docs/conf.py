@@ -17,6 +17,8 @@ from mock import Mock as MagicMock
 class Mock(MagicMock):
     @classmethod
     def __getattr__(cls, name):
+        if name == 'BaseEstimator':
+            return object
         return Mock()
 
 MOCK_MODULES = ['numpy', 'theano', 'sklearn.base',
@@ -40,7 +42,10 @@ import sknn
 version = sknn.__version__
 release = sknn.__version__
 
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 'numpydoc']
+extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.autosummary',
+              'sphinx.ext.coverage',
+              'numpydoc']
 templates_path = ['_templates']
 source_suffix = '.rst'
 master_doc = 'index'
