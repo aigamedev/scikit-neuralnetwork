@@ -343,31 +343,24 @@ class MultiLayerPerceptronClassifier(MultiLayerPerceptronRegressor, sklearn.base
         super(MultiLayerPerceptronClassifier, self).fit(X, y)
 
     def decision_function(self, X):
-        """Decision function of the multi-layer perceptron.
+        """Decision function of the multi-layer perceptron, returning probability
+        estimates for the input features.
 
         Parameters
         ----------
         X : array-like, shape (n_samples, n_features)
-            The input data as a numpy array.
+            The input features as a numpy array.
 
         Returns
         -------
         y : array, shape (n_samples, n_classes)
-            The predicted values.
+            The predicted output probabilities.
         """
         y_scores = super(MultiLayerPerceptronClassifier, self).predict(X)
-        print 'decision', X.shape, y_scores.shape
-        """
-        if self.unit_counts[-1] == 1:
-            # Not tested, ever used?
-            print 'raveling?'
-            return y_scores.ravel()
-        else:
-        """
         return y_scores
 
     def predict(self, X):
-        """Predict probabilities by converting the problem to a regression problem.
+        """Predict class by converting the problem to a regression problem.
 
         Parameters
         ----------
@@ -380,7 +373,6 @@ class MultiLayerPerceptronClassifier(MultiLayerPerceptronRegressor, sklearn.base
             The predicted classes, or the predicted values.
         """
         y_scores = self.decision_function(X)
-        print X.shape, y_scores.shape
         return self.label_binarizer.inverse_transform(y_scores)
 
     def predict_proba(self, X):
