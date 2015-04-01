@@ -141,7 +141,7 @@ class NeuralNetwork(sklearn.base.BaseEstimator):
                 kernel_shape=args[2],
                 pool_shape=(1,1),
                 pool_stride=(1,1),
-                sparse_init=True)
+                irange=irange)
 
         raise NotImplementedError(
             "Hidden layer type `%s` is not implemented." % activation_type)
@@ -194,7 +194,7 @@ class NeuralNetwork(sklearn.base.BaseEstimator):
             input_space=input_space)
 
     def initialize(self, X, y):
-        assert not self.initialized,\
+        assert not self.is_initialized,\
             "This neural network has already been initialized."
 
         log.info(
@@ -210,9 +210,9 @@ class NeuralNetwork(sklearn.base.BaseEstimator):
         log.debug("Units per layer %r.", self.unit_counts)
 
         # Convolution networks need a custom input space.
-        if "Conv" in self.layers[0][0]:
+        if self.is_convolution:
             nvis = None
-            input_space = Conv2DSpace(shape=X.shape[1:], num_channels=1)
+            input_space = Conv2DSpace(shape=X.shape[2:], num_channels=1)
             view = input_space.get_origin_batch(100)
             self.ds = DenseDesignMatrix(topo_view=view, y=y)
         else:
@@ -229,10 +229,14 @@ class NeuralNetwork(sklearn.base.BaseEstimator):
         self.f = theano.function([inputs], self.mlp.fprop(inputs))
 
     @property
-    def initialized(self):
+    def is_initialized(self):
         """Check if the neural network was setup already.
         """
         return not (self.ds is None or self.trainer is None or self.f is None)
+
+    @property
+    def is_convolution(self):
+        return "Conv" in self.layers[0][0]
 
     def fit(self, X, y):
         """Fit the neural network to the given data.
@@ -257,8 +261,9 @@ class NeuralNetwork(sklearn.base.BaseEstimator):
 
         if len(y.shape) == 1:
             y = y.reshape((y.shape[0], 1))
-
-        if not self.initialized:
+        if self.is_convolution:
+            X = numpy.array([X]).transpose(1,2,3,0)
+        if not self.is_initialized:
             self.initialize(X, y)
 
         self.ds.X, self.ds.y = X, y
@@ -281,7 +286,7 @@ class NeuralNetwork(sklearn.base.BaseEstimator):
             The predicted values as real numbers.
         """
 
-        if not self.initialized:
+        if not self.is_initialized:
             assert self.unit_counts is not None,\
                 "The neural network has not been trained."
             y = numpy.zeros((X.shape[0], self.unit_counts[-1]))
