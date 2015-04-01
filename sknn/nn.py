@@ -231,9 +231,7 @@ class NeuralNetwork(sklearn.base.BaseEstimator):
             "Expecting same number of input and output samples."
 
         if len(y.shape) == 1:
-            print y.shape
             y = y.reshape((y.shape[0], 1))
-            print y.shape
 
         if not self.initialized:
             self.initialize(X, y)
