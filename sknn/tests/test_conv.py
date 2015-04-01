@@ -4,7 +4,7 @@ import numpy as np
 
 from nose.tools import (assert_is_not_none, assert_raises, assert_equal)
 
-from sknn.mlp import NeuralNetwork
+from sknn.mlp import MultiLayerPerceptronRegressor as MLPR
 
 
 class TestConvolution(unittest.TestCase):
@@ -16,21 +16,21 @@ class TestConvolution(unittest.TestCase):
         assert_equal(type(a_out), type(a_in))
 
     def test_SquareKernel(self):
-        self._run(NeuralNetwork(
+        self._run(MLPR(
             layers=[
                 ("Convolution", 4, (2,2)),
                 ("Linear",),
             ]))
 
     def test_VerticalKernel(self):
-        self._run(NeuralNetwork(
+        self._run(MLPR(
             layers=[
                 ("Convolution", 4, (16,1)),
                 ("Linear",),
             ]))
 
     def test_HorizontalKernel(self):
-        self._run(NeuralNetwork(
+        self._run(MLPR(
             layers=[
                 ("Convolution", 4, (1,16)),
                 ("Linear",),

@@ -1,5 +1,8 @@
 from __future__ import (absolute_import, unicode_literals)
 
+__all__ = ['MultiLayerPerceptronRegressor']
+
+
 import logging
 log = logging.getLogger('sknn')
 
@@ -16,7 +19,7 @@ from pylearn2.training_algorithms.learning_rule import RMSProp, Momentum
 from pylearn2.space import Conv2DSpace
 
 
-class NeuralNetwork(sklearn.base.BaseEstimator):
+class BaseMLP(sklearn.base.BaseEstimator):
     """
     A wrapper for PyLearn2 compatible with scikit-learn.
 
@@ -238,6 +241,26 @@ class NeuralNetwork(sklearn.base.BaseEstimator):
     def is_convolution(self):
         return "Conv" in self.layers[0][0]
 
+    def __getstate__(self):
+        assert self.mlp is not None,\
+            "The neural network has not been initialized."
+
+        d = self.__dict__.copy()
+        for k in ['ds', 'f', 'trainer']:
+            if k in d:
+                del d[k]
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__.update(d)
+
+        for k in ['ds', 'f', 'trainer']:
+            setattr(self, k, None)
+
+
+
+class MultiLayerPerceptronRegressor(BaseMLP, sklearn.base.RegressorMixin):
+
     def fit(self, X, y):
         """Fit the neural network to the given data.
 
@@ -300,18 +323,8 @@ class NeuralNetwork(sklearn.base.BaseEstimator):
 
         return self.f(X)
 
-    def __getstate__(self):
-        assert self.mlp is not None,\
-            "The neural network has not been initialized."
 
-        d = self.__dict__.copy()
-        for k in ['ds', 'f', 'trainer']:
-            if k in d:
-                del d[k]
-        return d
 
-    def __setstate__(self, d):
-        self.__dict__.update(d)
+class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
 
-        for k in ['ds', 'f', 'trainer']:
-            setattr(self, k, None)
+    pass

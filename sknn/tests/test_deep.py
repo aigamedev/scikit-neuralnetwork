@@ -6,14 +6,15 @@ import numpy as np
 
 from nose.tools import (assert_is_not_none, assert_raises, assert_equal)
 
-from sknn.mlp import NeuralNetwork
+from sknn.mlp import MultiLayerPerceptronRegressor as MLPR
+
 from . import test_linear
 
 
 class TestDeepNetwork(test_linear.TestLinearNetwork):
 
     def setUp(self):
-        self.nn = NeuralNetwork(
+        self.nn = MLPR(
             layers=[
                 ("RectifiedLinear", 16),
                 ("Sigmoid", 12),

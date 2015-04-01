@@ -1,7 +1,10 @@
 Welcome to scikit-neuralnetwork's documentation!
 ================================================
 
-.. autoclass:: sknn.NeuralNetwork
+.. autoclass:: sknn.mlp.MultiLayerPerceptronRegressor
+    :members:
+
+.. autoclass:: sknn.mlp.MultiLayerPerceptronClassifier
     :members:
 
 .. toctree::

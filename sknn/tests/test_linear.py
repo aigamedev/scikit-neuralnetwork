@@ -6,13 +6,13 @@ import pickle
 import numpy as np
 
 
-from sknn.mlp import NeuralNetwork
+from sknn.mlp import MultiLayerPerceptronRegressor as MLPR
 
 
 class TestLinearNetwork(unittest.TestCase):
 
     def setUp(self):
-        self.nn = NeuralNetwork(layers=[("Linear",)])
+        self.nn = MLPR(layers=[("Linear",)])
 
     def test_LifeCycle(self):
         del self.nn
@@ -43,7 +43,7 @@ class TestLinearNetwork(unittest.TestCase):
 class TestInputOutputs(unittest.TestCase):
 
     def setUp(self):
-        self.nn = NeuralNetwork(layers=[("Linear",)])
+        self.nn = MLPR(layers=[("Linear",)])
 
     def test_FitOneDimensional(self):
         a_in, a_out = np.zeros((8,16)), np.zeros((8,))
@@ -53,7 +53,7 @@ class TestInputOutputs(unittest.TestCase):
 class TestSerialization(unittest.TestCase):
 
     def setUp(self):
-        self.nn = NeuralNetwork(layers=[("Linear",)])
+        self.nn = MLPR(layers=[("Linear",)])
 
     def test_SerializeFail(self):
         buf = io.BytesIO()
@@ -76,7 +76,7 @@ class TestSerialization(unittest.TestCase):
 class TestSerializedNetwork(TestLinearNetwork):
 
     def setUp(self):
-        self.original = NeuralNetwork(layers=[("Linear",)])
+        self.original = MLPR(layers=[("Linear",)])
         a_in, a_out = np.zeros((8,16)), np.zeros((8,4))
         self.original.initialize(a_in, a_out)
 

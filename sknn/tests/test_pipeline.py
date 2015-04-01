@@ -8,7 +8,7 @@ import numpy as np
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler
 
-from sknn.mlp import NeuralNetwork
+from sknn.mlp import MultiLayerPerceptronRegressor as MLPR
 
 
 class TestPipeline(unittest.TestCase):
@@ -20,14 +20,14 @@ class TestPipeline(unittest.TestCase):
 
     def test_NeuralNetworkOnly(self):
         pipeline = Pipeline([
-            ('neural network', NeuralNetwork(layers=[("Linear",)]))
+            ('neural network', MLPR(layers=[("Linear",)]))
         ])
         self._run(pipeline)
 
     def test_ScalerThenNeuralNetwork(self):
         pipeline = Pipeline([
             ('min/max scaler', MinMaxScaler()),
-            ('neural network', NeuralNetwork(layers=[("Linear",)]))
+            ('neural network', MLPR(layers=[("Linear",)]))
         ])
         self._run(pipeline)
 
