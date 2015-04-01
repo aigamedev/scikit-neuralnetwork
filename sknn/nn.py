@@ -55,6 +55,7 @@ class NeuralNetwork(BaseEstimator):
             dropout=False):
 
         self.layers = layers
+        self.units_per_layer = None
         self.seed = random_state
 
         self.mlp = None
@@ -240,8 +241,12 @@ class NeuralNetwork(BaseEstimator):
         y : array of shape = [n_samples, n_outputs]
             The predicted values as real numbers.
         """
-        assert self.initialized,\
-            "The neural network has not been trained."
+
+        if not self.initialized:
+            assert self.units_per_layer is not None,\
+                "The neural network has not been trained."
+            y = np.zeros((X.shape[0], self.units_per_layer[-1]))
+            self.initialize(X, y)
 
         return self.f(X)
 

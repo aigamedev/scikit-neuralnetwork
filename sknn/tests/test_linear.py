@@ -1,11 +1,9 @@
 import unittest
+from nose.tools import (assert_is_not_none, assert_false, assert_raises, assert_equal)
 
 import io
 import pickle
 import numpy as np
-
-from nose.tools import (assert_is_not_none)
-from sklearn.utils.testing import (assert_raises, assert_equal)
 
 
 from sknn import NeuralNetwork
@@ -76,3 +74,12 @@ class TestSerializedNetwork(TestLinearNetwork):
         pickle.dump(self.original, buf)
         buf.seek(0)
         self.nn = pickle.load(buf)
+
+    def test_PredictUninitialized(self):
+        # Override base class test, this is not initialized but it
+        # should be able to predict without throwing assert.
+        assert_false(self.nn.initialized)
+
+    def test_PredictAlreadyInitialized(self):
+        a_in = np.zeros((8,16))
+        self.nn.predict(a_in)
