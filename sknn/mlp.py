@@ -9,7 +9,12 @@ log = logging.getLogger('sknn')
 # By default, we force Theano to use a GPU and fallback to CPU, using 32-bits.
 # This must be done in the code before Theano is imported for the first time.
 os.environ['THEANO_FLAGS'] = "device=gpu,floatX=float32"
+
+cuda = logging.getLogger('theano.sandbox.cuda')
+cuda.setLevel(logging.CRITICAL)
 import theano
+cuda.setLevel(logging.WARNING)
+
 
 import numpy
 import sklearn.base
@@ -41,7 +46,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
     learning_rule : str
         Name of the learning rule used during stochastic gradient descent,
-        one of ('default', 'momentum', 'rmsprop') at the moment.    
+        one of ('sgd', 'momentum', 'rmsprop') at the moment.    
 
     learning_rate : float
         Real number indicating the default/starting rate of adjustment for
@@ -69,7 +74,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
             self,
             layers,
             random_state=None,
-            learning_rule='default',
+            learning_rule='sgd',
             learning_rate=0.01,
             learning_momentum=0.9,
             batch_size=1,
@@ -90,7 +95,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
         self.batch_size = batch_size
         self.n_iter = n_iter
 
-        if learning_rule == 'default':
+        if learning_rule == 'sgd':
             self.learning_rule = None
         elif learning_rule == 'momentum':
             self.learning_rule = Momentum(learning_momentum)
