@@ -2,13 +2,16 @@ from __future__ import (absolute_import, unicode_literals)
 
 __all__ = ['MultiLayerPerceptronRegressor', 'MultiLayerPerceptronClassifier']
 
-
+import os
 import logging
 log = logging.getLogger('sknn')
 
+# By default, we force Theano to use a GPU and fallback to CPU, using 32-bits.
+# This must be done in the code before Theano is imported for the first time.
+os.environ['THEANO_FLAGS'] = "device=gpu,floatX=float32"
+import theano
 
 import numpy
-import theano
 import sklearn.base
 import sklearn.preprocessing
 
@@ -321,6 +324,9 @@ class MultiLayerPerceptronRegressor(BaseMLP, sklearn.base.RegressorMixin):
                 "The neural network has not been trained."
             y = numpy.zeros((X.shape[0], self.unit_counts[-1]))
             self.initialize(X, y)
+
+        if X.dtype != numpy.float32:
+            X = X.astype(numpy.float32)
 
         if self.is_convolution:
             X = numpy.array([X]).transpose(1,2,3,0)

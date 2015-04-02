@@ -12,7 +12,6 @@ Upcoming Features
 
 * An example that covers hand-written digit recognition from the MNIST dataset.
 * Better error checking for the layer specifications, useful messages otherwise.
-* Support for automatically using the GPU, with manually specified CPU fallback.
 * Use pylearn2's monitoring code to stop training upon detecting convergence.
 
 
