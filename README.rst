@@ -10,9 +10,9 @@ Deep neural network implementation without the learning cliff!  This is a wrappe
 Upcoming Features
 -----------------
 
-* An example that covers hand-written digit recognition from the MNIST dataset.
 * Better error checking for the layer specifications, useful messages otherwise.
 * Use pylearn2's monitoring code to stop training upon detecting convergence.
+* Improve the classification code by using more specialized softmax activation.
 
 
 .. |Build Status| image:: https://travis-ci.org/aigamedev/scikit-neuralnetwork.svg?branch=master

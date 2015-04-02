@@ -117,7 +117,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
     def _create_hidden_layer(self, name, args, irange=0.1):
         activation_type = args[0]
-        if activation_type == "RectifiedLinear":
+        if activation_type == "Rectifier":
             return mlp.RectifiedLinear(
                 layer_name=name,
                 dim=args[1],

@@ -16,7 +16,7 @@ class TestDeepNetwork(test_linear.TestLinearNetwork):
     def setUp(self):
         self.nn = MLPR(
             layers=[
-                ("RectifiedLinear", 16),
+                ("Rectifier", 16),
                 ("Sigmoid", 12),
                 ("Maxout", 8, 2),
                 ("Tanh", 4),

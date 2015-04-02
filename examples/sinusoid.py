@@ -22,10 +22,8 @@ clf_2 = AdaBoostRegressor(DecisionTreeRegressor(max_depth=4),
                           n_estimators=300, random_state=rng)
 clf_3 = MultiLayerPerceptronRegressor(layers=[("Linear",)], n_iter=100)
 clf_4 = MultiLayerPerceptronRegressor(
-            layers=[("RectifiedLinear",250),("RectifiedLinear",200),
-                    ("RectifiedLinear",150),("RectifiedLinear",100),
-                    ("Linear",)],
-            learning_rate=0.1, dropout=False, n_iter=5000)
+            layers=[("Rectifier", 250), ("Linear",)],
+            learning_rate=0.01, learning_rule='default', dropout=False, n_iter=5000)
 
 # Training.
 clf_1.fit(X, y)
