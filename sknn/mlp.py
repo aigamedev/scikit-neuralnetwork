@@ -329,7 +329,12 @@ class MultiLayerPerceptronRegressor(BaseMLP, sklearn.base.RegressorMixin):
 
 
 
-class MultiLayerPerceptronClassifier(MultiLayerPerceptronRegressor, sklearn.base.ClassifierMixin):
+class MultiLayerPerceptronClassifier(sklearn.base.ClassifierMixin, MultiLayerPerceptronRegressor):
+
+    @classmethod
+    def _get_param_names(cls):
+        # TEMPORARY: Fix requires duplicating __init__ code?
+        return ['layers']
 
     def __init__(self, *args, **kwargs):
         super(MultiLayerPerceptronClassifier, self).__init__(*args, **kwargs)
@@ -340,7 +345,16 @@ class MultiLayerPerceptronClassifier(MultiLayerPerceptronRegressor, sklearn.base
         self.label_binarizer.fit(y)
         yp = self.label_binarizer.transform(y)
         # Now train based on a problem transformed into regression.
-        super(MultiLayerPerceptronClassifier, self).fit(X, y)
+        return super(MultiLayerPerceptronClassifier, self).fit(X, yp)
+
+    def partial_fit(self, X, y, classes=None):
+        if classes is not None:
+            self.label_binarizer.fit(classes)
+        if not isinstance(X, numpy.ndarray):
+            X = X.toarray()
+        if not isinstance(y, numpy.ndarray):
+            y = y.toarray()
+        return self.fit(X, y)
 
     def decision_function(self, X):
         """Decision function of the multi-layer perceptron, returning probability
@@ -372,6 +386,8 @@ class MultiLayerPerceptronClassifier(MultiLayerPerceptronRegressor, sklearn.base
         y : array-like, shape (n_samples,) or (n_samples, n_classes)
             The predicted classes, or the predicted values.
         """
+        if not isinstance(X, numpy.ndarray):
+            X = X.toarray()
         y_scores = self.decision_function(X)
         return self.label_binarizer.inverse_transform(y_scores)
 
