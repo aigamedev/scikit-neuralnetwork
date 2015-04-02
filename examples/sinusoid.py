@@ -23,12 +23,12 @@ clf_2 = AdaBoostRegressor(DecisionTreeRegressor(max_depth=4),
                           n_estimators=300, random_state=rng)
 clf_3 = MultiLayerPerceptronRegressor(layers=[("Linear",)], n_iter=100)
 clf_4 = MultiLayerPerceptronRegressor(
-            layers=[("Rectifier", 100),("Rectifier", 100),  ("Linear",)],
-            learning_rate=0.05, learning_rule='default', dropout=False, batch_size=10, n_iter=1000)
+            layers=[("Maxout", 20, 2),("Maxout", 20, 2),("Maxout", 20, 2),  ("Linear",)],
+            learning_rate=0.001, learning_rule="rmsprop", dropout=False, batch_size=10, n_iter=1000)
 
 
-clf_4 = make_pipeline(StandardScaler(), clf_4)
-#clf_4 = make_pipeline(MinMaxScaler(feature_range=(-1,1)), clf_4)
+#clf_4 = make_pipeline(StandardScaler(), clf_4)
+clf_4 = make_pipeline(MinMaxScaler(feature_range=(-1,1)), clf_4)
 
 
 # Training.
