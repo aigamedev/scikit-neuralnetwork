@@ -22,9 +22,9 @@ class Mock(MagicMock):
         return Mock()
 
 MOCK_MODULES = ['numpy', 'theano', 'sklearn.base', 'sklearn.preprocessing',
-                'pylearn2.datasets', 'pylearn2.training_algorithms',
-                'pylearn2.models', 'pylearn2.space', 'pylearn2.costs.mlp.dropout',
-                'pylearn2.training_algorithms.learning_rule']
+                'pylearn2.termination_criteria', 'pylearn2.datasets', 'pylearn2.models',
+                'pylearn2.training_algorithms', 'pylearn2.costs.mlp.dropout',
+                'pylearn2.space', 'pylearn2.training_algorithms.learning_rule']
 
 for fullname in MOCK_MODULES:
     segments = []
@@ -42,7 +42,8 @@ import sknn
 version = sknn.__version__
 release = sknn.__version__
 
-extensions = ['sphinx.ext.autodoc',
+extensions = ['sphinx.ext.autosummary',
+              'sphinx.ext.autodoc',
               'sphinx.ext.coverage',
               'numpydoc']
 templates_path = ['_templates']
