@@ -28,8 +28,6 @@ class TestLearningRules(unittest.TestCase):
                        dropout=True,
                        n_iter=1))
 
-    # TODO: Support for dropout on Linear networks.
-
     def test_unknown(self):
         assert_raises(NotImplementedError, MLPR,
                       layers=[], learning_rule='unknown')

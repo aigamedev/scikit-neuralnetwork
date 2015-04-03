@@ -29,8 +29,8 @@ class TestClassifier(unittest.TestCase):
 
     def test_PartialFit(self):
         a_in, a_out = numpy.zeros((8,4)), numpy.zeros((8,), dtype=numpy.int32)
-        self.nn.partial_fit(a_in, a_out)
-        self.nn.partial_fit(a_in*2.0, a_out+1)
+        self.nn.partial_fit(a_in, a_out, classes=[0,1,2,3])
+        self.nn.partial_fit(a_in*2.0, a_out+1, classes=[0,1,2,3])
 
     def test_PredictUninitialized(self):
         a_in = numpy.zeros((8,16))

@@ -88,6 +88,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
             batch_size=1,
             n_iter=None,
             n_stable=50,
+            f_stable=0.001,
             dropout=False,
             verbose=False):
 
@@ -106,6 +107,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
         self.batch_size = batch_size
         self.n_iter = n_iter
         self.n_stable = n_stable
+        self.f_stable = f_stable
 
         if learning_rule == 'sgd':
             self.learning_rule = None
@@ -131,11 +133,11 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 input_include_probs={first_hidden_name: 1.0},
                 input_scales={first_hidden_name: 1.})
 
-        logging.getLogger('pylearn2.monitor').setLevel(logging.WARNING)
+        logging.getLogger('pylearn2.monitor').setLevel(logging.DEBUG)
         termination_criterion = MonitorBased(
             channel_name='objective',
             N=self.n_stable,
-            prop_decrease=0.0)
+            prop_decrease=self.f_stable)
 
         return sgd.SGD(
             cost=self.cost,
@@ -306,6 +308,10 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
         if y.ndim == 1:
             y = y.reshape((y.shape[0], 1))
+        if not isinstance(X, numpy.ndarray):
+            X = X.toarray()
+        if not isinstance(y, numpy.ndarray):
+            y = y.toarray()
 
         if not self.is_initialized:
             self._initialize(X, y)
@@ -340,15 +346,12 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
     def _predict(self, X):
         if not self.is_initialized:
-            raise ValueError("LabelEncoder was not fitted yet.")
-            # assert self.unit_counts is not None,\
-            #     "The neural network has not been trained."
-            # y = numpy.zeros((X.shape[0], self.unit_counts[-1]))
-            # self.initialize(X, y)
+            raise ValueError("The neural network has not been trained.")
 
         if X.dtype != numpy.float32:
             X = X.astype(numpy.float32)
-
+        if not isinstance(X, numpy.ndarray):
+            X = X.toarray()
         if self.is_convolution:
             X = numpy.array([X]).transpose(1,2,3,0)
 
@@ -414,13 +417,6 @@ class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
     def partial_fit(self, X, y, classes=None):
         if classes is not None:
             self.label_binarizer.fit(classes)
-
-        # TODO: Move these further down so they are supported everywhere?
-        if not isinstance(X, numpy.ndarray):
-            X = X.toarray()
-        if not isinstance(y, numpy.ndarray):
-            y = y.toarray()
-
         return self.fit(X, y)
 
     def predict_proba(self, X):
@@ -455,8 +451,6 @@ class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
         y : array-like, shape (n_samples,) or (n_samples, n_classes)
             The predicted classes, or the predicted values.
         """
-        if not isinstance(X, numpy.ndarray):
-            X = X.toarray()
-
         y_ml = self.predict_proba(X).argmax(1)
         return self.label_binarizer.inverse_transform(y_ml)
+
