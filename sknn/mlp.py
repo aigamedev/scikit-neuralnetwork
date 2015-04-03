@@ -183,6 +183,12 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 layer_name=name,
                 irange=0.1)
 
+        if activation_type == "Softmax":
+            return mlp.Softmax(
+                layer_name=name,
+                n_classes=2,
+                irange=0.1)
+
         raise NotImplementedError(
             "Output layer type `%s` is not implemented." % activation_type)
 
@@ -366,6 +372,10 @@ class MultiLayerPerceptronClassifier(sklearn.base.ClassifierMixin, MultiLayerPer
         self.label_binarizer.fit(y)
         yp = self.label_binarizer.transform(y)
         # Now train based on a problem transformed into regression.
+        from sklearn.preprocessing import OneHotEncoder
+        self.onehot = OneHotEncoder(sparse = False)
+        yp = self.onehot.fit_transform(yp)
+
         return super(MultiLayerPerceptronClassifier, self).fit(X, yp)
 
     def partial_fit(self, X, y, classes=None):
@@ -409,8 +419,8 @@ class MultiLayerPerceptronClassifier(sklearn.base.ClassifierMixin, MultiLayerPer
         """
         if not isinstance(X, numpy.ndarray):
             X = X.toarray()
-        y_scores = self.decision_function(X)
-        return self.label_binarizer.inverse_transform(y_scores)
+        y_probs = self.predict_proba(X).argmax(1)
+        return self.label_binarizer.inverse_transform(y_probs)
 
     def predict_proba(self, X):
         """Calculate probability estimates based on these input features.
@@ -426,13 +436,6 @@ class MultiLayerPerceptronClassifier(sklearn.base.ClassifierMixin, MultiLayerPer
             The predicted probability of the sample for each class in the
             model, in the same order as the classes.
         """
-        raise NotImplementedError("Work in progress.")
-        
-        # TODO: Use pre-activation of the final layer?
-        y_scores = self.decision_function(X)
+        y_probs = super(MultiLayerPerceptronClassifier, self).predict(X)
+        return y_probs
 
-        if y_scores.ndim == 1:
-            y_scores = logistic(y_scores)
-            return numpy.vstack([1 - y_scores, y_scores]).T
-        else:
-            return softmax(y_scores)
