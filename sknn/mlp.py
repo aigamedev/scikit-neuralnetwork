@@ -85,7 +85,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
             learning_rate=0.01,
             learning_momentum=0.9,
             batch_size=1,
-            n_iter=None,
+            n_iter=100,
             n_stable=10,
             dropout=False,
             verbose=False):
@@ -414,23 +414,6 @@ class MultiLayerPerceptronClassifier(sklearn.base.ClassifierMixin, MultiLayerPer
             y = y.toarray()
         return self.fit(X, y)
 
-    def decision_function(self, X):
-        """Decision function of the multi-layer perceptron, returning probability
-        estimates for the input features.
-
-        Parameters
-        ----------
-        X : array-like, shape (n_samples, n_features)
-            The input features as a numpy array.
-
-        Returns
-        -------
-        y : array, shape (n_samples, n_classes)
-            The predicted output probabilities.
-        """
-        y_scores = super(MultiLayerPerceptronClassifier, self).predict(X)
-        return y_scores
-
     def predict(self, X):
         """Predict class by converting the problem to a regression problem.
 
@@ -463,6 +446,5 @@ class MultiLayerPerceptronClassifier(sklearn.base.ClassifierMixin, MultiLayerPer
             The predicted probability of the sample for each class in the
             model, in the same order as the classes.
         """
-        y_probs = super(MultiLayerPerceptronClassifier, self).predict(X)
-        return y_probs
+        return super(MultiLayerPerceptronClassifier, self).predict(X)
 
