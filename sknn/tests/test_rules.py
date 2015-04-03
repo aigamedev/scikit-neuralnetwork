@@ -11,7 +11,7 @@ class TestLearningRules(unittest.TestCase):
 
     def test_default(self):
         self._run(MLPR(layers=[("Linear",)],
-                       learning_rule='default'))
+                       learning_rule='sgd'))
 
     def test_momentum(self):
         self._run(MLPR(layers=[("Linear",)],
