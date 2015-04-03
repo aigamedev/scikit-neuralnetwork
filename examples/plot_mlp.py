@@ -54,8 +54,9 @@ names = []
 classifiers = []
 for (activation, alpha, dropout, iterations, output, rule, units) in itertools.product(*params):
     classifiers.append(MultiLayerPerceptronClassifier(
-        layers=[(activation, units, 2), (output,)], random_state=1, n_iter=iterations,
-        dropout=dropout, learning_rule=rule, learning_rate=alpha))
+        layers=[(activation, units, 2), (output,)], random_state=1,
+        n_iter=iterations, n_stable=iterations,
+        dropout=dropout, learning_rule=rule, learning_rate=alpha),)
 
     t = []
     for k, v in zip(sorted(PARAMETERS), [activation, alpha, dropout, iterations, output, rule, units]):

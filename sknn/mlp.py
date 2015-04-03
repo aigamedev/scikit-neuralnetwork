@@ -21,6 +21,7 @@ cuda.setLevel(logging.WARNING)
 
 import numpy
 import sklearn.base
+import sklearn.pipeline
 import sklearn.preprocessing
 
 from pylearn2.datasets import DenseDesignMatrix
@@ -92,6 +93,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
         self.layers = layers
         self.seed = random_state
+        self.verbose = verbose
 
         self.unit_counts = None
         self.mlp = None
@@ -115,7 +117,10 @@ class BaseMLP(sklearn.base.BaseEstimator):
             raise NotImplementedError(
                 "Learning rule type `%s` is not supported." % learning_rule)
 
-        self.verbose = verbose
+        self._setup()
+
+    def _setup(self):
+        pass
 
     def _create_trainer(self, dataset):
         sgd.log.setLevel(logging.WARNING)
@@ -391,24 +396,18 @@ class MultiLayerPerceptronRegressor(BaseMLP, sklearn.base.RegressorMixin):
 
 class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
 
-    @classmethod
-    def _get_param_names(cls):
-        # TEMPORARY: Fix requires duplicating __init__ code?
-        return ['layers']
-
-    def __init__(self, *args, **kwargs):
-        super(MultiLayerPerceptronClassifier, self).__init__(*args, **kwargs)
+    def _setup(self):
         self.label_binarizer = sklearn.preprocessing.LabelBinarizer()
+        self.label_pipeline = sklearn.pipeline.Pipeline([
+            ('binarizer', self.label_binarizer),
+            ('encoder', sklearn.preprocessing.OneHotEncoder(sparse=False))])
 
     def fit(self, X, y):
         # Scan training samples to find all different classes.
-        self.label_binarizer.fit(y)
-        yp = self.label_binarizer.transform(y)
-        # Now train based on a problem transformed into regression.
-        from sklearn.preprocessing import OneHotEncoder
-        self.onehot = OneHotEncoder(sparse = False)
-        yp = self.onehot.fit_transform(yp)
+        self.label_pipeline.fit(y)
+        yp = self.label_pipeline.transform(y)
 
+        # Now train based on a problem transformed into regression.
         return super(MultiLayerPerceptronClassifier, self)._fit(X, yp)
 
     def partial_fit(self, X, y, classes=None):
