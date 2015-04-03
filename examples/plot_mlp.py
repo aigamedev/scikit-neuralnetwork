@@ -27,6 +27,7 @@ PARAMETERS = {
     'alpha': [0.001, 0.005, 0.01, 0.05, 0.1, 0.2],
     'dropout': [False, True],
     'iterations': [100, 200, 500, 1000],
+    'output': ['Linear', 'Softmax'],
     'rules': ['sgd', 'momentum', 'rmsprop'],
     'units': [16, 64, 128, 256],
 }
@@ -51,13 +52,13 @@ for p in sorted(PARAMETERS):
 # Build the classifiers for all possible combinations of parameters.
 names = []
 classifiers = []
-for (activation, alpha, dropout, iterations, rule, units) in itertools.product(*params):
+for (activation, alpha, dropout, iterations, output, rule, units) in itertools.product(*params):
     classifiers.append(MultiLayerPerceptronClassifier(
-        layers=[(activation, units, 2), ("Softmax",)], random_state=1, n_iter=iterations,
+        layers=[(activation, units, 2), (output,)], random_state=1, n_iter=iterations,
         dropout=dropout, learning_rule=rule, learning_rate=alpha))
 
     t = []
-    for k, v in zip(sorted(PARAMETERS), [activation, alpha, dropout, iterations, rule, units]):
+    for k, v in zip(sorted(PARAMETERS), [activation, alpha, dropout, iterations, output, rule, units]):
         if k in args.params:
             t.append(str(v))
     names.append(','.join(t))

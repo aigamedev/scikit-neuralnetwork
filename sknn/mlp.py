@@ -130,7 +130,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
         termination_criterion = MonitorBased(
             channel_name='objective',
             N=self.n_stable,
-            prop_decrease=0.001)
+            prop_decrease=0.0)
 
         return sgd.SGD(
             cost=self.cost,
