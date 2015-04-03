@@ -68,6 +68,9 @@ class BaseMLP(sklearn.base.BaseEstimator):
     dropout : bool
         Whether to use drop-out training for the inputs (jittering) and the
         hidden layers, for each training example.
+
+    verbose : bool
+        If True, print the score at each epoch.
     """
 
     def __init__(
@@ -79,7 +82,8 @@ class BaseMLP(sklearn.base.BaseEstimator):
             learning_momentum=0.9,
             batch_size=1,
             n_iter=1,
-            dropout=False):
+            dropout=False,
+            verbose = False):
 
         self.layers = layers
         self.seed = random_state
@@ -104,6 +108,8 @@ class BaseMLP(sklearn.base.BaseEstimator):
         else:
             raise NotImplementedError(
                 "Learning rule type `%s` is not supported." % learning_rule)
+
+        self.verbose = verbose
 
     def _create_trainer(self):
         sgd.log.setLevel(logging.WARNING)
@@ -305,8 +311,12 @@ class MultiLayerPerceptronRegressor(BaseMLP, sklearn.base.RegressorMixin):
             X = self.ds.view_converter.topo_view_to_design_mat(X)
 
         self.ds.X, self.ds.y = X, y
-        for _ in range(self.n_iter):
+        for i in range(self.n_iter):
             self.trainer.train(dataset=self.ds)
+            if(self.verbose):
+                score = self.score(X,y)
+                log.debug("Epoch %i, R^2 %f "%(i,score))
+
 
         return self
 

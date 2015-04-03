@@ -12,6 +12,17 @@ from sknn.mlp import MultiLayerPerceptronRegressor
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
+import logging
+import sys
+
+log = logging.getLogger()
+log.setLevel(logging.DEBUG)
+
+stdout = logging.StreamHandler(sys.stdout)
+stdout.setLevel(logging.DEBUG)
+stdout.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+log.addHandler(stdout)
+
 # Preparation.
 rng = np.random.RandomState(1)
 X = np.linspace(0, 1, 100)[:, np.newaxis]
@@ -22,9 +33,14 @@ clf_1 = DecisionTreeRegressor(max_depth=4)
 clf_2 = AdaBoostRegressor(DecisionTreeRegressor(max_depth=4),
                           n_estimators=300, random_state=rng)
 clf_3 = MultiLayerPerceptronRegressor(layers=[("Linear",)], n_iter=100)
+# clf_4 = MultiLayerPerceptronRegressor(
+#             layers=[("Maxout", 20, 2),("Maxout", 20, 2),("Maxout", 20, 2),  ("Linear",)],
+#             learning_rate=0.001, learning_rule="rmsprop", dropout=False, batch_size=10, n_iter=1000)
+
+
 clf_4 = MultiLayerPerceptronRegressor(
             layers=[("Maxout", 20, 2),("Maxout", 20, 2),("Maxout", 20, 2),  ("Linear",)],
-            learning_rate=0.001, learning_rule="rmsprop", dropout=False, batch_size=10, n_iter=1000)
+            learning_rate=0.01, learning_rule="momentum", dropout=False, batch_size=10, n_iter=500, verbose=True)
 
 
 #clf_4 = make_pipeline(StandardScaler(), clf_4)
