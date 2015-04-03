@@ -295,28 +295,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
         for k in ['ds', 'f', 'trainer']:
             setattr(self, k, None)
 
-
-
-class MultiLayerPerceptronRegressor(BaseMLP, sklearn.base.RegressorMixin):
-
-    def fit(self, X, y):
-        """Fit the neural network to the given data.
-
-        Parameters
-        ----------
-        X : array-like, shape (n_samples, n_inputs)
-            Training vectors as real numbers, where n_samples is the number of
-            samples and n_inputs is the number of input features.
-
-        y : array-like, shape (n_samples, n_outputs)
-            Target values as real numbers, either as regression targets or
-            label probabilities for classification.
-
-        Returns
-        -------
-        self : object
-            Returns this instance.
-        """
+    def _fit(self, X, y):
         assert X.shape[0] == y.shape[0],\
             "Expecting same number of input and output samples."
 
@@ -354,20 +333,7 @@ class MultiLayerPerceptronRegressor(BaseMLP, sklearn.base.RegressorMixin):
 
         return self
 
-    def predict(self, X):
-        """Calculate predictions for specified inputs.
-
-        Parameters
-        ----------
-        X : array-like, shape (n_samples, n_inputs)
-            The input samples as real numbers.
-
-        Returns
-        -------
-        y : array, shape (n_samples, n_outputs)
-            The predicted values as real numbers.
-        """
-
+    def _predict(self, X):
         if not self.is_initialized:
             assert self.unit_counts is not None,\
                 "The neural network has not been trained."
@@ -384,7 +350,46 @@ class MultiLayerPerceptronRegressor(BaseMLP, sklearn.base.RegressorMixin):
 
 
 
-class MultiLayerPerceptronClassifier(sklearn.base.ClassifierMixin, MultiLayerPerceptronRegressor):
+class MultiLayerPerceptronRegressor(BaseMLP, sklearn.base.RegressorMixin):
+
+    def fit(self, X, y):
+        """Fit the neural network to the given data.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_inputs)
+            Training vectors as real numbers, where n_samples is the number of
+            samples and n_inputs is the number of input features.
+
+        y : array-like, shape (n_samples, n_outputs)
+            Target values as real numbers, either as regression targets or
+            label probabilities for classification.
+
+        Returns
+        -------
+        self : object
+            Returns this instance.
+        """
+        return super(MultiLayerPerceptronRegressor, self)._fit(X, y)
+
+    def predict(self, X):
+        """Calculate predictions for specified inputs.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_inputs)
+            The input samples as real numbers.
+
+        Returns
+        -------
+        y : array, shape (n_samples, n_outputs)
+            The predicted values as real numbers.
+        """
+        return super(MultiLayerPerceptronRegressor, self)._predict(X)
+
+
+
+class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
 
     @classmethod
     def _get_param_names(cls):
@@ -404,16 +409,35 @@ class MultiLayerPerceptronClassifier(sklearn.base.ClassifierMixin, MultiLayerPer
         self.onehot = OneHotEncoder(sparse = False)
         yp = self.onehot.fit_transform(yp)
 
-        return super(MultiLayerPerceptronClassifier, self).fit(X, yp)
+        return super(MultiLayerPerceptronClassifier, self)._fit(X, yp)
 
     def partial_fit(self, X, y, classes=None):
         if classes is not None:
             self.label_binarizer.fit(classes)
+
+        # TODO: Move these further down so they are supported everywhere?
         if not isinstance(X, numpy.ndarray):
             X = X.toarray()
         if not isinstance(y, numpy.ndarray):
             y = y.toarray()
+
         return self.fit(X, y)
+
+    def predict_proba(self, X):
+        """Calculate probability estimates based on these input features.
+
+        Parameters
+        ----------
+        X : array-like of shape [n_samples, n_features]
+            The input data as a numpy array.
+
+        Returns
+        -------
+        y_prob : array-like of shape [n_samples, n_classes]
+            The predicted probability of the sample for each class in the
+            model, in the same order as the classes.
+        """
+        return super(MultiLayerPerceptronClassifier, self)._predict(X)
 
     def predict(self, X):
         """Predict class by converting the problem to a regression problem.
@@ -430,22 +454,6 @@ class MultiLayerPerceptronClassifier(sklearn.base.ClassifierMixin, MultiLayerPer
         """
         if not isinstance(X, numpy.ndarray):
             X = X.toarray()
+
         y_probs = self.predict_proba(X).argmax(1)
         return self.label_binarizer.inverse_transform(y_probs)
-
-    def predict_proba(self, X):
-        """Calculate probability estimates based on these input features.
-
-        Parameters
-        ----------
-        X : array-like of shape [n_samples, n_features]
-            The input data as a numpy array.
-
-        Returns
-        -------
-        y_prob : array-like of shape [n_samples, n_classes]
-            The predicted probability of the sample for each class in the
-            model, in the same order as the classes.
-        """
-        return super(MultiLayerPerceptronClassifier, self).predict(X)
-

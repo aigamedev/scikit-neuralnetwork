@@ -3,7 +3,7 @@ scikit-neuralnetwork
 
 Deep neural network implementation without the learning cliff!  This library implements multi-layer perceptrons as a wrapper for the powerful ``pylearn2`` library that's compatible with ``scikit-learn`` for a more user-friendly and Pythonic interface. Oh, and it runs on your GPU by default.
 
-**NOTE**: This project is possible thanks to the `nucl.ai Conference <http://nucl.ai/>`_ on **July 20-22**. Join us in **Vienna**!
+**NOTE**: This project is made possible thanks to the `nucl.ai Conference <http://nucl.ai/>`_ on **July 20-22**. Join us in **Vienna**!
 
 |Build Status| |Documentation Status| |Code Coverage|
 
@@ -37,11 +37,8 @@ Upcoming Features
 
 * Full tests for sklearn ``Classifier`` and ``Regressor`` compatibility.
 * Quick start in the README.rst file showing how to get an estimator.
-* Fix documentation by moving common code to MLP base rather than inheritance chain.
-* Use pylearn2's monitoring code to stop training upon detecting convergence.
 * Allow using all layer types as hidden layers, not linear only for output.
 * Better error checking for the layer specifications, useful messages otherwise.
-* Improve the classification code by using more specialized softmax activation.
 * Support for RGB images (as 3-channel input arrays) in the convolution network.
 
 

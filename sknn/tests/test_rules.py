@@ -11,23 +11,23 @@ class TestLearningRules(unittest.TestCase):
 
     def test_default(self):
         self._run(MLPR(layers=[("Linear",)],
-                       learning_rule='sgd'),
-                       n_iter=1)
+                       learning_rule='sgd',
+                       n_iter=1))
 
     def test_momentum(self):
         self._run(MLPR(layers=[("Linear",)],
-                       learning_rule='momentum'),
-                       n_iter=1)
+                       learning_rule='momentum',
+                       n_iter=1))
 
     def test_rmsprop(self):
         self._run(MLPR(layers=[("Linear",)],
-                       learning_rule='rmsprop'),
-                       n_iter=1)
+                       learning_rule='rmsprop',
+                       n_iter=1))
 
     def test_dropout(self):
         self._run(MLPR(layers=[("Sigmoid", 8), ("Linear",)],
-                       dropout=True),
-                       n_iter=1)
+                       dropout=True,
+                       n_iter=1))
 
     # TODO: Support for dropout on Linear networks.
 

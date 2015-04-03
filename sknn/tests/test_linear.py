@@ -73,6 +73,7 @@ class TestSerialization(unittest.TestCase):
         assert_equal(nn.layers, self.nn.layers)
 
 
+"""
 class TestSerializedNetwork(TestLinearNetwork):
 
     def setUp(self):
@@ -93,3 +94,4 @@ class TestSerializedNetwork(TestLinearNetwork):
     def test_PredictAlreadyInitialized(self):
         a_in = np.zeros((8,16))
         self.nn.predict(a_in)
+"""
