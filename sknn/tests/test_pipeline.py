@@ -3,7 +3,7 @@ from nose.tools import (assert_equal, assert_true)
 
 import io
 import pickle
-import numpy as np
+import numpy
 
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler
@@ -14,7 +14,7 @@ from sknn.mlp import MultiLayerPerceptronRegressor as MLPR
 class TestPipeline(unittest.TestCase):
 
     def _run(self, pipeline):
-        a_in, a_out = np.zeros((8,16)), np.zeros((8,4))
+        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
         pipeline.fit(a_in, a_out)
         pipeline.predict(a_in)
 
@@ -36,7 +36,7 @@ class TestPipeline(unittest.TestCase):
 class TestSerializedPipeline(TestPipeline):
 
     def _run(self, pipeline):
-        a_in, a_out = np.zeros((8,16)), np.zeros((8,4))
+        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
         pipeline.fit(a_in, a_out)        
         a_test = pipeline.predict(a_in)
 

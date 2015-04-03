@@ -3,8 +3,7 @@ from nose.tools import (assert_is_not_none, assert_false, assert_raises, assert_
 
 import io
 import pickle
-import numpy as np
-
+import numpy
 
 from sknn.mlp import MultiLayerPerceptronRegressor as MLPR
 
@@ -18,25 +17,25 @@ class TestLinearNetwork(unittest.TestCase):
         del self.nn
 
     def test_InitializeManually(self):
-        a_in, a_out = np.zeros((8,16)), np.zeros((8,4))
+        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
         self.nn.initialize(a_in, a_out)
 
     def test_PredictUninitialized(self):
-        a_in = np.zeros((8,16))
+        a_in = numpy.zeros((8,16))
         assert_raises(AssertionError, self.nn.predict, a_in)
 
     def test_PredictAutoInitialize(self):
-        a_in = np.zeros((8,16))
+        a_in = numpy.zeros((8,16))
         self.nn.initialize(a_in, a_in)
         a_out = self.nn.predict(a_in)
         assert_equal(type(a_out), type(a_in))
 
     def test_FitAutoInitialize(self):
-        a_in, a_out = np.zeros((8,16)), np.zeros((8,4))
+        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
         self.nn.fit(a_in, a_out)
 
     def test_FitWrongSize(self):
-        a_in, a_out = np.zeros((7,16)), np.zeros((9,4))
+        a_in, a_out = numpy.zeros((7,16)), numpy.zeros((9,4))
         assert_raises(AssertionError, self.nn.fit, a_in, a_out)
 
 
@@ -46,7 +45,7 @@ class TestInputOutputs(unittest.TestCase):
         self.nn = MLPR(layers=[("Linear",)])
 
     def test_FitOneDimensional(self):
-        a_in, a_out = np.zeros((8,16)), np.zeros((8,))
+        a_in, a_out = numpy.zeros((8,16)), np.zeros((8,))
         self.nn.fit(a_in, a_out)
 
 

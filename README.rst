@@ -32,14 +32,14 @@ The datasets are randomized each time, but the output should be an image that lo
 .. image:: docs/plot_activation.png
 
 
-Upcoming Features
------------------
+Upcoming Features v0.1
+----------------------
 
 * Full tests for sklearn ``Classifier`` and ``Regressor`` compatibility.
 * Quick start in the README.rst file showing how to get an estimator.
 * Allow using all layer types as hidden layers, not linear only for output.
 * Better error checking for the layer specifications, useful messages otherwise.
-* Support for RGB images (as 3-channel input arrays) in the convolution network.
+* Installation using ``setup.py`` like all normal Python projects!
 
 
 .. |Build Status| image:: https://travis-ci.org/aigamedev/scikit-neuralnetwork.svg?branch=master
