@@ -1,5 +1,6 @@
 import unittest
-from nose.tools import (assert_is_not_none, assert_false, assert_raises, assert_equal)
+from nose.tools import (assert_is_not_none, assert_false, assert_raises,
+                        assert_equal, assert_true)
 
 import io
 import pickle
@@ -11,7 +12,7 @@ from sknn.mlp import MultiLayerPerceptronRegressor as MLPR
 class TestLinearNetwork(unittest.TestCase):
 
     def setUp(self):
-        self.nn = MLPR(layers=[("Linear",)])
+        self.nn = MLPR(layers=[("Linear",)], n_iter=1)
 
     def test_LifeCycle(self):
         del self.nn
@@ -23,6 +24,7 @@ class TestLinearNetwork(unittest.TestCase):
     def test_FitAutoInitialize(self):
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
         self.nn.fit(a_in, a_out)
+        assert_true(self.nn.is_initialized)
 
     def test_FitWrongSize(self):
         a_in, a_out = numpy.zeros((7,16)), numpy.zeros((9,4))
@@ -32,7 +34,7 @@ class TestLinearNetwork(unittest.TestCase):
 class TestInputOutputs(unittest.TestCase):
 
     def setUp(self):
-        self.nn = MLPR(layers=[("Linear",)])
+        self.nn = MLPR(layers=[("Linear",)], n_iter=1)
 
     def test_FitOneDimensional(self):
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,))
@@ -42,7 +44,7 @@ class TestInputOutputs(unittest.TestCase):
 class TestSerialization(unittest.TestCase):
 
     def setUp(self):
-        self.nn = MLPR(layers=[("Linear",)])
+        self.nn = MLPR(layers=[("Linear",)], n_iter=1)
 
     def test_SerializeFail(self):
         buf = io.BytesIO()

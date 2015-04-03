@@ -40,6 +40,7 @@ Upcoming Features v0.1
 * Allow using all layer types as hidden layers, not linear only for output.
 * Better error checking for the layer specifications, useful messages otherwise.
 * Installation using ``setup.py`` like all normal Python projects!
+* Tested support for ``scipy.sparse`` throughout the library.
 
 
 .. |Build Status| image:: https://travis-ci.org/aigamedev/scikit-neuralnetwork.svg?branch=master

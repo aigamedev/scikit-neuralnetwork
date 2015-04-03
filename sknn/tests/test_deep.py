@@ -30,3 +30,5 @@ class TestDeepNetwork(test_linear.TestLinearNetwork):
         nn = MLPR(layers=[("Unknown", 8), ("Linear",)])
         a_in = numpy.zeros((8,16))
         assert_raises(NotImplementedError, nn.fit, a_in, a_in)
+
+    # This class also runs all the tests from the linear network too.
