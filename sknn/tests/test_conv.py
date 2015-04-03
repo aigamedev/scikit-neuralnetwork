@@ -19,19 +19,19 @@ class TestConvolution(unittest.TestCase):
         self._run(MLPR(
             layers=[
                 ("Convolution", 4, (2,2)),
-                ("Linear",),
-            ]))
+                ("Linear",)],
+            n_iter=1))
 
     def test_VerticalKernel(self):
         self._run(MLPR(
             layers=[
                 ("Convolution", 4, (16,1)),
-                ("Linear",),
-            ]))
+                ("Linear",)],
+            n_iter=1))
 
     def test_HorizontalKernel(self):
         self._run(MLPR(
             layers=[
                 ("Convolution", 4, (1,16)),
-                ("Linear",),
-            ]))
+                ("Linear",)],
+            n_iter=1))

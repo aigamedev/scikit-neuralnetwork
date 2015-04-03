@@ -20,8 +20,8 @@ class TestDeepNetwork(test_linear.TestLinearNetwork):
                 ("Sigmoid", 12),
                 ("Maxout", 8, 2),
                 ("Tanh", 4),
-                ("Linear",),
-            ])
+                ("Linear",)],
+            n_iter=1)
 
     def test_UnknownOuputActivation(self):
         nn = MLPR(layers=[("Unknown", 8)])

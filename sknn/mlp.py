@@ -85,8 +85,8 @@ class BaseMLP(sklearn.base.BaseEstimator):
             learning_rate=0.01,
             learning_momentum=0.9,
             batch_size=1,
-            n_iter=100,
-            n_stable=10,
+            n_iter=None,
+            n_stable=50,
             dropout=False,
             verbose=False):
 
@@ -341,6 +341,7 @@ class MultiLayerPerceptronRegressor(BaseMLP, sklearn.base.RegressorMixin):
             self.mlp.monitor()
             
             if not self.trainer.continue_learning(self.mlp):
+                log.info("Termination condition fired after %i iterations.", i)
                 break
             if self.n_iter is not None and i >= self.n_iter:
                 log.info("Terminating after specified %i iterations.", i)

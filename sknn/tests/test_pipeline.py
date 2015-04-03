@@ -20,14 +20,14 @@ class TestPipeline(unittest.TestCase):
 
     def test_NeuralNetworkOnly(self):
         pipeline = Pipeline([
-            ('neural network', MLPR(layers=[("Linear",)]))
+            ('neural network', MLPR(layers=[("Linear",)], n_iter=1))
         ])
         self._run(pipeline)
 
     def test_ScalerThenNeuralNetwork(self):
         pipeline = Pipeline([
             ('min/max scaler', MinMaxScaler()),
-            ('neural network', MLPR(layers=[("Linear",)]))
+            ('neural network', MLPR(layers=[("Linear",)], n_iter=1))
         ])
         self._run(pipeline)
 
