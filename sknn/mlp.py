@@ -25,7 +25,7 @@ import sklearn.pipeline
 import sklearn.preprocessing
 
 from pylearn2.datasets import DenseDesignMatrix
-from pylearn2.training_algorithms import sgd, bgd
+from pylearn2.training_algorithms import sgd
 from pylearn2.models import mlp, maxout
 from pylearn2.costs.mlp.dropout import Dropout
 from pylearn2.training_algorithms.learning_rule import RMSProp, Momentum
@@ -436,7 +436,10 @@ class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
             The predicted probability of the sample for each class in the
             model, in the same order as the classes.
         """
-        return super(MultiLayerPerceptronClassifier, self)._predict(X)
+
+        # Normalize so every row sums to one.
+        proba = super(MultiLayerPerceptronClassifier, self)._predict(X)
+        return proba / proba.sum(1, keepdims=True)
 
     def predict(self, X):
         """Predict class by converting the problem to a regression problem.
@@ -454,5 +457,5 @@ class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
         if not isinstance(X, numpy.ndarray):
             X = X.toarray()
 
-        y_probs = self.predict_proba(X).argmax(1)
-        return self.label_binarizer.inverse_transform(y_probs)
+        y_ml = self.predict_proba(X).argmax(1)
+        return self.label_binarizer.inverse_transform(y_ml)
