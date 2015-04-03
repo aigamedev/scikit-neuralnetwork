@@ -4,7 +4,10 @@ __all__ = ['MultiLayerPerceptronRegressor', 'MultiLayerPerceptronClassifier']
 
 import os
 import logging
+import itertools
+
 log = logging.getLogger('sknn')
+
 
 # By default, we force Theano to use a GPU and fallback to CPU, using 32-bits.
 # This must be done in the code before Theano is imported for the first time.
@@ -26,6 +29,7 @@ from pylearn2.models import mlp, maxout
 from pylearn2.costs.mlp.dropout import Dropout
 from pylearn2.training_algorithms.learning_rule import RMSProp, Momentum
 from pylearn2.space import Conv2DSpace
+from pylearn2.termination_criteria import MonitorBased
 
 
 
@@ -81,9 +85,10 @@ class BaseMLP(sklearn.base.BaseEstimator):
             learning_rate=0.01,
             learning_momentum=0.9,
             batch_size=1,
-            n_iter=1,
+            n_iter=None,
+            n_stable=10,
             dropout=False,
-            verbose = False):
+            verbose=False):
 
         self.layers = layers
         self.seed = random_state
@@ -98,6 +103,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
         self.learning_rate = learning_rate
         self.batch_size = batch_size
         self.n_iter = n_iter
+        self.n_stable = n_stable
 
         if learning_rule == 'sgd':
             self.learning_rule = None
@@ -111,7 +117,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
         self.verbose = verbose
 
-    def _create_trainer(self):
+    def _create_trainer(self, dataset):
         sgd.log.setLevel(logging.WARNING)
 
         if self.cost == "Dropout":
@@ -120,11 +126,19 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 input_include_probs={first_hidden_name: 1.0},
                 input_scales={first_hidden_name: 1.})
 
+        logging.getLogger('pylearn2.monitor').setLevel(logging.WARNING)
+        termination_criterion = MonitorBased(
+            channel_name='objective',
+            N=self.n_stable,
+            prop_decrease=0.001)
+
         return sgd.SGD(
-            learning_rate=self.learning_rate,
             cost=self.cost,
             batch_size=1,
-            learning_rule=self.learning_rule)
+            learning_rule=self.learning_rule,
+            learning_rate=self.learning_rate,
+            termination_criterion=termination_criterion,
+            monitoring_dataset=dataset)
 
     def _create_hidden_layer(self, name, args, irange=0.1):
         activation_type = args[0]
@@ -242,7 +256,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
         if self.mlp is None:
             self.mlp = self._create_mlp(X, y, input_space=input_space, nvis=nvis)
 
-        self.trainer = self._create_trainer()
+        self.trainer = self._create_trainer(self.ds)
         self.trainer.setup(self.mlp, self.ds)
         inputs = self.mlp.get_input_space().make_theano_batch()
         self.f = theano.function([inputs], self.mlp.fprop(inputs))
@@ -311,9 +325,22 @@ class MultiLayerPerceptronRegressor(BaseMLP, sklearn.base.RegressorMixin):
             X = self.ds.view_converter.topo_view_to_design_mat(X)
 
         self.ds.X, self.ds.y = X, y
-        for i in range(self.n_iter):
+
+        self.mlp.monitor.channels = {str(k): v for k, v in self.mlp.monitor.channels.items()}
+
+        for i in itertools.count(0):
             self.trainer.train(dataset=self.ds)
-            if(self.verbose):
+
+            self.mlp.monitor.report_epoch()
+            self.mlp.monitor()
+            
+            if not self.trainer.continue_learning(self.mlp):
+                break
+            if self.n_iter is not None and i >= self.n_iter:
+                log.info("Terminating after specified %i iterations.", i)
+                break
+
+            if self.verbose:
                 score = self.score(X,y)
                 log.debug("Epoch %i, R^2 %f "%(i,score))
 

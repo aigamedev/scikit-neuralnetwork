@@ -35,10 +35,14 @@ The datasets are randomized each time, but the output should be an image that lo
 Upcoming Features
 -----------------
 
+* Full tests for sklearn ``Classifier`` and ``Regressor`` compatibility.
+* Quick start in the README.rst file showing how to get an estimator.
+* Fix documentation by moving common code to MLP base rather than inheritance chain.
+* Use pylearn2's monitoring code to stop training upon detecting convergence.
 * Allow using all layer types as hidden layers, not linear only for output.
 * Better error checking for the layer specifications, useful messages otherwise.
-* Use pylearn2's monitoring code to stop training upon detecting convergence.
 * Improve the classification code by using more specialized softmax activation.
+* Support for RGB images (as 3-channel input arrays) in the convolution network.
 
 
 .. |Build Status| image:: https://travis-ci.org/aigamedev/scikit-neuralnetwork.svg?branch=master
