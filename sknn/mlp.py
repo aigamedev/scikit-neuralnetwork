@@ -205,7 +205,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
         if activation_type == "Softmax":
             return mlp.Softmax(
                 layer_name=name,
-                n_classes=2,
+                n_classes=args[1],
                 irange=0.1)
 
         raise NotImplementedError(
@@ -237,7 +237,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
             seed=self.seed,
             input_space=input_space)
 
-    def initialize(self, X, y):
+    def _initialize(self, X, y):
         assert not self.is_initialized,\
             "This neural network has already been initialized."
 
@@ -308,7 +308,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
             y = y.reshape((y.shape[0], 1))
 
         if not self.is_initialized:
-            self.initialize(X, y)
+            self._initialize(X, y)
 
         if self.is_convolution:
             X = numpy.array([X]).transpose(1,2,3,0)
@@ -340,10 +340,11 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
     def _predict(self, X):
         if not self.is_initialized:
-            assert self.unit_counts is not None,\
-                "The neural network has not been trained."
-            y = numpy.zeros((X.shape[0], self.unit_counts[-1]))
-            self.initialize(X, y)
+            raise ValueError("LabelEncoder was not fitted yet.")
+            # assert self.unit_counts is not None,\
+            #     "The neural network has not been trained."
+            # y = numpy.zeros((X.shape[0], self.unit_counts[-1]))
+            # self.initialize(X, y)
 
         if X.dtype != numpy.float32:
             X = X.astype(numpy.float32)

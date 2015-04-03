@@ -17,19 +17,9 @@ class TestLinearNetwork(unittest.TestCase):
     def test_LifeCycle(self):
         del self.nn
 
-    def test_InitializeManually(self):
-        a_in, a_out = np.zeros((8,16)), np.zeros((8,4))
-        self.nn.initialize(a_in, a_out)
-
     def test_PredictUninitialized(self):
         a_in = np.zeros((8,16))
-        assert_raises(AssertionError, self.nn.predict, a_in)
-
-    def test_PredictAutoInitialize(self):
-        a_in = np.zeros((8,16))
-        self.nn.initialize(a_in, a_in)
-        a_out = self.nn.predict(a_in)
-        assert_equal(type(a_out), type(a_in))
+        assert_raises(ValueError, self.nn.predict, a_in)
 
     def test_FitAutoInitialize(self):
         a_in, a_out = np.zeros((8,16)), np.zeros((8,4))
@@ -61,7 +51,7 @@ class TestSerialization(unittest.TestCase):
 
     def test_SerializeCorrect(self):
         a_in, a_out = np.zeros((8,16)), np.zeros((8,4))
-        self.nn.initialize(a_in, a_out)
+        self.nn.fit(a_in, a_out)
 
         buf = io.BytesIO()
         pickle.dump(self.nn, buf)
