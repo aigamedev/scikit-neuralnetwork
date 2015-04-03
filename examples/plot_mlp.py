@@ -53,7 +53,7 @@ names = []
 classifiers = []
 for (activation, alpha, dropout, iterations, rule, units) in itertools.product(*params):
     classifiers.append(MultiLayerPerceptronClassifier(
-        layers=[(activation, units, 2), ("Linear",)], random_state=1, n_iter=iterations,
+        layers=[(activation, units, 2), ("Softmax",)], random_state=1, n_iter=iterations,
         dropout=dropout, learning_rule=rule, learning_rate=alpha))
 
     t = []
@@ -90,7 +90,7 @@ for X, y in datasets:
                          np.arange(y_min, y_max, GRID_RESOLUTION))
 
     # Plot the dataset on its own first.
-    cm = plt.cm.PuGn
+    cm = plt.cm.get_cmap("PRGn")
     cm_bright = ListedColormap(['#FF00FF', '#00FF00'])
     ax = plt.subplot(len(datasets), len(classifiers) + 1, i)
     ax.scatter(X_train[:, 0], X_train[:, 1], c=y_train, cmap=cm_bright)
@@ -109,10 +109,8 @@ for X, y in datasets:
 
         # Plot the decision boundary. For that, we will assign a color to each
         # point in the mesh [x_min, m_max]x[y_min, y_max].
-        if hasattr(clf, "decision_function"):
-            Z = clf.decision_function(np.c_[xx.ravel(), yy.ravel()])
-        else:
-            Z = clf.predict_proba(np.c_[xx.ravel(), yy.ravel()])[:, 1]
+
+        Z = clf.predict_proba(np.c_[xx.ravel(), yy.ravel()])[:, 1]
 
         # Put the result into a color plot
         Z = Z.reshape(xx.shape)
