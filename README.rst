@@ -3,7 +3,7 @@ scikit-neuralnetwork
 
 Deep neural network implementation without the learning cliff!  This is a wrapper for the powerful ``pylearn2`` library that's compatible with ``scikit-learn`` for a more user-friendly and Pythonic interface.
 
-**NOTE: This work was made possible thanks to the `nucl.ai Conference <http://nucl.ai/>`_, on July 20-22. Join us in Vienna!**
+**NOTE: This project is possible thanks to the `nucl.ai Conference`_ on July 20-22. Join us in Vienna!**
 
 |Build Status| |Documentation Status| |Code Coverage|
 
@@ -49,3 +49,5 @@ Upcoming Features
 
 .. |Code Coverage| image:: https://coveralls.io/repos/aigamedev/scikit-neuralnetwork/badge.svg?branch=master
     :target: https://coveralls.io/r/aigamedev/scikit-neuralnetwork?branch=master
+
+.. _`nucl.ai Conference': http://nucl.ai/
