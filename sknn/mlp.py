@@ -24,7 +24,7 @@ import sklearn.base
 import sklearn.preprocessing
 
 from pylearn2.datasets import DenseDesignMatrix
-from pylearn2.training_algorithms import sgd, bgd
+from pylearn2.training_algorithms import sgd
 from pylearn2.models import mlp, maxout
 from pylearn2.costs.mlp.dropout import Dropout
 from pylearn2.training_algorithms.learning_rule import RMSProp, Momentum
@@ -399,14 +399,12 @@ class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
     def __init__(self, *args, **kwargs):
         super(MultiLayerPerceptronClassifier, self).__init__(*args, **kwargs)
         self.label_binarizer = sklearn.preprocessing.LabelBinarizer()
+        self.onehot = sklearn.preprocessing.OneHotEncoder(sparse=False)
 
     def fit(self, X, y):
         # Scan training samples to find all different classes.
         self.label_binarizer.fit(y)
         yp = self.label_binarizer.transform(y)
-        # Now train based on a problem transformed into regression.
-        from sklearn.preprocessing import OneHotEncoder
-        self.onehot = OneHotEncoder(sparse = False)
         yp = self.onehot.fit_transform(yp)
 
         return super(MultiLayerPerceptronClassifier, self)._fit(X, yp)
@@ -437,7 +435,10 @@ class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
             The predicted probability of the sample for each class in the
             model, in the same order as the classes.
         """
-        return super(MultiLayerPerceptronClassifier, self)._predict(X)
+        predictions = super(MultiLayerPerceptronClassifier, self)._predict(X)
+
+        # make sure every row sums to one
+        return predictions/predictions.sum(1, keepdims=True)
 
     def predict(self, X):
         """Predict class by converting the problem to a regression problem.
@@ -455,5 +456,5 @@ class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
         if not isinstance(X, numpy.ndarray):
             X = X.toarray()
 
-        y_probs = self.predict_proba(X).argmax(1)
-        return self.label_binarizer.inverse_transform(y_probs)
+        y_ml = self.predict_proba(X).argmax(1)
+        return self.label_binarizer.inverse_transform(y_ml)
