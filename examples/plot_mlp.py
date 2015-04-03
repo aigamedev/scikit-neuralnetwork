@@ -90,8 +90,8 @@ for X, y in datasets:
                          np.arange(y_min, y_max, GRID_RESOLUTION))
 
     # Plot the dataset on its own first.
-    cm = plt.cm.RdBu
-    cm_bright = ListedColormap(['#FF0000', '#0000FF'])
+    cm = plt.cm.PuGn
+    cm_bright = ListedColormap(['#FF00FF', '#00FF00'])
     ax = plt.subplot(len(datasets), len(classifiers) + 1, i)
     ax.scatter(X_train[:, 0], X_train[:, 1], c=y_train, cmap=cm_bright)
     ax.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=cm_bright, alpha=0.6)

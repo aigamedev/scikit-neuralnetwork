@@ -3,6 +3,8 @@ scikit-neuralnetwork
 
 Deep neural network implementation without the learning cliff!  This is a wrapper for the powerful ``pylearn2`` library that's compatible with ``scikit-learn`` for a more user-friendly and Pythonic interface.
 
+**NOTE: This work was made possible thanks to the `nucl.ai Conference <http://nucl.ai/>`_, on July 20-22. Join us in Vienna!**
+
 |Build Status| |Documentation Status| |Code Coverage|
 
 ----
@@ -16,6 +18,18 @@ You'll need to first install some dependencies manually.  Unfortunately, ``pylea
     > cd pylearn2; python setup.py develop
 
 Once that's done, you can grab this repository and set your ``PYTHONPATH`` to point to the correct folder.  A ``setup.py`` file is coming soon for the official version 0.1!
+
+
+Demonstration
+-------------
+
+To run a visualization that uses the `sknn.mlp.MultiLayerPerceptron` just run the following command::
+
+    > PYTHONPATH=. python examples/plot_mlp.py --params activation
+
+The datasets are randomized each time, but the output should be an image that looks like this...
+
+.. image:: docs/plot_activation.png
 
 
 Upcoming Features
