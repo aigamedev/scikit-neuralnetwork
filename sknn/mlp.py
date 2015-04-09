@@ -453,5 +453,4 @@ class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
         """
         y = self.predict_proba(X)
         y_ml = y.argmax(1)
-        print y.shape, y_ml.shape
         return self.label_binarizer.inverse_transform(y_ml)
