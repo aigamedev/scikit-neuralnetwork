@@ -302,7 +302,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
         for k in ['ds', 'f', 'trainer']:
             setattr(self, k, None)
 
-    def _fit(self, X, y):
+    def _fit(self, X, y, test=None):
         assert X.shape[0] == y.shape[0],\
             "Expecting same number of input and output samples."
 
@@ -338,9 +338,10 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 break
 
             if self.verbose:
-                score = self.score(X,y)
-                log.debug("Epoch %i, R^2 %f "%(i,score))
-
+                if test is None:
+                    test = y
+                score = self.score(X, test)
+                log.debug("Epoch %i, R^2 %f."%(i,score))
 
         return self
 
@@ -410,9 +411,8 @@ class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
         # Scan training samples to find all different classes.
         self.label_pipeline.fit(y)
         yp = self.label_pipeline.transform(y)
-
         # Now train based on a problem transformed into regression.
-        return super(MultiLayerPerceptronClassifier, self)._fit(X, yp)
+        return super(MultiLayerPerceptronClassifier, self)._fit(X, yp, test=y)
 
     def partial_fit(self, X, y, classes=None):
         if classes is not None:
@@ -451,6 +451,7 @@ class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
         y : array-like, shape (n_samples,) or (n_samples, n_classes)
             The predicted classes, or the predicted values.
         """
-        y_ml = self.predict_proba(X).argmax(1)
+        y = self.predict_proba(X)
+        y_ml = y.argmax(1)
+        print y.shape, y_ml.shape
         return self.label_binarizer.inverse_transform(y_ml)
-
