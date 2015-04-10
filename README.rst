@@ -54,7 +54,9 @@ All the networks have 300 hidden units of the default type, and were given the s
 Getting Started
 ---------------
 
-The library supports both regressors (to estimate continuous outputs) and classifiers (to predict classes).  This is ``sklearn`` compatible API::
+The library supports both regressors (to estimate continuous outputs) and classifiers (to predict classes).  This is ``sklearn`` compatible API:
+
+.. code:: python
 
     import sknn.mlp
 
