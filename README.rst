@@ -37,6 +37,8 @@ Benchmarks
 
 Here are the results of testing 10 epochs of training for two-thirds of the original MNIST data, on Ubuntu 14.04 and a GeForce GTX 650 (Memory: 1024Mb, Cores: 384).  You can run ``examples/bench_mnist.py`` to get the results.
 
+.. class:: center
+
 ==========  ============  ===============  ===================
    MNIST      sknn.mlp      nolearn.dbn      nolearn.lasagne
 ==========  ============  ===============  ===================
