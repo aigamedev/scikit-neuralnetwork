@@ -17,7 +17,7 @@ You'll need to first install some dependencies manually.  Unfortunately, ``pylea
     > git clone https://github.com/lisa-lab/pylearn2.git
     > cd pylearn2; python setup.py develop
 
-Once that's done, you can grab this repository and set your ``PYTHONPATH`` to point to the correct folder.  A ``setup.py`` file is coming soon for the official version 0.1!
+Once that's done, you can grab this repository and set your ``PYTHONPATH`` to point to the correct folder, or install from ``setup.py`` in the exact same way.
 
 
 Demonstration
@@ -55,9 +55,6 @@ Upcoming Features v0.1
 ----------------------
 
 * Quick start in the README.rst file showing how to get an estimator.
-* Allow using all layer types as hidden layers, not linear only for output.
-* Better error checking for the layer specifications, useful messages otherwise.
-* Installation using ``setup.py`` like all normal Python projects!
 
 
 .. |Build Status| image:: https://travis-ci.org/aigamedev/scikit-neuralnetwork.svg?branch=master
