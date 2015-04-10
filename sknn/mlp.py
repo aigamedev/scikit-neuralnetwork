@@ -141,7 +141,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
         return sgd.SGD(
             cost=self.cost,
-            batch_size=1,
+            batch_size=self.batch_size,
             learning_rule=self.learning_rule,
             learning_rate=self.learning_rate,
             termination_criterion=termination_criterion,
