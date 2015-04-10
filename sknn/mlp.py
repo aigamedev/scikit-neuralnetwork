@@ -133,7 +133,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 input_include_probs={first_hidden_name: 1.0},
                 input_scales={first_hidden_name: 1.})
 
-        logging.getLogger('pylearn2.monitor').setLevel(logging.DEBUG)
+        logging.getLogger('pylearn2.monitor').setLevel(logging.WARNING)
         termination_criterion = MonitorBased(
             channel_name='objective',
             N=self.n_stable,
