@@ -51,10 +51,24 @@ All the networks have 300 hidden units of the default type, and were given the s
 **WARNING**: These results are not surprising, as ``pylearn2`` is developed by one of the best and most famous Deep Learning labs in the world.  However, they are not definitive and those numbers are very sensitive to parameter changes.
 
 
-Upcoming Features v0.1
-----------------------
+Getting Started
+---------------
 
-* Quick start in the README.rst file showing how to get an estimator.
+The library supports both regressors (to estimate continuous outputs) and classifiers (to predict classes).  This is ``sklearn`` compatible API::
+
+    import sknn.mlp
+
+    nn = sknn.mlp.MultiLayerPerceptronClassifier(
+        layers=[("Rectifier", 100), ("Linear",)],
+        learning_rate=0.02,
+        n_iter=10)
+
+    nn.fit(X_train, y_train)
+    nn.predict(X_test)
+
+    nn.score(X_valid, y_valid)
+
+We currently recommend reading ``mlp.py`` for more information about the parameters.  There's also `generated documentation <http://scikit-neuralnetwork.readthedocs.org/>`_ for details on the construction paramaters.
 
 
 .. |Build Status| image:: https://travis-ci.org/aigamedev/scikit-neuralnetwork.svg?branch=master
