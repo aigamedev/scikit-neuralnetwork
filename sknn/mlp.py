@@ -413,12 +413,8 @@ class MultiLayerPerceptronRegressor(BaseMLP, sklearn.base.RegressorMixin):
 
 class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
 
-
-    #def __convert_to_output(self, ):
-
     def _setup(self):
         self.label_binarizer = sklearn.preprocessing.LabelBinarizer()
-
 
     def fit(self, X, y):
         # Scan training samples to find all different classes.
