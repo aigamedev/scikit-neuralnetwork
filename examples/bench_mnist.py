@@ -1,10 +1,11 @@
-from sklearn.cross_validation import train_test_split
-from sklearn.datasets import fetch_mldata
-
 import sys
 import time
 import logging
 import numpy as np
+
+if len(sys.argv) == 1:
+    print("ERROR: Please specify implementation to benchmark, 'sknn' 'dbn' or 'lasagne'.")
+    sys.exit(-1)
 
 np.set_printoptions(precision=4)
 np.set_printoptions(suppress=True)
@@ -17,13 +18,20 @@ stdout.setLevel(logging.DEBUG)
 stdout.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 log.addHandler(stdout)
 
+
+from sklearn.cross_validation import train_test_split
+from sklearn.datasets import fetch_mldata
+
 mnist = fetch_mldata('MNIST original')
-X_train, X_test, y_train, y_test = train_test_split(mnist.data / 255.0, mnist.target, test_size=0.33, random_state=1234)
+X_train, X_test, y_train, y_test = train_test_split(
+        (mnist.data / 255.0).astype(np.float32),
+        mnist.target.astype(np.int32),
+        test_size=0.33, random_state=1234)
 
 classifiers = []
 
 
-try:
+if 'dbn' in sys.argv:
     from nolearn.dbn import DBN
     clf = DBN(
         [X_train.shape[1], 300, 10],
@@ -32,11 +40,22 @@ try:
         epochs=10,
         verbose=1)
     classifiers.append(('nolearn.dbn', clf))
-except ImportError:
-    pass
 
+if 'sknn' in sys.argv:
+    from sknn.mlp import MultiLayerPerceptronClassifier
 
-try:
+    clf = MultiLayerPerceptronClassifier(
+        layers=[("Rectifier", 300), ("Softmax",)],
+        learning_rate=0.02,
+        learning_rule='momentum',
+        batch_size=25,
+        n_stable=10,
+        n_iter=10,
+        verbose=0,
+    )
+    classifiers.append(('sknn.mlp', clf))
+
+if 'lasagne' in sys.argv:
     from nolearn.lasagne import NeuralNet
     from lasagne.layers import InputLayer, DenseLayer
     from lasagne.nonlinearities import softmax
@@ -66,30 +85,10 @@ try:
         )
     classifiers.append(('nolearn.lasagne', clf))
 
-except ImportError:
-    pass
-
-
-try:
-    from sknn.mlp import MultiLayerPerceptronClassifier
-
-    clf = MultiLayerPerceptronClassifier(
-        layers=[("Rectifier", 300), ("Softmax",)],
-        learning_rate=0.02,
-        learning_rule='momentum',
-        batch_size=25,
-        n_stable=10,
-        n_iter=10,
-        verbose=0,
-    )
-    classifiers.append(('sknn.mlp', clf))
-except ImportError:
-    pass
-
 
 for name, clf in classifiers:
     start = time.time()
-    clf.fit(X_train.astype(np.float32), y_train.astype(np.int32))
+    clf.fit(X_train, y_train)
 
     from sklearn.metrics import classification_report
 
