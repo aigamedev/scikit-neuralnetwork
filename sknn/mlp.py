@@ -135,8 +135,8 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 input_include_probs={first_hidden_name: 1.0},
                 input_scales={first_hidden_name: 1.})
 
+        logging.getLogger('pylearn2.monitor').setLevel(logging.WARNING)
         if self.valid_set is not None:
-            logging.getLogger('pylearn2.monitor').setLevel(logging.WARNING)
             termination_criterion = MonitorBased(
                 channel_name='objective',
                 N=self.n_stable,
@@ -334,20 +334,17 @@ class BaseMLP(sklearn.base.BaseEstimator):
         self.ds.X, self.ds.y = X, y
 
         # Bug in PyLearn2 that has some unicode channels, can't sort.
-        if self.mlp.monitor is not None:
-            self.mlp.monitor.channels = {str(k): v for k, v in self.mlp.monitor.channels.items()}
+        self.mlp.monitor.channels = {str(k): v for k, v in self.mlp.monitor.channels.items()}
 
         for i in itertools.count(0):
             self.trainer.train(dataset=self.ds)
 
-            if self.mlp.monitor is not None:
-                self.mlp.monitor.report_epoch()
-                self.mlp.monitor()
+            self.mlp.monitor.report_epoch()
+            self.mlp.monitor()
 
-                if not self.trainer.continue_learning(self.mlp):
-                    log.info("Termination condition fired after %i iterations.", i)
-                    break
-
+            if not self.trainer.continue_learning(self.mlp):
+                log.info("Termination condition fired after %i iterations.", i)
+                break
             if self.n_iter is not None and i >= self.n_iter:
                 log.info("Terminating after specified %i iterations.", i)
                 break
