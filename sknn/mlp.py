@@ -416,16 +416,18 @@ class MultiLayerPerceptronRegressor(BaseMLP, sklearn.base.RegressorMixin):
 
 class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
 
+
+    #def __convert_to_output(self, ):
+
     def _setup(self):
         self.label_binarizer = sklearn.preprocessing.LabelBinarizer()
-        self.label_pipeline = sklearn.pipeline.Pipeline([
-            ('binarizer', self.label_binarizer),
-            ('encoder', sklearn.preprocessing.OneHotEncoder(sparse=False))])
+
 
     def fit(self, X, y):
         # Scan training samples to find all different classes.
-        self.label_pipeline.fit(y)
-        yp = self.label_pipeline.transform(y)
+        self.label_binarizer.fit(y)
+        yp = self.label_binarizer.transform(y)
+
         # Now train based on a problem transformed into regression.
         return super(MultiLayerPerceptronClassifier, self)._fit(X, yp, test=y)
 
@@ -467,5 +469,4 @@ class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
             The predicted classes, or the predicted values.
         """
         y = self.predict_proba(X)
-        y_ml = y.argmax(1)
-        return self.label_binarizer.inverse_transform(y_ml)
+        return self.label_binarizer.inverse_transform(y, threshold=0.5)
