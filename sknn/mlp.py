@@ -339,12 +339,14 @@ class BaseMLP(sklearn.base.BaseEstimator):
         for i in itertools.count(0):
             self.trainer.train(dataset=self.ds)
 
-            self.mlp.monitor.report_epoch()
-            self.mlp.monitor()
+            if self.mlp.monitor:
+                self.mlp.monitor.report_epoch()
+                self.mlp.monitor()
 
-            if not self.trainer.continue_learning(self.mlp):
-                log.info("Termination condition fired after %i iterations.", i)
-                break
+                if not self.trainer.continue_learning(self.mlp):
+                    log.info("Termination condition fired after %i iterations.", i)
+                    break
+
             if self.n_iter is not None and i >= self.n_iter:
                 log.info("Terminating after specified %i iterations.", i)
                 break
@@ -420,7 +422,6 @@ class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
         # Scan training samples to find all different classes.
         self.label_binarizer.fit(y)
         yp = self.label_binarizer.transform(y)
-
         # Now train based on a problem transformed into regression.
         return super(MultiLayerPerceptronClassifier, self)._fit(X, yp, test=y)
 
