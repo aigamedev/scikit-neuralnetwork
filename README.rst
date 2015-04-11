@@ -42,13 +42,13 @@ Here are the results of testing 10 epochs of training for two-thirds of the orig
 ==========  ============  ===============  ===================
    MNIST      sknn.mlp      nolearn.dbn      nolearn.lasagne
 ==========  ============  ===============  ===================
- Accuracy    **98.00%**       97.80%             97.75%
- Training     **36s**          274s                68s
+ Accuracy    **98.05%**       97.80%             97.78%
+ Training        36s           274s              **32s**
 ==========  ============  ===============  ===================
 
-All the networks have 300 hidden units of the default type, and were given the same data with monitoring disabled. (For ``sknn`` the monitoring was commented out manually as of 2015/04/10.)  The remaining third of the MNIST dataset was only used to test the score once training terminated.
+All the networks have a single hidden layer with 300 hidden units of the default type, and were given the same data with validation and monitoring disabled.  The remaining third of the MNIST dataset was only used to test the score once training terminated.
 
-**WARNING**: These results are not surprising, as ``pylearn2`` is developed by one of the best and most famous Deep Learning labs in the world.  However, they are not definitive and those numbers are very sensitive to parameter changes.
+**WARNING**: For the ``theano`` powered libraries, these numbers are somewhat sensitive to parameter changes so please do not consider them definitive!  It's likely tweaking parameters in both libraries would make training times very similar...
 
 
 Getting Started
