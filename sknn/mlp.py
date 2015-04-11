@@ -87,6 +87,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
             learning_momentum=0.9,
             batch_size=1,
             n_iter=None,
+            valid_set=None,
             n_stable=50,
             f_stable=0.001,
             dropout=False,
@@ -108,6 +109,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
         self.n_iter = n_iter
         self.n_stable = n_stable
         self.f_stable = f_stable
+        self.valid_set = valid_set
 
         if learning_rule == 'sgd':
             self.learning_rule = None
@@ -133,11 +135,14 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 input_include_probs={first_hidden_name: 1.0},
                 input_scales={first_hidden_name: 1.})
 
-        logging.getLogger('pylearn2.monitor').setLevel(logging.WARNING)
-        termination_criterion = MonitorBased(
-            channel_name='objective',
-            N=self.n_stable,
-            prop_decrease=self.f_stable)
+        if self.valid_set is not None:
+            logging.getLogger('pylearn2.monitor').setLevel(logging.WARNING)
+            termination_criterion = MonitorBased(
+                channel_name='objective',
+                N=self.n_stable,
+                prop_decrease=self.f_stable)
+        else:
+            termination_criterion = None
 
         return sgd.SGD(
             cost=self.cost,
@@ -266,10 +271,16 @@ class BaseMLP(sklearn.base.BaseEstimator):
             input_space = None
             self.ds = DenseDesignMatrix(X=X, y=y)
 
+        if self.valid_set:
+            X_v, y_v = self.valid_set
+            self.vs = DenseDesignMatrix(X=X_v, y=y_v)
+        else:
+            self.vs = None
+
         if self.mlp is None:
             self.mlp = self._create_mlp(X, y, input_space=input_space, nvis=nvis)
 
-        self.trainer = self._create_trainer(self.ds)
+        self.trainer = self._create_trainer(self.vs)
         self.trainer.setup(self.mlp, self.ds)
         inputs = self.mlp.get_input_space().make_theano_batch()
         self.f = theano.function([inputs], self.mlp.fprop(inputs))
@@ -322,17 +333,21 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
         self.ds.X, self.ds.y = X, y
 
-        self.mlp.monitor.channels = {str(k): v for k, v in self.mlp.monitor.channels.items()}
+        # Bug in PyLearn2 that has some unicode channels, can't sort.
+        if self.mlp.monitor is not None:
+            self.mlp.monitor.channels = {str(k): v for k, v in self.mlp.monitor.channels.items()}
 
         for i in itertools.count(0):
             self.trainer.train(dataset=self.ds)
 
-            self.mlp.monitor.report_epoch()
-            self.mlp.monitor()
+            if self.mlp.monitor is not None:
+                self.mlp.monitor.report_epoch()
+                self.mlp.monitor()
 
-            if not self.trainer.continue_learning(self.mlp):
-                log.info("Termination condition fired after %i iterations.", i)
-                break
+                if not self.trainer.continue_learning(self.mlp):
+                    log.info("Termination condition fired after %i iterations.", i)
+                    break
+
             if self.n_iter is not None and i >= self.n_iter:
                 log.info("Terminating after specified %i iterations.", i)
                 break
@@ -401,18 +416,16 @@ class MultiLayerPerceptronRegressor(BaseMLP, sklearn.base.RegressorMixin):
 
 class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
 
-
-    #def __convert_to_output(self, ):
-
     def _setup(self):
         self.label_binarizer = sklearn.preprocessing.LabelBinarizer()
-
+        self.label_pipeline = sklearn.pipeline.Pipeline([
+            ('binarizer', self.label_binarizer),
+            ('encoder', sklearn.preprocessing.OneHotEncoder(sparse=False))])
 
     def fit(self, X, y):
         # Scan training samples to find all different classes.
-        self.label_binarizer.fit(y)
-        yp = self.label_binarizer.transform(y)
-
+        self.label_pipeline.fit(y)
+        yp = self.label_pipeline.transform(y)
         # Now train based on a problem transformed into regression.
         return super(MultiLayerPerceptronClassifier, self)._fit(X, yp, test=y)
 
@@ -454,4 +467,5 @@ class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
             The predicted classes, or the predicted values.
         """
         y = self.predict_proba(X)
-        return self.label_binarizer.inverse_transform(y, threshold=0.5)
+        y_ml = y.argmax(1)
+        return self.label_binarizer.inverse_transform(y_ml)

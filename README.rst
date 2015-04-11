@@ -70,7 +70,7 @@ The library supports both regressors (to estimate continuous outputs) and classi
 
     nn.score(X_valid, y_valid)
 
-We currently recommend reading ``mlp.py`` for more information about the parameters.  There's also `generated documentation <http://scikit-neuralnetwork.readthedocs.org/>`_ for details on the construction paramaters.
+We currently recommend reading ``sknn/mlp.py`` for more information about the parameters.  There's also `generated documentation <http://scikit-neuralnetwork.readthedocs.org/>`_ as a standalone page.
 
 
 .. |Build Status| image:: https://travis-ci.org/aigamedev/scikit-neuralnetwork.svg?branch=master
