@@ -22,7 +22,7 @@ log.addHandler(stdout)
 from sklearn.cross_validation import train_test_split
 from sklearn.datasets import fetch_mldata
 
-mnist = fetch_mldata('MNIST original')
+mnist = fetch_mldata('mnist-original')
 X_train, X_test, y_train, y_test = train_test_split(
         (mnist.data / 255.0).astype(np.float32),
         mnist.target.astype(np.int32),
