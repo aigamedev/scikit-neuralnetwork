@@ -3,6 +3,7 @@ from __future__ import (absolute_import, unicode_literals)
 __all__ = ['MultiLayerPerceptronRegressor', 'MultiLayerPerceptronClassifier']
 
 import os
+import time
 import logging
 import itertools
 
@@ -32,6 +33,13 @@ from pylearn2.training_algorithms.learning_rule import RMSProp, Momentum
 from pylearn2.space import Conv2DSpace
 from pylearn2.termination_criteria import MonitorBased
 
+
+class ansi:
+    BOLD = '\033[1;97m'
+    WHITE = '\033[0;97m'
+    BLUE = '\033[0;94m'
+    GREEN = '\033[0;32m'
+    ENDC = '\033[0m'
 
 
 class BaseMLP(sklearn.base.BaseEstimator):
@@ -249,16 +257,17 @@ class BaseMLP(sklearn.base.BaseEstimator):
             "This neural network has already been initialized."
 
         log.info(
-            "Initializing neural network with %i layers.",
-            len(self.layers))
+            "Initializing neural network with %i layers, %i inputs and %i outputs.",
+            len(self.layers), X.shape[1], y.shape[1])
 
         # Calculate and store all layer sizes.
+        self.layers[-1] = (self.layers[-1][0], y.shape[1])
         self.unit_counts = [X.shape[1]]
-        for layer in self.layers[:-1]:
+        for layer in self.layers:
             self.unit_counts += [layer[1]]
-        self.unit_counts += [y.shape[1]]
-
-        log.debug("Units per layer %r.", self.unit_counts)
+            log.debug("  - Type: {}{: <10}{}  Units: {}{: <4}{}".format(
+                ansi.BOLD, layer[0], ansi.ENDC, ansi.BOLD, layer[1], ansi.ENDC))
+        log.debug("")
 
         # Convolution networks need a custom input space.
         if self.is_convolution:
@@ -335,25 +344,56 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
         # Bug in PyLearn2 that has some unicode channels, can't sort.
         self.mlp.monitor.channels = {str(k): v for k, v in self.mlp.monitor.channels.items()}
+        log.info("Training on dataset of {:,} samples with {:,} total size.".format(X.shape[0], X.size+y.size))
+        if self.n_iter:
+            log.debug("  - Terminating loop after {} total iterations.".format(self.n_iter))
+        if self.n_stable:
+            log.debug("  - Early termination after {} stable iterations.".format(self.n_stable))
+
+        log.debug("""
+ EPOCH           TRAINING SET              VALIDATION SET
+              error     accuracy         error     accuracy        Time
+------------------------------------------------------------------------""")
 
         for i in itertools.count(0):
+            start = time.time()
             self.trainer.train(dataset=self.ds)
 
             self.mlp.monitor.report_epoch()
             self.mlp.monitor()
 
             if not self.trainer.continue_learning(self.mlp):
-                log.info("Termination condition fired after %i iterations.", i)
+                log.debug("")
+                log.info("Early termination condition fired at %i iterations.", i)
                 break
             if self.n_iter is not None and i >= self.n_iter:
-                log.info("Terminating after specified %i iterations.", i)
+                log.debug("")
+                log.info("Terminating after specified %i total iterations.", i)
                 break
 
             if self.verbose:
-                if test is None:
-                    test = y
-                score = self.score(X, test)
-                log.debug("Epoch %i, score = %f."%(i,score))
+                # if test is None: test = y
+                # score = self.score(X, test)
+
+                avg_train_loss, best_train_loss = 0.0, 0.0
+                avg_valid_loss, best_valid_loss = -1.0, -1.0
+                avg_valid_acc, avg_train_acc = 0.5, 0.5
+
+                best_train = best_train_loss == avg_train_loss
+                best_valid = best_valid_loss == avg_valid_loss
+                log.debug(" {:>5}     {}{:>10.6f}{}    {:.2f}%       "
+                          "{}{}{}    {}         {:>3.1f}s".format(
+                          i,
+                          ansi.BLUE if best_train else "",
+                          avg_train_loss,
+                          ansi.ENDC if best_train else "",
+                          avg_train_acc * 100,
+                          ansi.GREEN if best_valid else "",
+                          "    N/A", # "{:10.6f}".format(avg_valid_loss),
+                          ansi.ENDC if best_valid else "",
+                          "    N/A  ", # "{:.2f}%".format(avg_valid_acc * 100),
+                          time.time() - start
+                          ))
 
         return self
 

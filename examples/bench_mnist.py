@@ -9,14 +9,7 @@ if len(sys.argv) == 1:
 
 np.set_printoptions(precision=4)
 np.set_printoptions(suppress=True)
-
-log = logging.getLogger()
-log.setLevel(logging.DEBUG)
-
-stdout = logging.StreamHandler(sys.stdout)
-stdout.setLevel(logging.DEBUG)
-stdout.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-log.addHandler(stdout)
+logging.basicConfig(format="%(message)s", level=logging.DEBUG, stream=sys.stdout)
 
 
 from sklearn.cross_validation import train_test_split
@@ -51,7 +44,7 @@ if 'sknn' in sys.argv:
         batch_size=25,
         n_stable=10,
         n_iter=10,
-        verbose=0,
+        verbose=1,
     )
     classifiers.append(('sknn.mlp', clf))
 
