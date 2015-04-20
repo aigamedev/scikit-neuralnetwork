@@ -42,6 +42,7 @@ if 'sknn' in sys.argv:
         learning_rate=0.02,
         learning_rule='momentum',
         batch_size=25,
+        valid_size=0.0,
         n_stable=10,
         n_iter=10,
         verbose=1,

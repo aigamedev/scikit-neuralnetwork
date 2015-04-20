@@ -274,8 +274,8 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 ansi.BOLD, layer[0], ansi.ENDC, ansi.BOLD, layer[1], ansi.ENDC))
         log.debug("")
 
-        if self.valid_size is not None:
-            assert self.valid_set is None, "Can't specify validation set and ."
+        if self.valid_size > 0.0:
+            assert self.valid_set is None, "Can't specify valid_size and valid_set together."
             X, X_v, y, y_v = sklearn.cross_validation.train_test_split(
                                 X, y,
                                 test_size=1.0 - self.valid_size,
@@ -384,14 +384,18 @@ Epoch    Validation Error    Time
                 break
 
             if self.verbose:
-                avg_valid_error = self.mlp.monitor.channels['objective'].val_shared.get_value()
-                self.best_valid_error = min(self.best_valid_error, avg_valid_error)
+                objective = self.mlp.monitor.channels.get('objective', None)
+                if objective:
+                    avg_valid_error = objective.val_shared.get_value()
+                    self.best_valid_error = min(self.best_valid_error, avg_valid_error)
+                else:
+                    avg_valid_error = None
 
                 best_valid = bool(self.best_valid_error == avg_valid_error)
-                log.debug("{:>5}      {}{:>10.6f}{}        {:>3.1f}s".format(
+                log.debug("{:>5}      {}{}{}        {:>3.1f}s".format(
                           i,
                           ansi.GREEN if best_valid else "",
-                          float(avg_valid_error),
+                          "{:>10.6f}".format(float(avg_valid_error)) if avg_valid_error else "     N/A  ",
                           ansi.ENDC if best_valid else "",
                           time.time() - start
                           ))
