@@ -445,6 +445,12 @@ class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
 
         # Normalize so every row sums to one.
         proba = super(MultiLayerPerceptronClassifier, self)._predict(X)
+        if(proba.shape[-1] == 1):
+            probaf = proba.flatten()
+            tmp_prob = numpy.zeros((proba.shape[0], 2))
+            tmp_prob[:, 0] =  1.0-probaf
+            tmp_prob[:, 1] =  probaf
+            proba = tmp_prob
         return proba / proba.sum(1, keepdims=True)
 
     def predict(self, X):
