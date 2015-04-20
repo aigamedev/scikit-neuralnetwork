@@ -112,6 +112,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
         self.ds = None
         self.trainer = None
         self.f = None
+        self.train_set = None
 
         self.cost = "Dropout" if dropout else None
         self.learning_rate = learning_rate
@@ -278,9 +279,10 @@ class BaseMLP(sklearn.base.BaseEstimator):
             assert self.valid_set is None, "Can't specify valid_size and valid_set together."
             X, X_v, y, y_v = sklearn.cross_validation.train_test_split(
                                 X, y,
-                                test_size=1.0 - self.valid_size,
+                                test_size=self.valid_size,
                                 random_state=self.seed)
             self.valid_set = X_v, y_v
+        self.train_set = X, y
 
         # Convolution networks need a custom input space.
         if self.is_convolution:
@@ -338,6 +340,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
     def _fit(self, X, y, test=None):
         assert X.shape[0] == y.shape[0],\
             "Expecting same number of input and output samples."
+        num_samples, data_size = X.shape[0], X.size+y.size
 
         if y.ndim == 1:
             y = y.reshape((y.shape[0], 1))
@@ -346,8 +349,11 @@ class BaseMLP(sklearn.base.BaseEstimator):
         if not isinstance(y, numpy.ndarray):
             y = y.toarray()
 
-        if not self.is_initialized:
-            self._initialize(X, y)
+        if not self.is_initialized:            
+            self._initialize(X, y)            
+            X, y = self.train_set
+        else:
+            self.train_set = X, y
 
         if self.is_convolution:
             X = numpy.array([X]).transpose(1,2,3,0)
@@ -357,7 +363,11 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
         # Bug in PyLearn2 that has some unicode channels, can't sort.
         self.mlp.monitor.channels = {str(k): v for k, v in self.mlp.monitor.channels.items()}
-        log.info("Training on dataset of {:,} samples with {:,} total size.".format(X.shape[0], X.size+y.size))
+
+        log.info("Training on dataset of {:,} samples with {:,} total size.".format(num_samples, data_size))
+        if self.valid_set:
+            X_v, _ = self.valid_set
+            log.debug("  - Test: {: <10,}  Valid: {: <4,}".format(X.shape[0], X_v.shape[0]))
         if self.n_iter:
             log.debug("  - Terminating loop after {} total iterations.".format(self.n_iter))
         if self.n_stable:
