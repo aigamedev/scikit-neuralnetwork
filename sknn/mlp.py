@@ -482,15 +482,13 @@ class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
             The predicted probability of the sample for each class in the
             model, in the same order as the classes.
         """
-
-        # Normalize so every row sums to one.
         proba = super(MultiLayerPerceptronClassifier, self)._predict(X)
-        if(proba.shape[-1] == 1):
-            probaf = proba.flatten()
-            tmp_prob = numpy.zeros((proba.shape[0], 2))
-            tmp_prob[:, 0] =  1.0-probaf
-            tmp_prob[:, 1] =  probaf
-            proba = tmp_prob
+        # For binary case, LabelBinarizer only has one output so convert to 2D.
+        if proba.shape[-1] == 1:
+            p = proba.flatten()
+            proba = numpy.zeros((proba.shape[0], 2))
+            proba[:,0], proba[:,1] = 1.0-p, p
+        # Normalize so every row sums to one.
         return proba / proba.sum(1, keepdims=True)
 
     def predict(self, X):
