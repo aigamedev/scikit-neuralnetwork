@@ -24,6 +24,7 @@ import numpy
 import sklearn.base
 import sklearn.pipeline
 import sklearn.preprocessing
+import sklearn.cross_validation
 
 from pylearn2.datasets import DenseDesignMatrix
 from pylearn2.training_algorithms import sgd
@@ -96,6 +97,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
             batch_size=1,
             n_iter=None,
             valid_set=None,
+            valid_size=0.2,
             n_stable=50,
             f_stable=0.001,
             dropout=False,
@@ -118,6 +120,9 @@ class BaseMLP(sklearn.base.BaseEstimator):
         self.n_stable = n_stable
         self.f_stable = f_stable
         self.valid_set = valid_set
+        self.valid_size = valid_size
+
+        self.best_valid_error = float("inf")
 
         if learning_rule == 'sgd':
             self.learning_rule = None
@@ -144,7 +149,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 input_scales={first_hidden_name: 1.})
 
         logging.getLogger('pylearn2.monitor').setLevel(logging.WARNING)
-        if self.valid_set is not None:
+        if dataset is not None:
             termination_criterion = MonitorBased(
                 channel_name='objective',
                 N=self.n_stable,
@@ -269,6 +274,14 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 ansi.BOLD, layer[0], ansi.ENDC, ansi.BOLD, layer[1], ansi.ENDC))
         log.debug("")
 
+        if self.valid_size is not None:
+            assert self.valid_set is None, "Can't specify validation set and ."
+            X, X_v, y, y_v = sklearn.cross_validation.train_test_split(
+                                X, y,
+                                test_size=1.0 - self.valid_size,
+                                random_state=self.seed)
+            self.valid_set = X_v, y_v
+
         # Convolution networks need a custom input space.
         if self.is_convolution:
             nvis = None
@@ -351,9 +364,8 @@ class BaseMLP(sklearn.base.BaseEstimator):
             log.debug("  - Early termination after {} stable iterations.".format(self.n_stable))
 
         log.debug("""
- EPOCH           TRAINING SET              VALIDATION SET
-              error     accuracy         error     accuracy        Time
-------------------------------------------------------------------------""")
+Epoch    Validation Error    Time
+---------------------------------""")
 
         for i in itertools.count(0):
             start = time.time()
@@ -372,26 +384,15 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 break
 
             if self.verbose:
-                # if test is None: test = y
-                # score = self.score(X, test)
+                avg_valid_error = self.mlp.monitor.channels['objective'].val_shared.get_value()
+                self.best_valid_error = min(self.best_valid_error, avg_valid_error)
 
-                avg_train_loss, best_train_loss = 0.0, 0.0
-                avg_valid_loss, best_valid_loss = -1.0, -1.0
-                avg_valid_acc, avg_train_acc = 0.5, 0.5
-
-                best_train = best_train_loss == avg_train_loss
-                best_valid = best_valid_loss == avg_valid_loss
-                log.debug(" {:>5}     {}{:>10.6f}{}    {:.2f}%       "
-                          "{}{}{}    {}         {:>3.1f}s".format(
+                best_valid = bool(self.best_valid_error == avg_valid_error)
+                log.debug("{:>5}      {}{:>10.6f}{}        {:>3.1f}s".format(
                           i,
-                          ansi.BLUE if best_train else "",
-                          avg_train_loss,
-                          ansi.ENDC if best_train else "",
-                          avg_train_acc * 100,
                           ansi.GREEN if best_valid else "",
-                          "    N/A", # "{:10.6f}".format(avg_valid_loss),
+                          float(avg_valid_error),
                           ansi.ENDC if best_valid else "",
-                          "    N/A  ", # "{:.2f}%".format(avg_valid_acc * 100),
                           time.time() - start
                           ))
 
