@@ -288,6 +288,14 @@ class BaseMLP(sklearn.base.BaseEstimator):
             seed=self.seed,
             input_space=input_space)
 
+    def _create_matrix_input(self, X, y):
+        if self.is_convolution:
+            input_space = Conv2DSpace(shape=X.shape[1:], num_channels=1)
+            view = input_space.get_origin_batch(100)
+            return DenseDesignMatrix(topo_view=view, y=y), input_space
+        else:
+            return DenseDesignMatrix(X=X, y=y), None
+
     def _initialize(self, X, y):
         assert not self.is_initialized,\
             "This neural network has already been initialized."
@@ -315,23 +323,15 @@ class BaseMLP(sklearn.base.BaseEstimator):
         self.train_set = X, y
 
         # Convolution networks need a custom input space.
-        if self.is_convolution:
-            nvis = None
-            input_space = Conv2DSpace(shape=X.shape[1:], num_channels=1)
-            view = input_space.get_origin_batch(100)
-            self.ds = DenseDesignMatrix(topo_view=view, y=y)
-        else:
-            nvis = self.unit_counts[0]
-            input_space = None
-            self.ds = DenseDesignMatrix(X=X, y=y)
-
+        self.ds, input_space = self._create_matrix_input(X, y)
         if self.valid_set:
             X_v, y_v = self.valid_set
-            self.vs = DenseDesignMatrix(X=X_v, y=y_v)
+            self.vs, _ = self._create_matrix_input(X_v, y_v)
         else:
             self.vs = None
 
         if self.mlp is None:
+            nvis = None if self.is_convolution else self.unit_counts[0]
             self.mlp = self._create_mlp(X, y, input_space=input_space, nvis=nvis)
 
         self.trainer = self._create_trainer(self.vs)
