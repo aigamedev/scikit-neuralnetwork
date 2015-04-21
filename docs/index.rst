@@ -1,7 +1,7 @@
 Welcome to scikit-neuralnetwork's documentation!
 ================================================
 
-Deep neural network implementation without the learning cliff! This library implements multi-layer perceptrons as a wrapper for the powerful pylearn2 library that's compatible with scikit-learn for a more user-friendly and Pythonic interface.
+Deep neural network implementation without the learning cliff! This library implements multi-layer perceptrons as a wrapper for the powerful ``pylearn2`` library that's compatible with ``scikit-learn`` for a more user-friendly and Pythonic interface.
 
 |Build Status| |Documentation Status| |Code Coverage|
 

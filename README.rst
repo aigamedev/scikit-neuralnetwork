@@ -27,9 +27,9 @@ With that done, you can run the samples and benchmarks available in the ``exampl
 Demonstration
 -------------
 
-To run a visualization that uses the `sknn.mlp.MultiLayerPerceptron` just run the following command::
+To run a visualization that uses the ``sknn.mlp.MultiLayerPerceptronClassifier`` just run the following command::
 
-    > PYTHONPATH=. python examples/plot_mlp.py --params activation
+    > python examples/plot_mlp.py --params activation
 
 There are multiple parameters you can plot as well, for example ``iterations``, ``rules`` or ``units``.  The datasets are randomized each time, but the output should be an image that looks like this...
 
@@ -39,7 +39,11 @@ There are multiple parameters you can plot as well, for example ``iterations``, 
 Benchmarks
 ----------
 
-Here are the results of testing 10 epochs of training for two-thirds of the original MNIST data, on Ubuntu 14.04 and a GeForce GTX 650 (Memory: 1024Mb, Cores: 384).  You can run ``examples/bench_mnist.py`` to get the results.
+Here are the results of testing 10 epochs of training for two-thirds of the original MNIST data, on Ubuntu 14.04 and a GeForce GTX 650 (Memory: 1024Mb, Cores: 384).  You can run the following command::
+
+    > python examples/bench_mnist.py (sknn|lasagne)
+
+...to generate the results below.
 
 .. class:: center
 
