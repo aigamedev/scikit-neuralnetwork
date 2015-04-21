@@ -469,6 +469,10 @@ class MultiLayerPerceptronRegressor(BaseMLP, sklearn.base.RegressorMixin):
 class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
 
     def _setup(self):
+        # this is a truly smart hack that forces LabelBinariser to treat
+        # binary variables as multi-class
+        import sklearn.preprocessing.label as L
+        L.type_of_target = lambda _: "multiclass"
         self.label_binarizer = sklearn.preprocessing.LabelBinarizer()
 
     def fit(self, X, y):
@@ -498,12 +502,7 @@ class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
             model, in the same order as the classes.
         """
         proba = super(MultiLayerPerceptronClassifier, self)._predict(X)
-        # For binary case, LabelBinarizer only has one output so convert to 2D.
-        if proba.shape[-1] == 1:
-            p = proba.flatten()
-            proba = numpy.zeros((proba.shape[0], 2))
-            proba[:,0], proba[:,1] = 1.0-p, p
-        # Normalize so every row sums to one.
+
         return proba / proba.sum(1, keepdims=True)
 
     def predict(self, X):
