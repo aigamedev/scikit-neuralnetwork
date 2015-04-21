@@ -34,10 +34,12 @@ class TestTrainingOutput(unittest.TestCase):
         nn = sknn.mlp.MultiLayerPerceptronRegressor(layers=[("Linear",)], verbose=1, n_iter=1)
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
         nn.fit(a_in, a_out)
-        assert_in("Epoch 0, score = 1.000000", self.buf.getvalue())
+        assert_in("Epoch    Validation Error    Time", self.buf.getvalue())
+        assert_in("    0           N/A          0.0s", self.buf.getvalue())
 
     def test_VerboseClassifier(self):
         nn = sknn.mlp.MultiLayerPerceptronClassifier(layers=[("Linear",)], verbose=1, n_iter=1)
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,1), dtype=numpy.int32)
         nn.fit(a_in, a_out)
-        assert_in("Epoch 0, score = 1.000000", self.buf.getvalue())
+        assert_in("Epoch    Validation Error    Time", self.buf.getvalue())
+        assert_in("    0           N/A          0.0s", self.buf.getvalue())

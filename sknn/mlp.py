@@ -97,7 +97,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
             batch_size=1,
             n_iter=None,
             valid_set=None,
-            valid_size=0.2,
+            valid_size=0.0,
             n_stable=50,
             f_stable=0.001,
             dropout=False,
