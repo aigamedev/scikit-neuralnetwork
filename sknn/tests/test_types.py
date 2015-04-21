@@ -8,7 +8,7 @@ from sknn.mlp import BaseMLP
 class TestInputDataTypes(unittest.TestCase):
 
     def setUp(self):
-        self.nn = BaseMLP(layers=[("LinearGaussian",)], n_iter=1)
+        self.nn = BaseMLP(layers=[("Gaussian",)], n_iter=1)
 
     def test_FitSciPySparse(self):
         X, y = scipy.sparse.csr_matrix((8, 4)), scipy.sparse.csr_matrix((8, 4))

@@ -55,6 +55,14 @@ class BaseMLP(sklearn.base.BaseEstimator):
         activation type and then optional parameters such as the number of
         units.
 
+            * For hidden layers, you can use the following layer types:
+            ``Rectifier``, ``Sigmoid``, ``Tanh``, ``Maxout`` or ``Convolution``.
+            * For output layers, you can use the following layer types:
+            ``Linear``, ``Softmax`` or ``Gaussian``.
+
+        You must specify at least an output layer, so the last tiple in your
+        layers input should contain ``Linear`` (for example).
+
     random_state : int
         Seed for the initialization of the neural network parameters (e.g.
         weights and biases).  This is fully deterministic.
@@ -235,7 +243,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 layer_name=name,
                 irange=0.00001)
 
-        if activation_type == "LinearGaussian":
+        if activation_type == "Gaussian":
             return mlp.LinearGaussian(
                 init_beta=0.1,
                 min_beta=0.001,

@@ -9,16 +9,16 @@ Most of the functionality provided to simulate and train multi-layer perceptron 
 When using the multi-layer perceptron, you should initialize a Regressor or a Classifier directly.
 
 
-Regression
-----------
+Regressor
+---------
 
 .. autoclass:: sknn.mlp.MultiLayerPerceptronRegressor
     :members:
     :inherited-members:
 
 
-Classification
---------------
+Classifier
+----------
 
 .. autoclass:: sknn.mlp.MultiLayerPerceptronClassifier
     :members:

@@ -9,7 +9,7 @@ from . import test_linear
 class TestGaussianOutput(test_linear.TestLinearNetwork):
 
     def setUp(self):
-        self.nn = MLPR(layers=[("LinearGaussian",)], n_iter=1)
+        self.nn = MLPR(layers=[("Gaussian",)], n_iter=1)
 
 
 class TestSoftmaxOutput(test_linear.TestLinearNetwork):

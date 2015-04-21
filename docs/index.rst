@@ -32,11 +32,32 @@ Once that's done, you can grab this repository and install from ``setup.py`` in 
 With that done, you can run the samples and benchmarks available in the ``examples/`` folder.
 
 
+Getting Started
+---------------
+
+The library supports both regressors (to estimate continuous outputs) and classifiers (to predict classes).  This is the ``sklearn``-compatible API:
+
+.. code:: python
+
+    import sknn.mlp
+
+    nn = sknn.mlp.MultiLayerPerceptronClassifier(
+        layers=[("Rectifier", 100), ("Linear",)],
+        learning_rate=0.02,
+        n_iter=10)
+
+    nn.fit(X_train, y_train)
+    nn.predict(X_test)
+
+    nn.score(X_valid, y_valid)
+
+You can also use a ``MultiLayerPerceptronRegressor`` in the exact same way.  See the documentation in :mod:`sknn.mlp` for details about the construction parameters.
+
+
 Indices & Search
 ----------------
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
 
 
