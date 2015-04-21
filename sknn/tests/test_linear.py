@@ -22,7 +22,7 @@ class TestLinearNetwork(unittest.TestCase):
         assert_raises(ValueError, self.nn.predict, a_in)
 
     def test_FitAutoInitialize(self):
-        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
+        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,1))
         self.nn.fit(a_in, a_out)
         assert_true(self.nn.is_initialized)
 
