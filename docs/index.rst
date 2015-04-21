@@ -8,7 +8,7 @@ Deep neural network implementation without the learning cliff! This library impl
 ----
 
 Modules
-=======
+-------
 
 .. toctree::
     :maxdepth: 2
@@ -16,8 +16,24 @@ Modules
     mlp
 
 
+Installation
+------------
+
+You'll need to first install some dependencies manually.  Unfortunately, ``pylearn2`` isn't yet installable via PyPI and recommends an editable (``pip -e``) installation::
+
+    > pip install numpy scipy theano
+    > pip install -e git+https://github.com/lisa-lab/pylearn2.git#egg=Package
+
+Once that's done, you can grab this repository and install from ``setup.py`` in the exact same way::
+
+    > git clone https://github.com/aigamedev/scikit-neuralnetwork.git
+    > cd scikit-neuralnetwork; python setup.py develop
+
+With that done, you can run the samples and benchmarks available in the ``examples/`` folder.
+
+
 Indices & Search
-================
+----------------
 
 * :ref:`genindex`
 * :ref:`modindex`
