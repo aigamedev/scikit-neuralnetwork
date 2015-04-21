@@ -397,7 +397,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
         log.info("Training on dataset of {:,} samples with {:,} total size.".format(num_samples, data_size))
         if self.valid_set:
             X_v, _ = self.valid_set
-            log.debug("  - Test: {: <10,}  Valid: {: <4,}".format(X.shape[0], X_v.shape[0]))
+            log.debug("  - Train: {: <9,}  Valid: {: <4,}".format(X.shape[0], X_v.shape[0]))
         if self.n_iter:
             log.debug("  - Terminating loop after {} total iterations.".format(self.n_iter))
         if self.n_stable:

@@ -20,12 +20,18 @@ labels_test = np.array(dataset3['labels'])
 n_feat = data_train.shape[1]
 n_targets = labels_train.max() + 1
 
-net = DBN(
-    [n_feat, n_feat / 3, n_targets],
-    epochs=50,
-    learn_rates=0.03,
-    verbose=1,
-    )
+import sys
+import logging
+logging.basicConfig(format="%(message)s", level=logging.DEBUG, stream=sys.stdout)
+
+from sknn.mlp import MultiLayerPerceptronClassifier
+net = MultiLayerPerceptronClassifier(
+    [("Rectifier", n_feat*2/3), ("Rectifier", n_feat*1/3), ("Linear", n_targets)],
+    n_iter=50,
+    n_stable=10,
+    learning_rate=0.005,
+    valid_size=0.1,
+    verbose=1)
 net.fit(data_train, labels_train)
 
 from sklearn.metrics import classification_report
