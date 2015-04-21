@@ -267,12 +267,18 @@ class BaseMLP(sklearn.base.BaseEstimator):
         mlp_layers = []
         for i, layer in enumerate(self.layers[:-1]):
             fan_in = self.unit_counts[i] + 1
-            fan_out = self.unit_counts[i + 1]
+            fan_out = self.unit_counts[i + 1] + 1
 
             if layer[0] == "Tanh":
                 lim = numpy.sqrt(6) / (numpy.sqrt(fan_in + fan_out))
             elif layer[0] in ("Rectifier", "Maxout"):
-                lim = 2.0 / fan_in
+                #  He, Rang, Zhen and Sun, converted to uniform
+                var = 2.0 / fan_in
+                lim = numpy.sqrt(3*var)
+            elif layer[0] == "Linear":
+                # Glorot & Bengio
+                var = 1.0 / fan_in
+                lim = numpy.sqrt(3*var)
             elif layer[0] == "Sigmoid":
                 lim = 4.0 * numpy.sqrt(6) / (numpy.sqrt(fan_in + fan_out))
             else:
