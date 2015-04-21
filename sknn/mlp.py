@@ -497,8 +497,8 @@ class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
     def _setup(self):
         # WARNING: Unfortunately, sklearn's LabelBinarizer handles binary data
         # as a special case and encodes it very differently to multiclass cases.
-        # In our case, we want to have 2D outputs when there are 2 outputs, or
-        # the predicted probabilities (e.g. Softmax) will be wrong.
+        # In our case, we want to have 2D outputs when there are 2 classes, or
+        # the predicted probabilities (e.g. Softmax) will be incorrect.
         # The LabelBinarizer is also implemented in a way that this cannot be
         # customized without a providing a complete rewrite, so here we patch
         # the `type_of_target` function for this to work correctly,

@@ -14,11 +14,15 @@ Installation
 
 You'll need to first install some dependencies manually.  Unfortunately, ``pylearn2`` isn't yet installable via PyPI and recommends an editable (``pip -e``) installation::
 
-    > git clone https://github.com/lisa-lab/pylearn2.git
-    > cd pylearn2; python setup.py develop
+    > pip install numpy scipy theano
+    > pip install -e git+https://github.com/lisa-lab/pylearn2.git#egg=Package
 
-Once that's done, you can grab this repository and set your ``PYTHONPATH`` to point to the correct folder, or install from ``setup.py`` in the exact same way.
+Once that's done, you can grab this repository and install from ``setup.py`` in the exact same way::
 
+    > git clone https://github.com/aigamedev/scikit-neuralnetwork.git
+    > cd scikit-neuralnetwork; python setup.py develop
+
+With that done, you can run the samples and benchmarks available in the ``examples/`` folder.
 
 Demonstration
 -------------
@@ -27,7 +31,7 @@ To run a visualization that uses the `sknn.mlp.MultiLayerPerceptron` just run th
 
     > PYTHONPATH=. python examples/plot_mlp.py --params activation
 
-The datasets are randomized each time, but the output should be an image that looks like this...
+There are multiple parameters you can plot as well, for example ``iterations``, ``rules`` or ``units``.  The datasets are randomized each time, but the output should be an image that looks like this...
 
 .. image:: docs/plot_activation.png
 
