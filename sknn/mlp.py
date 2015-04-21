@@ -476,6 +476,10 @@ class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
         self.label_binarizer = sklearn.preprocessing.LabelBinarizer()
 
     def fit(self, X, y):
+        # check now for correct shapes
+        assert X.shape[0] == y.shape[0],\
+            "Expecting same number of input and output samples."
+
         # Scan training samples to find all different classes.
         self.label_binarizer.fit(y)
         yp = self.label_binarizer.transform(y)
