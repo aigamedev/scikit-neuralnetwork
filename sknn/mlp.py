@@ -45,7 +45,8 @@ class ansi:
 
 class BaseMLP(sklearn.base.BaseEstimator):
     """
-    A wrapper for PyLearn2 compatible with scikit-learn.
+    Abstract base class for wrapping the multi-layer perceptron functionality
+    from PyLearn2.
 
     Parameters
     ----------
@@ -79,12 +80,31 @@ class BaseMLP(sklearn.base.BaseEstimator):
         The number of iterations of gradient descent to perform on the
         neural network's weights when training with fit().
 
+    valid_set : tuple of array-like
+        Validation set (X_v, y_v) to be used explicitly while training.  Both
+        arrays should have the same size for the first dimention, and the second
+        dimention should match with the training data specified in fit().
+
+    valid_size : float
+        Ratio of the training data to be used for validation.  0.0 means no
+        validation, and 1.0 would mean there's no training data!  Common values are
+        0.1 or 0.25.
+
+    n_stable : int
+        Number of interations after which training should return when the validation
+        error remains constant.  This is a sign that the data has been fitted.
+
+    f_stable : float
+        Threshold under which the validation error change is assumed to be stable, to
+        be used in combination with `n_stable`.
+
     dropout : bool
         Whether to use drop-out training for the inputs (jittering) and the
         hidden layers, for each training example.
 
     verbose : bool
-        If True, print the score at each epoch.
+        If True, print the score at each epoch via the logger called 'sknn'.  You can
+        control the detail of the output by customising the logger level and formatter.
     """
 
     def __init__(
@@ -138,6 +158,8 @@ class BaseMLP(sklearn.base.BaseEstimator):
         self._setup()
 
     def _setup(self):
+        # raise NotImplementedError("BaseMLP is an abstract class; "
+        #                           "use the Classifier or Regressor instead.")
         pass
 
     def _create_trainer(self, dataset):
@@ -428,6 +450,8 @@ Epoch    Validation Error    Time
 
 
 class MultiLayerPerceptronRegressor(BaseMLP, sklearn.base.RegressorMixin):
+    """Regressor compatible with sklearn that wraps PyLearn2.
+    """
 
     def fit(self, X, y):
         """Fit the neural network to the given data.
@@ -467,12 +491,20 @@ class MultiLayerPerceptronRegressor(BaseMLP, sklearn.base.RegressorMixin):
 
 
 class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
+    """Classifier compatible with sklearn that wraps PyLearn2.
+    """
 
     def _setup(self):
-        # this is a truly smart hack that forces LabelBinariser to treat
-        # binary variables as multi-class
+        # WARNING: Unfortunately, sklearn's LabelBinarizer handles binary data
+        # as a special case and encodes it very differently to multiclass cases.
+        # In our case, we want to have 2D outputs when there are 2 outputs, or
+        # the predicted probabilities (e.g. Softmax) will be wrong.
+        # The LabelBinarizer is also implemented in a way that this cannot be
+        # customized without a providing a complete rewrite, so here we patch
+        # the `type_of_target` function for this to work correctly,
         import sklearn.preprocessing.label as L
         L.type_of_target = lambda _: "multiclass"
+
         self.label_binarizer = sklearn.preprocessing.LabelBinarizer()
 
     def fit(self, X, y):
