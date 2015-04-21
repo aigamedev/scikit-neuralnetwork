@@ -268,7 +268,15 @@ class BaseMLP(sklearn.base.BaseEstimator):
         for i, layer in enumerate(self.layers[:-1]):
             fan_in = self.unit_counts[i] + 1
             fan_out = self.unit_counts[i + 1]
-            lim = numpy.sqrt(6) / (numpy.sqrt(fan_in + fan_out))
+
+            if layer[0] == "Tanh":
+                lim = numpy.sqrt(6) / (numpy.sqrt(fan_in + fan_out))
+            elif layer[0] in ("Rectifier", "Maxout"):
+                lim = 2.0 / fan_in
+            elif layer[0] == "Sigmoid":
+                lim = 4.0 * numpy.sqrt(6) / (numpy.sqrt(fan_in + fan_out))
+            else:
+                lim = 0.005
 
             layer_name = "Hidden_%i_%s" % (i, layer[0])
             hidden_layer = self._create_hidden_layer(layer_name, layer, irange=lim)
