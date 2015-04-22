@@ -237,11 +237,18 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
     def _create_output_layer(self, name, args):
         activation_type = args[0]
+
+        fan_in = self.unit_counts[-2]
+        fan_out = self.unit_counts[-1]
+        lim = numpy.sqrt(6) / (numpy.sqrt(fan_in + fan_out))
+
+        #print fan_in, fan_out
+
         if activation_type == "Linear":
             return mlp.Linear(
                 dim=args[1],
                 layer_name=name,
-                irange=0.00001)
+                irange=lim)
 
         if activation_type == "Gaussian":
             return mlp.LinearGaussian(
@@ -251,13 +258,13 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 beta_lr_scale=None,
                 dim=args[1],
                 layer_name=name,
-                irange=0.1)
+                irange=lim)
 
         if activation_type == "Softmax":
             return mlp.Softmax(
                 layer_name=name,
                 n_classes=args[1],
-                irange=0.1)
+                irange=lim)
 
         raise NotImplementedError(
             "Output layer type `%s` is not implemented." % activation_type)
@@ -265,24 +272,21 @@ class BaseMLP(sklearn.base.BaseEstimator):
     def _create_mlp(self, X, y, nvis=None, input_space=None):
         # Create the layers one by one, connecting to previous.
         mlp_layers = []
+        print self.layers
         for i, layer in enumerate(self.layers[:-1]):
-            fan_in = self.unit_counts[i] + 1
-            fan_out = self.unit_counts[i + 1] + 1
+            fan_in = self.unit_counts[i]
+            fan_out = self.unit_counts[i + 1]
+
+            #print fan_in, fan_out
+            lim = numpy.sqrt(6) / (numpy.sqrt(fan_in + fan_out))
 
             if layer[0] == "Tanh":
-                lim = numpy.sqrt(6) / (numpy.sqrt(fan_in + fan_out))
+               lim *= 1.1*lim
             elif layer[0] in ("Rectifier", "Maxout"):
                 #  He, Rang, Zhen and Sun, converted to uniform
-                var = 2.0 / fan_in
-                lim = numpy.sqrt(3*var)
-            elif layer[0] == "Linear":
-                # Glorot & Bengio
-                var = 1.0 / fan_in
-                lim = numpy.sqrt(3*var)
+               lim *= numpy.sqrt(2)
             elif layer[0] == "Sigmoid":
-                lim = 4.0 * numpy.sqrt(6) / (numpy.sqrt(fan_in + fan_out))
-            else:
-                lim = 0.005
+                lim *=4
 
             layer_name = "Hidden_%i_%s" % (i, layer[0])
             hidden_layer = self._create_hidden_layer(layer_name, layer, irange=lim)
