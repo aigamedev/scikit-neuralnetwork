@@ -9,8 +9,8 @@ Deep neural network implementation without the learning cliff!  This library imp
 
 ----
 
-Installation
-------------
+Installation & Testing
+----------------------
 
 You'll need to first install some dependencies manually.  Unfortunately, ``pylearn2`` isn't yet installable via PyPI and recommends an editable (``pip -e``) installation::
 
@@ -22,7 +22,14 @@ Once that's done, you can grab this repository and install from ``setup.py`` in 
     > git clone https://github.com/aigamedev/scikit-neuralnetwork.git
     > cd scikit-neuralnetwork; python setup.py develop
 
-With that done, you can run the samples and benchmarks available in the ``examples/`` folder.
+Then, you can run the samples and benchmarks available in the ``examples/`` folder, or launch the tests to check everything is working::
+
+    > nosetests -v sknn
+
+.. image:: docs/console_tests.png
+
+We strive to maintain 100% test coverage for all code-paths, to ensure that rapid changes in the underlying ``pylearn2`` library are caught automatically.
+
 
 Demonstration
 -------------
