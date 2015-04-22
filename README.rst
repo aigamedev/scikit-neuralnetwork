@@ -34,7 +34,7 @@ We strive to maintain 100% test coverage for all code-paths, to ensure that rapi
 Demonstration
 -------------
 
-To run a visualization that uses the ``sknn.mlp.MultiLayerPerceptronClassifier`` just run the following command::
+To run a visualization that uses the ``sknn.mlp.MultiLayerPerceptronClassifier`` just run the following command in the project's root folder::
 
     > python examples/plot_mlp.py --params activation
 
@@ -50,7 +50,7 @@ Here are the results of testing 10 epochs of training for two-thirds of the orig
 
     > python examples/bench_mnist.py (sknn|lasagne)
 
-...to generate the results below.
+... to generate the results below.
 
 .. class:: center
 
