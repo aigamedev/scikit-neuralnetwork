@@ -272,7 +272,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
     def _create_mlp(self, X, y, nvis=None, input_space=None):
         # Create the layers one by one, connecting to previous.
         mlp_layers = []
-        print self.layers
+        #print self.layers
         for i, layer in enumerate(self.layers[:-1]):
             fan_in = self.unit_counts[i]
             fan_out = self.unit_counts[i + 1]
