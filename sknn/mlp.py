@@ -69,7 +69,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
     learning_rule : str
         Name of the learning rule used during stochastic gradient descent,
-        one of ('sgd', 'momentum', 'rmsprop') at the moment.    
+        one of ('sgd', 'momentum', 'nesterov', 'rmsprop') at the moment.    
 
     learning_rate : float
         Real number indicating the default/starting rate of adjustment for
@@ -157,6 +157,8 @@ class BaseMLP(sklearn.base.BaseEstimator):
             self.learning_rule = None
         elif learning_rule == 'momentum':
             self.learning_rule = Momentum(learning_momentum)
+        elif learning_rule == 'nesterov':
+            self.learning_rule = Momentum(learning_momentum, nesterov_momentum=True)
         elif learning_rule == 'rmsprop':
             self.learning_rule = RMSProp()
         else:

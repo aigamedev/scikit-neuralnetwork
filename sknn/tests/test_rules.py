@@ -18,6 +18,11 @@ class TestLearningRules(unittest.TestCase):
                        learning_rule='momentum',
                        n_iter=1))
 
+    def test_nesterov(self):
+        self._run(MLPR(layers=[("Linear",)],
+                       learning_rule='nesterov',
+                       n_iter=1))
+
     def test_rmsprop(self):
         self._run(MLPR(layers=[("Linear",)],
                        learning_rule='rmsprop',
