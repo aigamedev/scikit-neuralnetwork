@@ -1,4 +1,4 @@
-from __future__ import (absolute_import, unicode_literals)
+from __future__ import (absolute_import, unicode_literals, print_function)
 
 __all__ = ['MultiLayerPerceptronRegressor', 'MultiLayerPerceptronClassifier']
 
@@ -242,8 +242,6 @@ class BaseMLP(sklearn.base.BaseEstimator):
         fan_out = self.unit_counts[-1]
         lim = numpy.sqrt(6) / (numpy.sqrt(fan_in + fan_out))
 
-        #print fan_in, fan_out
-
         if activation_type == "Linear":
             return mlp.Linear(
                 dim=args[1],
@@ -272,21 +270,18 @@ class BaseMLP(sklearn.base.BaseEstimator):
     def _create_mlp(self, X, y, nvis=None, input_space=None):
         # Create the layers one by one, connecting to previous.
         mlp_layers = []
-        #print self.layers
         for i, layer in enumerate(self.layers[:-1]):
             fan_in = self.unit_counts[i]
             fan_out = self.unit_counts[i + 1]
 
-            #print fan_in, fan_out
-            lim = numpy.sqrt(6) / (numpy.sqrt(fan_in + fan_out))
-
+            lim = numpy.sqrt(6) / numpy.sqrt(fan_in + fan_out)
             if layer[0] == "Tanh":
-               lim *= 1.1*lim
-            elif layer[0] in ("Rectifier", "Maxout"):
-                #  He, Rang, Zhen and Sun, converted to uniform
+               lim *= 1.1 * lim
+            elif layer[0] in ("Rectifier", "Maxout", "Convolution"):
+                #  He, Rang, Zhen and Sun, converted to uniform.
                lim *= numpy.sqrt(2)
             elif layer[0] == "Sigmoid":
-                lim *=4
+                lim *= 4
 
             layer_name = "Hidden_%i_%s" % (i, layer[0])
             hidden_layer = self._create_hidden_layer(layer_name, layer, irange=lim)
