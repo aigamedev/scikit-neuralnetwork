@@ -122,17 +122,27 @@ class BaseMLP(sklearn.base.BaseEstimator):
             learning_rule='sgd',
             learning_rate=0.01,
             learning_momentum=0.9,
+            dropout=False,
             batch_size=1,
             n_iter=None,
-            valid_set=None,
-            valid_size=0.0,
             n_stable=50,
             f_stable=0.001,
-            dropout=False,
+            valid_set=None,
+            valid_size=0.0,            
             verbose=False):
 
         self.layers = layers
-        self.seed = random_state
+        self.random_state = random_state
+        self.learning_rule = learning_rule
+        self.learning_rate = learning_rate
+        self.learning_momentum = learning_momentum
+        self.dropout = dropout
+        self.batch_size = batch_size
+        self.n_iter = n_iter
+        self.n_stable = n_stable
+        self.f_stable = f_stable
+        self.valid_set = valid_set
+        self.valid_size = valid_size
         self.verbose = verbose
 
         self.unit_counts = None
@@ -141,26 +151,17 @@ class BaseMLP(sklearn.base.BaseEstimator):
         self.trainer = None
         self.f = None
         self.train_set = None
-
-        self.cost = "Dropout" if dropout else None
-        self.learning_rate = learning_rate
-        self.batch_size = batch_size
-        self.n_iter = n_iter
-        self.n_stable = n_stable
-        self.f_stable = f_stable
-        self.valid_set = valid_set
-        self.valid_size = valid_size
-
         self.best_valid_error = float("inf")
 
+        self.cost = "Dropout" if dropout else None
         if learning_rule == 'sgd':
-            self.learning_rule = None
+            self._learning_rule = None
         elif learning_rule == 'momentum':
-            self.learning_rule = Momentum(learning_momentum)
+            self._learning_rule = Momentum(learning_momentum)
         elif learning_rule == 'nesterov':
-            self.learning_rule = Momentum(learning_momentum, nesterov_momentum=True)
+            self._learning_rule = Momentum(learning_momentum, nesterov_momentum=True)
         elif learning_rule == 'rmsprop':
-            self.learning_rule = RMSProp()
+            self._learning_rule = RMSProp()
         else:
             raise NotImplementedError(
                 "Learning rule type `%s` is not supported." % learning_rule)
@@ -193,7 +194,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
         return sgd.SGD(
             cost=self.cost,
             batch_size=self.batch_size,
-            learning_rule=self.learning_rule,
+            learning_rule=self._learning_rule,
             learning_rate=self.learning_rate,
             termination_criterion=termination_criterion,
             monitoring_dataset=dataset)
@@ -300,7 +301,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
         return mlp.MLP(
             mlp_layers,
             nvis=nvis,
-            seed=self.seed,
+            seed=self.random_state,
             input_space=input_space)
 
     def _initialize(self, X, y):
@@ -325,7 +326,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
             X, X_v, y, y_v = sklearn.cross_validation.train_test_split(
                                 X, y,
                                 test_size=self.valid_size,
-                                random_state=self.seed)
+                                random_state=self.random_state)
             self.valid_set = X_v, y_v
         self.train_set = X, y
 
