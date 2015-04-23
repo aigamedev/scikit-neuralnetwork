@@ -28,7 +28,7 @@ PARAMETERS = {
     'dropout': [False, True],
     'iterations': [100, 200, 500, 1000],
     'output': ['Linear', 'Softmax', 'LinearGaussian'],
-    'rules': ['sgd', 'momentum', 'rmsprop'],
+    'rules': ['sgd', 'momentum', 'nesterov', 'adadelta', 'rmsprop'],
     'units': [16, 64, 128, 256],
 }
 

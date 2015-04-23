@@ -12,6 +12,8 @@ When using the multi-layer perceptron, you should initialize a Regressor or a Cl
 Regressor
 ---------
 
+See the class :class:`sknn.mlp.BaseMLP` for inherited construction parameters.
+
 .. autoclass:: sknn.mlp.MultiLayerPerceptronRegressor
     :members:
     :inherited-members:
@@ -19,6 +21,8 @@ Regressor
 
 Classifier
 ----------
+
+Also check the :class:`sknn.mlp.BaseMLP` class for inherited construction parameters.
 
 .. autoclass:: sknn.mlp.MultiLayerPerceptronClassifier
     :members:

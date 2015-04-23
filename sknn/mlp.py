@@ -1,4 +1,4 @@
-from __future__ import (absolute_import, unicode_literals)
+from __future__ import (absolute_import, unicode_literals, print_function)
 
 __all__ = ['MultiLayerPerceptronRegressor', 'MultiLayerPerceptronClassifier']
 
@@ -30,7 +30,7 @@ from pylearn2.datasets import DenseDesignMatrix
 from pylearn2.training_algorithms import sgd
 from pylearn2.models import mlp, maxout
 from pylearn2.costs.mlp.dropout import Dropout
-from pylearn2.training_algorithms.learning_rule import RMSProp, Momentum
+from pylearn2.training_algorithms.learning_rule import RMSProp, Momentum, AdaGrad, AdaDelta
 from pylearn2.space import Conv2DSpace
 from pylearn2.termination_criteria import MonitorBased
 
@@ -56,12 +56,12 @@ class BaseMLP(sklearn.base.BaseEstimator):
         units.
 
             * For hidden layers, you can use the following layer types:
-            ``Rectifier``, ``Sigmoid``, ``Tanh``, ``Maxout`` or ``Convolution``.
+              ``Rectifier``, ``Sigmoid``, ``Tanh``, ``Maxout`` or ``Convolution``.
             * For output layers, you can use the following layer types:
-            ``Linear``, ``Softmax`` or ``Gaussian``.
+              ``Linear``, ``Softmax`` or ``Gaussian``.
 
-        You must specify at least an output layer, so the last tiple in your
-        layers input should contain ``Linear`` (for example).
+        You must specify at least an output layer, so the last tuple in your
+        layers parameter should contain ``Linear`` (for example).
 
     random_state : int
         Seed for the initialization of the neural network parameters (e.g.
@@ -69,7 +69,8 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
     learning_rule : str
         Name of the learning rule used during stochastic gradient descent,
-        one of ('sgd', 'momentum', 'rmsprop') at the moment.    
+        one of ``sgd``, ``momentum``, ``nesterov``, ``adadelta`` or ``rmsprop``
+        at the moment.
 
     learning_rate : float
         Real number indicating the default/starting rate of adjustment for
@@ -86,12 +87,12 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
     n_iter : int
         The number of iterations of gradient descent to perform on the
-        neural network's weights when training with fit().
+        neural network's weights when training with ``fit()``.
 
     valid_set : tuple of array-like
         Validation set (X_v, y_v) to be used explicitly while training.  Both
         arrays should have the same size for the first dimention, and the second
-        dimention should match with the training data specified in fit().
+        dimention should match with the training data specified in ``fit()``.
 
     valid_size : float
         Ratio of the training data to be used for validation.  0.0 means no
@@ -122,17 +123,27 @@ class BaseMLP(sklearn.base.BaseEstimator):
             learning_rule='sgd',
             learning_rate=0.01,
             learning_momentum=0.9,
+            dropout=False,
             batch_size=1,
             n_iter=None,
-            valid_set=None,
-            valid_size=0.0,
             n_stable=50,
             f_stable=0.001,
-            dropout=False,
+            valid_set=None,
+            valid_size=0.0,            
             verbose=False):
 
         self.layers = layers
-        self.seed = random_state
+        self.random_state = random_state
+        self.learning_rule = learning_rule
+        self.learning_rate = learning_rate
+        self.learning_momentum = learning_momentum
+        self.dropout = dropout
+        self.batch_size = batch_size
+        self.n_iter = n_iter
+        self.n_stable = n_stable
+        self.f_stable = f_stable
+        self.valid_set = valid_set
+        self.valid_size = valid_size
         self.verbose = verbose
 
         self.unit_counts = None
@@ -141,24 +152,21 @@ class BaseMLP(sklearn.base.BaseEstimator):
         self.trainer = None
         self.f = None
         self.train_set = None
-
-        self.cost = "Dropout" if dropout else None
-        self.learning_rate = learning_rate
-        self.batch_size = batch_size
-        self.n_iter = n_iter
-        self.n_stable = n_stable
-        self.f_stable = f_stable
-        self.valid_set = valid_set
-        self.valid_size = valid_size
-
         self.best_valid_error = float("inf")
 
+        self.cost = "Dropout" if dropout else None
         if learning_rule == 'sgd':
-            self.learning_rule = None
+            self._learning_rule = None
+        # elif learning_rule == 'adagrad':
+        #     self._learning_rule = AdaGrad()
+        elif learning_rule == 'adadelta':
+            self._learning_rule = AdaDelta()
         elif learning_rule == 'momentum':
-            self.learning_rule = Momentum(learning_momentum)
+            self._learning_rule = Momentum(learning_momentum)
+        elif learning_rule == 'nesterov':
+            self._learning_rule = Momentum(learning_momentum, nesterov_momentum=True)
         elif learning_rule == 'rmsprop':
-            self.learning_rule = RMSProp()
+            self._learning_rule = RMSProp()
         else:
             raise NotImplementedError(
                 "Learning rule type `%s` is not supported." % learning_rule)
@@ -191,7 +199,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
         return sgd.SGD(
             cost=self.cost,
             batch_size=self.batch_size,
-            learning_rule=self.learning_rule,
+            learning_rule=self._learning_rule,
             learning_rate=self.learning_rate,
             termination_criterion=termination_criterion,
             monitoring_dataset=dataset)
@@ -237,11 +245,16 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
     def _create_output_layer(self, name, args):
         activation_type = args[0]
+
+        fan_in = self.unit_counts[-2]
+        fan_out = self.unit_counts[-1]
+        lim = numpy.sqrt(6) / (numpy.sqrt(fan_in + fan_out))
+
         if activation_type == "Linear":
             return mlp.Linear(
                 dim=args[1],
                 layer_name=name,
-                irange=0.00001)
+                irange=lim)
 
         if activation_type == "Gaussian":
             return mlp.LinearGaussian(
@@ -251,13 +264,13 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 beta_lr_scale=None,
                 dim=args[1],
                 layer_name=name,
-                irange=0.1)
+                irange=lim)
 
         if activation_type == "Softmax":
             return mlp.Softmax(
                 layer_name=name,
                 n_classes=args[1],
-                irange=0.1)
+                irange=lim)
 
         raise NotImplementedError(
             "Output layer type `%s` is not implemented." % activation_type)
@@ -266,9 +279,17 @@ class BaseMLP(sklearn.base.BaseEstimator):
         # Create the layers one by one, connecting to previous.
         mlp_layers = []
         for i, layer in enumerate(self.layers[:-1]):
-            fan_in = self.unit_counts[i] + 1
+            fan_in = self.unit_counts[i]
             fan_out = self.unit_counts[i + 1]
-            lim = numpy.sqrt(6) / (numpy.sqrt(fan_in + fan_out))
+
+            lim = numpy.sqrt(6) / numpy.sqrt(fan_in + fan_out)
+            if layer[0] == "Tanh":
+               lim *= 1.1 * lim
+            elif layer[0] in ("Rectifier", "Maxout", "Convolution"):
+                #  He, Rang, Zhen and Sun, converted to uniform.
+               lim *= numpy.sqrt(2)
+            elif layer[0] == "Sigmoid":
+                lim *= 4
 
             layer_name = "Hidden_%i_%s" % (i, layer[0])
             hidden_layer = self._create_hidden_layer(layer_name, layer, irange=lim)
@@ -285,7 +306,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
         return mlp.MLP(
             mlp_layers,
             nvis=nvis,
-            seed=self.seed,
+            seed=self.random_state,
             input_space=input_space)
 
     def _create_matrix_input(self, X, y):
@@ -325,7 +346,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
             X, X_v, y, y_v = sklearn.cross_validation.train_test_split(
                                 X, y,
                                 test_size=self.valid_size,
-                                random_state=self.seed)
+                                random_state=self.random_state)
             self.valid_set = X_v, y_v
         self.train_set = X, y
 
