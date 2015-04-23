@@ -24,12 +24,12 @@ class TestLearningRules(unittest.TestCase):
                        n_iter=1))
 
     # NOTE: This is currentry broken in PyLearn2.
-    # def test_adagrad(self):
-    #      self._run(MLPR(layers=[("Linear",)],
-    #                     learning_rule='adagrad',
-    #                     learning_rate=0.000001,
-    #                     batch_size=100,
-    #                     n_iter=1))
+    def test_adagrad(self):
+         self._run(MLPR(layers=[("Linear",)],
+                        learning_rule='adagrad',
+                        learning_rate=0.000001,
+                        batch_size=100,
+                        n_iter=1))
 
     def test_adadelta(self):
         self._run(MLPR(layers=[("Linear",)],
@@ -51,7 +51,7 @@ class TestLearningRules(unittest.TestCase):
                       layers=[], learning_rule='unknown')
 
     def _run(self, nn):
-        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
+        a_in, a_out = numpy.ones((8,16)), numpy.zeros((8,4))
         nn.fit(a_in, a_out)
         a_test = nn.predict(a_in)
         assert_equal(type(a_out), type(a_test))

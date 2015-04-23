@@ -12,12 +12,14 @@ log = logging.getLogger('sknn')
 
 # By default, we force Theano to use a GPU and fallback to CPU, using 32-bits.
 # This must be done in the code before Theano is imported for the first time.
-os.environ['THEANO_FLAGS'] = "device=gpu,floatX=float32"
+os.environ['THEANO_FLAGS'] = "device=gpu,floatX=float32,optimizer=fast_compile"
 
 cuda = logging.getLogger('theano.sandbox.cuda')
 cuda.setLevel(logging.CRITICAL)
 import theano
 cuda.setLevel(logging.WARNING)
+
+from pylearn2.devtools import nan_guard
 
 
 import numpy
@@ -157,8 +159,8 @@ class BaseMLP(sklearn.base.BaseEstimator):
         self.cost = "Dropout" if dropout else None
         if learning_rule == 'sgd':
             self._learning_rule = None
-        # elif learning_rule == 'adagrad':
-        #     self._learning_rule = AdaGrad()
+        elif learning_rule == 'adagrad':
+            self._learning_rule = AdaGrad()
         elif learning_rule == 'adadelta':
             self._learning_rule = AdaDelta()
         elif learning_rule == 'momentum':
@@ -202,7 +204,8 @@ class BaseMLP(sklearn.base.BaseEstimator):
             learning_rule=self._learning_rule,
             learning_rate=self.learning_rate,
             termination_criterion=termination_criterion,
-            monitoring_dataset=dataset)
+            monitoring_dataset=dataset,
+            theano_function_mode=nan_guard.NanGuardMode(nan_is_error=True, inf_is_error=False))
 
     def _create_hidden_layer(self, name, args, irange=0.1):
         activation_type = args[0]
