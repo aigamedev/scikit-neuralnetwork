@@ -28,6 +28,14 @@ class TestConvolution(unittest.TestCase):
                 ("Linear",)],
             n_iter=1))
 
+
+    def test_VerticalVerbose(self):
+        self._run(MLPR(
+            layers=[
+                ("Convolution", 4, (16,1)),
+                ("Linear",)],
+            n_iter=1, verbose = 1, valid_size=0.1))
+
     def test_HorizontalKernel(self):
         self._run(MLPR(
             layers=[
@@ -43,7 +51,7 @@ class TestConvolution(unittest.TestCase):
             n_iter=1,
             valid_size=0.5))
 
-class TestConvolutionRGB(unittest.TestCase):
+class TestConvolutionRGB(TestConvolution):
 
     def _run(self, nn):
         a_in, a_out = numpy.zeros((8,32,16,3)), numpy.zeros((8,4))
