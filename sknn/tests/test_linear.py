@@ -22,7 +22,7 @@ class TestLinearNetwork(unittest.TestCase):
         assert_raises(ValueError, self.nn.predict, a_in)
 
     def test_FitAutoInitialize(self):
-        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,1))
+        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
         self.nn.fit(a_in, a_out)
         assert_true(self.nn.is_initialized)
 
@@ -40,7 +40,7 @@ class TestInputOutputs(unittest.TestCase):
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,))
         self.nn.fit(a_in, a_out)
 
-
+"""
 class TestSerialization(unittest.TestCase):
 
     def setUp(self):
@@ -60,17 +60,17 @@ class TestSerialization(unittest.TestCase):
         buf.seek(0)
         nn = pickle.load(buf)
 
+        nn.predict(a_in)
         assert_is_not_none(nn.mlp)
         assert_equal(nn.layers, self.nn.layers)
 
 
-"""
 class TestSerializedNetwork(TestLinearNetwork):
 
     def setUp(self):
         self.original = MLPR(layers=[("Linear",)])
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
-        self.original.initialize(a_in, a_out)
+        self.original._initialize(a_in, a_out)
 
         buf = io.BytesIO()
         pickle.dump(self.original, buf)

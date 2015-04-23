@@ -148,6 +148,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
         self.unit_counts = None
         self.mlp = None
+        self.weights = None
         self.ds = None
         self.trainer = None
         self.f = None
@@ -275,7 +276,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
         raise NotImplementedError(
             "Output layer type `%s` is not implemented." % activation_type)
 
-    def _create_mlp(self, X, y, nvis=None, input_space=None):
+    def _create_mlp(self, input_space=None):
         # Create the layers one by one, connecting to previous.
         mlp_layers = []
         for i, layer in enumerate(self.layers[:-1]):
@@ -286,7 +287,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
             if layer[0] == "Tanh":
                lim *= 1.1 * lim
             elif layer[0] in ("Rectifier", "Maxout", "Convolution"):
-                #  He, Rang, Zhen and Sun, converted to uniform.
+                # He, Rang, Zhen and Sun, converted to uniform.
                lim *= numpy.sqrt(2)
             elif layer[0] == "Sigmoid":
                 lim *= 4
@@ -303,11 +304,17 @@ class BaseMLP(sklearn.base.BaseEstimator):
         output_layer = self._create_output_layer(output_layer_name, output_layer_info)
         mlp_layers.append(output_layer)
 
-        return mlp.MLP(
+        nn = mlp.MLP(
             mlp_layers,
-            nvis=nvis,
+            nvis=None if self.is_convolution else self.unit_counts[0],
             seed=self.random_state,
             input_space=input_space)
+
+        if self.weights is not None:
+            self.__array_to_mlp(self.weights, nn)
+            self.weights = None
+
+        return nn
 
     def _create_matrix_input(self, X, y):
         if self.is_convolution:
@@ -356,8 +363,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
             self.vs = None
 
         if self.mlp is None:
-            nvis = None if self.is_convolution else self.unit_counts[0]
-            self.mlp = self._create_mlp(X, y, input_space=input_space, nvis=nvis)
+            self.mlp = self._create_mlp(input_space=input_space)
 
         self.trainer = self._create_trainer(self.vs)
         self.trainer.setup(self.mlp, self.ds)
@@ -381,16 +387,30 @@ class BaseMLP(sklearn.base.BaseEstimator):
             "The neural network has not been initialized."
 
         d = self.__dict__.copy()
-        for k in ['ds', 'f', 'trainer']:
+        d['weights'] = self.__mlp_to_array()
+
+        for k in ['ds', 'f', 'trainer', 'mlp']:
             if k in d:
                 del d[k]
         return d
 
+    def __mlp_to_array(self):
+        return [(l.get_weights(), l.get_biases()) for l in self.mlp.layers]
+
     def __setstate__(self, d):
         self.__dict__.update(d)
-
-        for k in ['ds', 'f', 'trainer']:
+        for k in ['ds', 'f', 'trainer', 'mlp']:
             setattr(self, k, None)
+
+    def __array_to_mlp(self, array, nn):
+        for layer, (weights, biases) in zip(nn.layers, array):
+            print(layer.get_weights().shape, weights.shape)
+            assert layer.get_weights().shape == weights.shape
+            layer.set_weights(weights)
+
+            print(layer.get_biases().shape, biases.shape)
+            assert layer.get_biases().shape == biases.shape
+            layer.set_biases(biases)
 
     def _fit(self, X, y, test=None):
         assert X.shape[0] == y.shape[0],\
@@ -405,14 +425,13 @@ class BaseMLP(sklearn.base.BaseEstimator):
             y = y.toarray()
 
         if not self.is_initialized:            
-            self._initialize(X, y)            
+            self._initialize(X, y)
             X, y = self.train_set
         else:
             self.train_set = X, y
 
         if self.is_convolution:
             X = self.ds.view_converter.topo_view_to_design_mat(X)
-
         self.ds.X, self.ds.y = X, y
 
         # Bug in PyLearn2 that has some unicode channels, can't sort.
@@ -474,7 +493,6 @@ Epoch    Validation Error    Time
             X = X.astype(numpy.float32)
         if not isinstance(X, numpy.ndarray):
             X = X.toarray()
-
 
         return self.f(X)
 
