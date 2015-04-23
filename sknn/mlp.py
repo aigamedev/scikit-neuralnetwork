@@ -30,7 +30,7 @@ from pylearn2.datasets import DenseDesignMatrix
 from pylearn2.training_algorithms import sgd
 from pylearn2.models import mlp, maxout
 from pylearn2.costs.mlp.dropout import Dropout
-from pylearn2.training_algorithms.learning_rule import RMSProp, Momentum
+from pylearn2.training_algorithms.learning_rule import RMSProp, Momentum, AdaGrad, AdaDelta
 from pylearn2.space import Conv2DSpace
 from pylearn2.termination_criteria import MonitorBased
 
@@ -56,12 +56,12 @@ class BaseMLP(sklearn.base.BaseEstimator):
         units.
 
             * For hidden layers, you can use the following layer types:
-            ``Rectifier``, ``Sigmoid``, ``Tanh``, ``Maxout`` or ``Convolution``.
+              ``Rectifier``, ``Sigmoid``, ``Tanh``, ``Maxout`` or ``Convolution``.
             * For output layers, you can use the following layer types:
-            ``Linear``, ``Softmax`` or ``Gaussian``.
+              ``Linear``, ``Softmax`` or ``Gaussian``.
 
-        You must specify at least an output layer, so the last tiple in your
-        layers input should contain ``Linear`` (for example).
+        You must specify at least an output layer, so the last tuple in your
+        layers parameter should contain ``Linear`` (for example).
 
     random_state : int
         Seed for the initialization of the neural network parameters (e.g.
@@ -69,7 +69,8 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
     learning_rule : str
         Name of the learning rule used during stochastic gradient descent,
-        one of ('sgd', 'momentum', 'nesterov', 'rmsprop') at the moment.    
+        one of ``sgd``, ``momentum``, ``nesterov``, ``adadelta`` or ``rmsprop``
+        at the moment.
 
     learning_rate : float
         Real number indicating the default/starting rate of adjustment for
@@ -86,12 +87,12 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
     n_iter : int
         The number of iterations of gradient descent to perform on the
-        neural network's weights when training with fit().
+        neural network's weights when training with ``fit()``.
 
     valid_set : tuple of array-like
         Validation set (X_v, y_v) to be used explicitly while training.  Both
         arrays should have the same size for the first dimention, and the second
-        dimention should match with the training data specified in fit().
+        dimention should match with the training data specified in ``fit()``.
 
     valid_size : float
         Ratio of the training data to be used for validation.  0.0 means no
@@ -156,6 +157,10 @@ class BaseMLP(sklearn.base.BaseEstimator):
         self.cost = "Dropout" if dropout else None
         if learning_rule == 'sgd':
             self._learning_rule = None
+        # elif learning_rule == 'adagrad':
+        #     self._learning_rule = AdaGrad()
+        elif learning_rule == 'adadelta':
+            self._learning_rule = AdaDelta()
         elif learning_rule == 'momentum':
             self._learning_rule = Momentum(learning_momentum)
         elif learning_rule == 'nesterov':
