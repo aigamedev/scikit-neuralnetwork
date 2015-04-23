@@ -311,13 +311,10 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
     def _create_matrix_input(self, X, y):
         if self.is_convolution:
-
             # b01c arrangement of data
             # http://benanne.github.io/2014/04/03/faster-convolutions-in-theano.html for more
-            #input: (batch size, channels, rows, columns)
-            #filters: (number of filters, channels, rows, columns)
-
-
+            # input: (batch size, channels, rows, columns)
+            # filters: (number of filters, channels, rows, columns)
             input_space = Conv2DSpace(shape=X.shape[1:3], num_channels=X.shape[-1])
             view = input_space.get_origin_batch(X.shape[0])
             return DenseDesignMatrix(topo_view=view, y=y), input_space
