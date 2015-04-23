@@ -147,8 +147,10 @@ class BaseMLP(sklearn.base.BaseEstimator):
         self.verbose = verbose
 
         self.unit_counts = None
+        self.input_space = None
         self.mlp = None
         self.weights = None
+        self.vs = None
         self.ds = None
         self.trainer = None
         self.f = None
@@ -276,7 +278,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
         raise NotImplementedError(
             "Output layer type `%s` is not implemented." % activation_type)
 
-    def _create_mlp(self, input_space=None):
+    def _create_mlp(self):
         # Create the layers one by one, connecting to previous.
         mlp_layers = []
         for i, layer in enumerate(self.layers[:-1]):
@@ -304,17 +306,18 @@ class BaseMLP(sklearn.base.BaseEstimator):
         output_layer = self._create_output_layer(output_layer_name, output_layer_info)
         mlp_layers.append(output_layer)
 
-        nn = mlp.MLP(
+        self.mlp = mlp.MLP(
             mlp_layers,
             nvis=None if self.is_convolution else self.unit_counts[0],
             seed=self.random_state,
-            input_space=input_space)
+            input_space=self.input_space)
 
         if self.weights is not None:
-            self.__array_to_mlp(self.weights, nn)
+            self.__array_to_mlp(self.weights, self.mlp)
             self.weights = None
 
-        return nn
+        inputs = self.mlp.get_input_space().make_theano_batch()
+        self.f = theano.function([inputs], self.mlp.fprop(inputs))
 
     def _create_matrix_input(self, X, y):
         if self.is_convolution:
@@ -355,26 +358,24 @@ class BaseMLP(sklearn.base.BaseEstimator):
         self.train_set = X, y
 
         # Convolution networks need a custom input space.
-        self.ds, input_space = self._create_matrix_input(X, y)
+        self.ds, self.input_space = self._create_matrix_input(X, y)
         if self.valid_set:
             X_v, y_v = self.valid_set
             self.vs, _ = self._create_matrix_input(X_v, y_v)
         else:
             self.vs = None
 
-        if self.mlp is None:
-            self.mlp = self._create_mlp(input_space=input_space)
+        self._create_mlp()
 
         self.trainer = self._create_trainer(self.vs)
         self.trainer.setup(self.mlp, self.ds)
-        inputs = self.mlp.get_input_space().make_theano_batch()
-        self.f = theano.function([inputs], self.mlp.fprop(inputs))
+        
 
     @property
     def is_initialized(self):
         """Check if the neural network was setup already.
         """
-        return not (self.ds is None or self.trainer is None or self.f is None)
+        return not (self.mlp is None or self.f is None)
 
     @property
     def is_convolution(self):
@@ -389,7 +390,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
         d = self.__dict__.copy()
         d['weights'] = self.__mlp_to_array()
 
-        for k in ['ds', 'f', 'trainer', 'mlp']:
+        for k in ['ds', 'vs', 'f', 'trainer', 'mlp']:
             if k in d:
                 del d[k]
         return d
@@ -399,16 +400,15 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
     def __setstate__(self, d):
         self.__dict__.update(d)
-        for k in ['ds', 'f', 'trainer', 'mlp']:
+        for k in ['ds', 'vs', 'f', 'trainer', 'mlp']:
             setattr(self, k, None)
+        self._create_mlp()
 
     def __array_to_mlp(self, array, nn):
         for layer, (weights, biases) in zip(nn.layers, array):
-            print(layer.get_weights().shape, weights.shape)
             assert layer.get_weights().shape == weights.shape
             layer.set_weights(weights)
 
-            print(layer.get_biases().shape, biases.shape)
             assert layer.get_biases().shape == biases.shape
             layer.set_biases(biases)
 
