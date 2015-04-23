@@ -290,8 +290,15 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
     def _create_matrix_input(self, X, y):
         if self.is_convolution:
-            input_space = Conv2DSpace(shape=X.shape[1:], num_channels=1)
-            view = input_space.get_origin_batch(100)
+
+            # b01c arrangement of data
+            # http://benanne.github.io/2014/04/03/faster-convolutions-in-theano.html for more
+            #input: (batch size, channels, rows, columns)
+            #filters: (number of filters, channels, rows, columns)
+
+
+            input_space = Conv2DSpace(shape=X.shape[1:3], num_channels=X.shape[-1])
+            view = input_space.get_origin_batch(X.shape[0])
             return DenseDesignMatrix(topo_view=view, y=y), input_space
         else:
             return DenseDesignMatrix(X=X, y=y), None
@@ -386,7 +393,6 @@ class BaseMLP(sklearn.base.BaseEstimator):
             self.train_set = X, y
 
         if self.is_convolution:
-            X = numpy.array([X]).transpose(1,2,3,0)
             X = self.ds.view_converter.topo_view_to_design_mat(X)
 
         self.ds.X, self.ds.y = X, y
@@ -450,8 +456,7 @@ Epoch    Validation Error    Time
             X = X.astype(numpy.float32)
         if not isinstance(X, numpy.ndarray):
             X = X.toarray()
-        if self.is_convolution:
-            X = numpy.array([X]).transpose(1,2,3,0)
+
 
         return self.f(X)
 

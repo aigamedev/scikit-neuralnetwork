@@ -9,7 +9,7 @@ from sknn.mlp import MultiLayerPerceptronRegressor as MLPR
 class TestConvolution(unittest.TestCase):
 
     def _run(self, nn):
-        a_in, a_out = numpy.zeros((32,16,16)), numpy.zeros((32,4))
+        a_in, a_out = numpy.zeros((8,32,16,2)), numpy.zeros((8,4))
         nn.fit(a_in, a_out)
         a_test = nn.predict(a_in)
         assert_equal(type(a_out), type(a_in))
