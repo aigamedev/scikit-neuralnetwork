@@ -21,8 +21,7 @@ class TestLinearNetwork(unittest.TestCase):
         a_in = numpy.zeros((8,16))
         assert_raises(ValueError, self.nn.predict, a_in)
 
-    def __test_FitAutoInitialize(self):
-        # TODO: This hangs forever with serialization?
+    def test_FitAutoInitialize(self):
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
         self.nn.fit(a_in, a_out)
         assert_true(self.nn.is_initialized)
@@ -76,6 +75,11 @@ class TestSerializedNetwork(TestLinearNetwork):
         pickle.dump(self.original, buf)
         buf.seek(0)
         self.nn = pickle.load(buf)
+
+    def test_FitAutoInitialize(self):
+        # Override base class test, you currently can't re-train a network that
+        # was serialized and deserialized.
+        pass
 
     def test_PredictUninitialized(self):
         # Override base class test, this is not initialized but it
