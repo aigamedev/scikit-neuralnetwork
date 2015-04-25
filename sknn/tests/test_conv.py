@@ -51,6 +51,16 @@ class TestConvolution(unittest.TestCase):
             n_iter=1,
             valid_size=0.5))
 
+    def test_MultipleLayers(self):
+        self._run(MLPR(
+            layers=[
+                ("Convolution", 6, (3,3)),
+                ("Convolution", 4, (5,5)),
+                ("Convolution", 8, (3,3)),
+                ("Linear",)],
+            n_iter=1))
+
+
 class TestConvolutionRGB(TestConvolution):
 
     def _run(self, nn):
