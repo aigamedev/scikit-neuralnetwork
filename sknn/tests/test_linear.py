@@ -76,6 +76,11 @@ class TestSerializedNetwork(TestLinearNetwork):
         buf.seek(0)
         self.nn = pickle.load(buf)
 
+    def test_TypeOfWeightsArray(self):
+        for w, b in self.nn._mlp_to_array():
+            assert_equal(type(w), numpy.ndarray)
+            assert_equal(type(b), numpy.ndarray)
+
     def test_FitAutoInitialize(self):
         # Override base class test, you currently can't re-train a network that
         # was serialized and deserialized.

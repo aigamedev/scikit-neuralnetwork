@@ -313,7 +313,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
             input_space=self.input_space)
 
         if self.weights is not None:
-            self.__array_to_mlp(self.weights, self.mlp)
+            self._array_to_mlp(self.weights, self.mlp)
             self.weights = None
 
         inputs = self.mlp.get_input_space().make_theano_batch()
@@ -388,14 +388,14 @@ class BaseMLP(sklearn.base.BaseEstimator):
             "The neural network has not been initialized."
 
         d = self.__dict__.copy()
-        d['weights'] = self.__mlp_to_array()
+        d['weights'] = self._mlp_to_array()
 
         for k in ['ds', 'vs', 'f', 'trainer', 'mlp']:
             if k in d:
                 del d[k]
         return d
 
-    def __mlp_to_array(self):
+    def _mlp_to_array(self):
         return [(l.get_weights(), l.get_biases()) for l in self.mlp.layers]
 
     def __setstate__(self, d):
@@ -404,7 +404,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
             setattr(self, k, None)
         self._create_mlp()
 
-    def __array_to_mlp(self, array, nn):
+    def _array_to_mlp(self, array, nn):
         for layer, (weights, biases) in zip(nn.layers, array):
             assert layer.get_weights().shape == weights.shape
             layer.set_weights(weights)
