@@ -15,4 +15,4 @@ class TestGaussianOutput(test_linear.TestLinearNetwork):
 class TestSoftmaxOutput(test_linear.TestLinearNetwork):
 
     def setUp(self):
-        self.nn = MLPC(layers=[("Softmax",)], n_iter=1)
+        self.nn = MLPR(layers=[("Softmax",)], n_iter=1)

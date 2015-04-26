@@ -32,7 +32,6 @@ class TestPipeline(unittest.TestCase):
         self._run(pipeline)
 
 
-"""
 class TestSerializedPipeline(TestPipeline):
 
     def _run(self, pipeline):
@@ -47,4 +46,3 @@ class TestSerializedPipeline(TestPipeline):
         p = pickle.load(buf)
         
         assert_true((a_test == p.predict(a_in)).all())
-"""
