@@ -24,4 +24,4 @@ class TestNestedParameters(unittest.TestCase):
 
     def test_SetParamsValueError(self):
         nn = MLPR(layers=[L("Linear")])
-        assert_raises(nn.set_params, output0__range=1.0)
+        assert_raises(ValueError, nn.set_params, output0__range=1.0)

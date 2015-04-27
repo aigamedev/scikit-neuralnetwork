@@ -417,11 +417,10 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             nl = mlp.SigmoidConvNonlinearity()
         elif layer.type == "Tanh":
             nl = mlp.TanhConvNonlinearity()
-        elif layer.type == "Linear":
-            nl = mlp.IdentityConvNonlinearity()
         else:
-            raise NotImplementedError(
-                "Convolution layer type `%s` is not supported." % layer.type)
+            assert layer.type == "Linear",\
+                "Convolution layer type `%s` is not supported." % layer.type
+            nl = mlp.IdentityConvNonlinearity()
 
         return mlp.ConvElemwise(
             layer_name=name,
@@ -490,9 +489,6 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
                 layer_name=layer.name,
                 n_classes=layer.units,
                 irange=irange)
-
-        raise NotImplementedError(
-            "Layer type `%s` is not supported." % layer.type)
 
     def _create_mlp(self):
         # Create the layers one by one, connecting to previous.

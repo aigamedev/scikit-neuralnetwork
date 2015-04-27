@@ -110,6 +110,9 @@ class TestActivationTypes(unittest.TestCase):
     def test_LinearConv(self):
         self._run("Linear")
 
+    def test_UnknownConv(self):
+        assert_raises(NotImplementedError, self._run, "Unknown")
+
 
 class TestConvolutionRGB(TestConvolution):
 
