@@ -1,13 +1,26 @@
 import unittest
-from nose.tools import (assert_is_not_none, assert_false, assert_raises, assert_equal)
+from nose.tools import (assert_true, assert_raises, assert_equal)
 
+import io
 import numpy
+import logging
 
+import sknn
 from sknn.mlp import MultiLayerPerceptronRegressor as MLPR
 from sknn.mlp import Layer as L
 
 
 class TestLearningRules(unittest.TestCase):
+
+    def setUp(self):
+        self.buf = io.StringIO()
+        self.hnd = logging.StreamHandler(self.buf)
+        logging.getLogger('sknn').addHandler(self.hnd)
+        logging.getLogger().setLevel(logging.WARNING)
+
+    def tearDown(self):
+        assert_equal('', self.buf.getvalue())
+        sknn.mlp.log.removeHandler(self.hnd)
 
     def test_Default(self):
         self._run(MLPR(layers=[L("Linear")],
@@ -15,12 +28,12 @@ class TestLearningRules(unittest.TestCase):
                        n_iter=1))
 
     def test_Momentum(self):
-        self._run(MLPR(layers=[L("Linear")],
+        self._run(MLPR(layers=[L("Gaussian")],
                        learning_rule='momentum',
                        n_iter=1))
 
     def test_Nesterov(self):
-        self._run(MLPR(layers=[L("Linear")],
+        self._run(MLPR(layers=[L("Softmax")],
                        learning_rule='nesterov',
                        n_iter=1))
 
@@ -53,9 +66,14 @@ class TestLearningRules(unittest.TestCase):
                        n_iter=1))
 
     def test_DropoutPerLayer(self):
-        self._run(MLPR(layers=[L("Tanh", units=8, dropout=0.25), L("Linear")],
+        self._run(MLPR(layers=[L("Maxout", units=8, pieces=2, dropout=0.25), L("Linear")],
                        dropout=True,
                        n_iter=1))
+
+    def test_AutomaticDropout(self):
+        nn = MLPR(layers=[L("Tanh", units=8, dropout=0.25), L("Linear")], n_iter=1)
+        self._run(nn)
+        assert_true(nn.cost is not None)
 
     def test_UnknownRule(self):
         assert_raises(NotImplementedError, MLPR,

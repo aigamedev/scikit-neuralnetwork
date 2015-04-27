@@ -108,6 +108,10 @@ class Layer(object):
         assert nop is None,\
             "Specify layer parameters as keyword arguments, not positional arguments."
 
+        if type not in ['Rectifier', 'Sigmoid', 'Tanh', 'Maxout', 'Convolution',
+                        'Linear', 'Softmax', 'Gaussian']:
+            raise NotImplementedError("Layer type `%s` is not implemented." % type)
+
         self.name = name
         self.type = type
         self.units = units
@@ -121,6 +125,9 @@ class Layer(object):
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
+    def __repr__(self):
+        params = ", ".join(["%s=%r" % (k, v) for k, v in self.__dict__.items() if v is not None])
+        return "<sknn.mlp.Layer %s: %s>" % (self.type, params)
 
 
 class BaseMLP(sklearn.base.BaseEstimator):
@@ -130,18 +137,18 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
     Parameters
     ----------
-    layers : list of tuples
-        An iterable sequence of each layer each as a tuple: first with an
-        activation type and then optional parameters such as the number of
-        units.
+    layers : list[Layer]
+        An iterable sequence of each layer each as a Layer instance that contains
+        its type, optional name, and any paramaters required.
 
             * For hidden layers, you can use the following layer types:
               ``Rectifier``, ``Sigmoid``, ``Tanh``, ``Maxout`` or ``Convolution``.
             * For output layers, you can use the following layer types:
               ``Linear``, ``Softmax`` or ``Gaussian``.
 
-        You must specify at least an output layer, so the last tuple in your
-        layers parameter should contain ``Linear`` (for example).
+        You must specify exactly one output layer type, so the last entry in your
+        ``layers`` list should contain ``Linear`` for regression, or ``Softmax`` for
+        classification (recommended).
 
     random_state : int
         Seed for the initialization of the neural network parameters (e.g.
@@ -275,17 +282,19 @@ class BaseMLP(sklearn.base.BaseEstimator):
     def _create_trainer(self, dataset):
         sgd.log.setLevel(logging.WARNING)
 
-        if self.cost == "Dropout":
-            probs, scales = {}, {}
-            for l in [l for l in self.layers if l.dropout is not None]:
-                incl = 1.0 - l.dropout
-                probs[l.name] = incl
-                scales[l.name] = 1.0 / incl
+        # Aggregate all the dropout parameters into shared dictionaries.
+        probs, scales = {}, {}
+        for l in [l for l in self.layers if l.dropout is not None]:
+            incl = 1.0 - l.dropout
+            probs[l.name] = incl
+            scales[l.name] = 1.0 / incl
 
+        if self.cost == "Dropout" or len(probs) > 0:
             # Use the globally specified dropout rate when there are no layer-specific ones.
             incl = 1.0 - self.dropout
             default_prob, default_scale = incl, 1.0 / incl
 
+            # Pass all the parameters to pylearn2 as a custom cost function.
             self.cost = Dropout(
                 default_input_include_prob=default_prob,
                 default_input_scale=default_scale,
@@ -308,26 +317,45 @@ class BaseMLP(sklearn.base.BaseEstimator):
             termination_criterion=termination_criterion,
             monitoring_dataset=dataset)
 
+    def _check_layer(self, layer, required, optional=[]):
+        required.extend(['name', 'type'])
+        for r in required:
+            if getattr(layer, r) is None:
+                raise ValueError("Layer type `%s` requires parameter `%s`."\
+                                 % (layer.type, r))
+
+        optional.extend(['dropout'])
+        for a in layer.__dict__:
+            if a in required+optional:
+                continue
+            if getattr(layer, a) is not None:
+                log.warning("Parameter `%s` is unused for layer type `%s`."\
+                            % (a, layer.type))
+
     def _create_hidden_layer(self, name, layer, irange=0.1):
         if layer.type == "Rectifier":
+            self._check_layer(layer, ['units'])
             return mlp.RectifiedLinear(
                 layer_name=name,
                 dim=layer.units,
                 irange=irange)
 
         if layer.type == "Sigmoid":
+            self._check_layer(layer, ['units'])
             return mlp.Sigmoid(
                 layer_name=name,
                 dim=layer.units,
                 irange=irange)
 
         if layer.type == "Tanh":
+            self._check_layer(layer, ['units'])
             return mlp.Tanh(
                 layer_name=name,
                 dim=layer.units,
                 irange=irange)
 
         if layer.type == "Maxout":
+            self._check_layer(layer, ['units', 'pieces'])
             return maxout.Maxout(
                 layer_name=name,
                 num_units=layer.units,
@@ -335,6 +363,8 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 irange=irange)
 
         if layer.type == "Convolution":
+            self._check_layer(layer, ['channels', 'kernel_shape'],
+                                     ['pool_shape', 'pool_type'])
             return mlp.ConvRectifiedLinear(
                 layer_name=name,
                 output_channels=layer.channels,
@@ -345,7 +375,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 irange=irange)
 
         raise NotImplementedError(
-            "Hidden layer type `%s` is not implemented." % layer.type)
+            "Hidden layer type `%s` is not supported." % layer.type)
 
     def _create_output_layer(self, layer):
         fan_in = self.unit_counts[-2]
@@ -353,29 +383,32 @@ class BaseMLP(sklearn.base.BaseEstimator):
         lim = numpy.sqrt(6) / (numpy.sqrt(fan_in + fan_out))
 
         if layer.type == "Linear":
+            self._check_layer(layer, ['units'])
             return mlp.Linear(
-                dim=layer.units,
                 layer_name=layer.name,
+                dim=layer.units,
                 irange=lim)
 
         if layer.type == "Gaussian":
+            self._check_layer(layer, ['units'])
             return mlp.LinearGaussian(
+                layer_name=layer.name,
                 init_beta=0.1,
                 min_beta=0.001,
                 max_beta=1000,
                 beta_lr_scale=None,
                 dim=layer.units,
-                layer_name=layer.name,
                 irange=lim)
 
         if layer.type == "Softmax":
+            self._check_layer(layer, ['units'])
             return mlp.Softmax(
                 layer_name=layer.name,
                 n_classes=layer.units,
                 irange=lim)
 
         raise NotImplementedError(
-            "Output layer type `%s` is not implemented." % layer.type)
+            "Output layer type `%s` is not supported." % layer.type)
 
     def _create_mlp(self):
         # Create the layers one by one, connecting to previous.
@@ -415,8 +448,8 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
     def _create_matrix_input(self, X, y):
         if self.is_convolution:
-            # b01c arrangement of data
-            # http://benanne.github.io/2014/04/03/faster-convolutions-in-theano.html for more
+            # Using `b01c` arrangement of data, see this for details:
+            #   http://benanne.github.io/2014/04/03/faster-convolutions-in-theano.html
             # input: (batch size, channels, rows, columns)
             # filters: (number of filters, channels, rows, columns)
             input_space = Conv2DSpace(shape=X.shape[1:3], num_channels=X.shape[-1])
