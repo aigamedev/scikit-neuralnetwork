@@ -48,6 +48,7 @@ class Layer(object):
     def __init__(
             self,
             type,
+            nop=None,
             name=None,
             units=None,
             pieces=None,
@@ -104,6 +105,8 @@ class Layer(object):
             means that 25% of the inputs will be excluded for each training sample, with the
             remaining inputs being renormalized accordingly.
         """
+        assert nop is None,\
+            "Specify layer parameters as keyword arguments, not positional arguments."
 
         self.name = name
         self.type = type
@@ -212,16 +215,13 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
         self.layers = []
         for i, layer in enumerate(layers):
-            if isinstance(layer, tuple):
-                if len(layer) == 1:
-                    layer = (layer[0], None)
-                layer = Layer(layer[0], units=layer[1])
+            assert isinstance(layer, Layer),\
+                "Specify each layer as an instance of a `sknn.mlp.Layer` object."
 
             if layer.name is None:
                 label = "Hidden" if i < len(layers)-1 else "Output"
                 layer.name = "%s_%i_%s" % (label, i, layer.type)
 
-            assert type(layer) == Layer
             self.layers.append(layer)
 
         self.random_state = random_state

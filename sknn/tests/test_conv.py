@@ -19,42 +19,42 @@ class TestConvolution(unittest.TestCase):
         self._run(MLPR(
             layers=[
                 L("Convolution", channels=4, kernel_shape=(3,3)),
-                ("Linear",)],
+                L("Linear")],
             n_iter=1))
 
     def test_KernelPooling(self):
         self._run(MLPR(
             layers=[
                 L("Convolution", channels=4, kernel_shape=(3,3), pool_shape=(2,2)),
-                ("Linear",)],
+                L("Linear")],
             n_iter=1))
 
     def test_VerticalKernel(self):
         self._run(MLPR(
             layers=[
                 L("Convolution", channels=4, kernel_shape=(16,1)),
-                ("Linear",)],
+                L("Linear")],
             n_iter=1))
 
     def test_VerticalVerbose(self):
         self._run(MLPR(
             layers=[
                 L("Convolution", channels=4, kernel_shape=(16,1)),
-                ("Linear",)],
+                L("Linear")],
             n_iter=1, verbose=1, valid_size=0.1))
 
     def test_HorizontalKernel(self):
         self._run(MLPR(
             layers=[
                 L("Convolution", channels=4, kernel_shape=(1,16)),
-                ("Linear",)],
+                L("Linear")],
             n_iter=1))
 
     def test_ValidationSet(self):
         self._run(MLPR(
             layers=[
                 L("Convolution", channels=4, kernel_shape=(3,3)),
-                ("Linear",)],
+                L("Linear")],
             n_iter=1,
             valid_size=0.5))
 
@@ -64,7 +64,7 @@ class TestConvolution(unittest.TestCase):
                 L("Convolution", channels=6, kernel_shape=(3,3)),
                 L("Convolution", channels=4, kernel_shape=(5,5)),
                 L("Convolution", channels=8, kernel_shape=(3,3)),
-                ("Linear",)],
+                L("Linear")],
             n_iter=1))
 
     def test_PoolingMaxType(self):
@@ -72,7 +72,7 @@ class TestConvolution(unittest.TestCase):
             layers=[
                 L("Convolution", channels=4, kernel_shape=(3,3),
                                  pool_shape=(2,2), pool_type='max'),
-                ("Linear",)],
+                L("Linear")],
             n_iter=1))
 
     def test_PoolingMeanType(self):
@@ -80,7 +80,7 @@ class TestConvolution(unittest.TestCase):
             layers=[
                 L("Convolution", channels=4, kernel_shape=(3,3),
                                  pool_shape=(2,2), pool_type='mean'),
-                ("Linear",)],
+                L("Linear")],
             n_iter=1))
 
 

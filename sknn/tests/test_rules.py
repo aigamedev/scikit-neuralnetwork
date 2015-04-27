@@ -10,17 +10,17 @@ from sknn.mlp import Layer as L
 class TestLearningRules(unittest.TestCase):
 
     def test_Default(self):
-        self._run(MLPR(layers=[("Linear",)],
+        self._run(MLPR(layers=[L("Linear")],
                        learning_rule='sgd',
                        n_iter=1))
 
     def test_Momentum(self):
-        self._run(MLPR(layers=[("Linear",)],
+        self._run(MLPR(layers=[L("Linear")],
                        learning_rule='momentum',
                        n_iter=1))
 
     def test_Nesterov(self):
-        self._run(MLPR(layers=[("Linear",)],
+        self._run(MLPR(layers=[L("Linear")],
                        learning_rule='nesterov',
                        n_iter=1))
 
@@ -33,27 +33,27 @@ class TestLearningRules(unittest.TestCase):
     #                     n_iter=1))
 
     def test_AdaDelta(self):
-        self._run(MLPR(layers=[("Linear",)],
+        self._run(MLPR(layers=[L("Linear")],
                        learning_rule='adadelta',
                        n_iter=1))
 
     def test_RmsProp(self):
-        self._run(MLPR(layers=[("Linear",)],
+        self._run(MLPR(layers=[L("Linear")],
                        learning_rule='rmsprop',
                        n_iter=1))
 
     def test_DropoutAsBool(self):
-        self._run(MLPR(layers=[("Sigmoid", 8), ("Linear",)],
+        self._run(MLPR(layers=[L("Sigmoid", units=8), L("Linear")],
                        dropout=True,
                        n_iter=1))
 
     def test_DropoutAsFloat(self):
-        self._run(MLPR(layers=[("Tanh", 8), ("Linear",)],
+        self._run(MLPR(layers=[L("Tanh", units=8), L("Linear",)],
                        dropout=0.25,
                        n_iter=1))
 
     def test_DropoutPerLayer(self):
-        self._run(MLPR(layers=[L("Tanh", units=8, dropout=0.25), ("Linear",)],
+        self._run(MLPR(layers=[L("Tanh", units=8, dropout=0.25), L("Linear")],
                        dropout=True,
                        n_iter=1))
 
