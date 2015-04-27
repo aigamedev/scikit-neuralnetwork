@@ -55,6 +55,7 @@ Getting Started
 
     guide
 
+.. image:: plot_activation.png
 
 Indices & Search
 ----------------
