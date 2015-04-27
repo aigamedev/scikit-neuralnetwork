@@ -8,6 +8,7 @@ __author__ = 'Alex J. Champandard'
 
 import sys
 import time
+import logging
 import argparse
 import itertools
 import numpy as np
@@ -19,7 +20,11 @@ from sklearn.cross_validation import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.datasets import make_moons, make_circles, make_classification
 
-from sknn.mlp import MultiLayerPerceptronClassifier
+# The neural network uses the `sknn` logger to output its information.
+import logging
+logging.basicConfig(format="%(message)s", level=logging.WARNING, stream=sys.stdout)
+
+from sknn import mlp
 
 # All possible parameter options that can be plotted, separately or combined.
 PARAMETERS = {
@@ -27,7 +32,7 @@ PARAMETERS = {
     'alpha': [0.001, 0.005, 0.01, 0.05, 0.1, 0.2],
     'dropout': [False, True],
     'iterations': [100, 200, 500, 1000],
-    'output': ['Linear', 'Softmax', 'LinearGaussian'],
+    'output': ['Softmax', 'Linear', 'Gaussian'],
     'rules': ['sgd', 'momentum', 'nesterov', 'adadelta', 'rmsprop'],
     'units': [16, 64, 128, 256],
 }
@@ -53,8 +58,9 @@ for p in sorted(PARAMETERS):
 names = []
 classifiers = []
 for (activation, alpha, dropout, iterations, output, rule, units) in itertools.product(*params):
-    classifiers.append(MultiLayerPerceptronClassifier(
-        layers=[(activation, units, 2), (output,)], random_state=1,
+    params = {'pieces': 2} if activation == "Maxout" else {}
+    classifiers.append(mlp.Classifier(
+        layers=[mlp.Layer(activation, units=units, **params), mlp.Layer(output)], random_state=1,
         n_iter=iterations, n_stable=iterations,
         dropout=dropout, learning_rule=rule, learning_rate=alpha),)
 

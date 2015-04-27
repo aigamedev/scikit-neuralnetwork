@@ -5,12 +5,13 @@ import numpy
 from sklearn.base import clone
 
 from sknn.mlp import MultiLayerPerceptronClassifier as MLPC
+from sknn.mlp import Layer as L
 
 
 class TestClassifierFunctionality(unittest.TestCase):
 
     def setUp(self):
-        self.nn = MLPC(layers=[("Linear",)], n_iter=1)
+        self.nn = MLPC(layers=[L("Linear")], n_iter=1)
 
     def test_FitAutoInitialize(self):
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,), dtype=numpy.int32)
@@ -49,7 +50,7 @@ class TestClassifierFunctionality(unittest.TestCase):
 class TestClassifierClone(TestClassifierFunctionality):
 
     def setUp(self):
-        cc = MLPC(layers=[("Linear",)], n_iter=1)
+        cc = MLPC(layers=[L("Linear")], n_iter=1)
         self.nn = clone(cc)
 
     # This runs the same tests on the clone as for the original above.
@@ -61,18 +62,18 @@ class TestClassifierInterface(unittest.TestCase):
         assert_equal(params['learning_rate'], 0.05)
         assert_equal(params['n_iter'], 456)
         assert_equal(params['n_stable'], 123)
-        assert_equal(params['dropout'], True)
+        assert_equal(params['dropout'], 0.25)
         assert_equal(params['valid_size'], 0.2)
 
     def test_GetParamValues(self):
-        nn = MLPC(layers=[("Linear",)], learning_rate=0.05, n_iter=456,
-                  n_stable=123, valid_size=0.2, dropout=True)
+        nn = MLPC(layers=[L("Linear")], learning_rate=0.05, n_iter=456,
+                  n_stable=123, valid_size=0.2, dropout=0.25)
         params = nn.get_params()
         self.check_values(params)
 
     def test_CloneWithValues(self):
-        nn = MLPC(layers=[("Linear",)], learning_rate=0.05, n_iter=456,
-                  n_stable=123, valid_size=0.2, dropout=True)
+        nn = MLPC(layers=[L("Linear")], learning_rate=0.05, n_iter=456,
+                  n_stable=123, valid_size=0.2, dropout=0.25)
         cc = clone(nn)
         params = cc.get_params()
         self.check_values(params)
@@ -81,24 +82,24 @@ class TestClassifierInterface(unittest.TestCase):
         assert_equal(params['learning_rate'], 0.01)
         assert_equal(params['n_iter'], None)
         assert_equal(params['n_stable'], 50)
-        assert_equal(params['dropout'], False)
+        assert_equal(params['dropout'], 0.0)
         assert_equal(params['valid_size'], 0.0)
 
     def test_GetParamDefaults(self):
-        nn = MLPC(layers=[("Gaussian",)])
+        nn = MLPC(layers=[L("Gaussian")])
         params = nn.get_params()
         self.check_defaults(params)
 
     def test_CloneDefaults(self):
-        nn = MLPC(layers=[("Gaussian",)])
+        nn = MLPC(layers=[L("Gaussian")])
         cc = clone(nn)
         params = cc.get_params()
         self.check_defaults(params)
 
     def test_ConvertToString(self):
-        nn = MLPC(layers=[("Gaussian",)])
+        nn = MLPC(layers=[L("Gaussian")])
         assert_equal(str, type(str(nn)))
 
     def test_Representation(self):
-        nn = MLPC(layers=[("Gaussian",)])
+        nn = MLPC(layers=[L("Gaussian")])
         assert_equal(str, type(repr(nn)))

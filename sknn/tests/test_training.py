@@ -5,6 +5,11 @@ import io
 import logging
 
 import numpy
+from sknn.mlp import BaseMLP as MLP
+from sknn.mlp import MultiLayerPerceptronRegressor as MLPR
+from sknn.mlp import MultiLayerPerceptronClassifier as MLPC
+from sknn.mlp import Layer as L
+
 import sknn.mlp
 
 
@@ -12,8 +17,8 @@ class TestTrainingProcedure(unittest.TestCase):
 
     def test_FitTerminateStable(self):
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
-        self.nn = sknn.mlp.BaseMLP(
-                    layers=[("Gaussian",)], learning_rate=0.001,
+        self.nn = MLP(
+                    layers=[L("Gaussian")], learning_rate=0.001,
                     n_iter=None, n_stable=1, f_stable=0.1,
                     valid_set=(a_in, a_out))
 
@@ -21,8 +26,8 @@ class TestTrainingProcedure(unittest.TestCase):
 
     def test_FitAutomaticValidation(self):
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
-        self.nn = sknn.mlp.BaseMLP(
-                    layers=[("Gaussian",)], learning_rate=0.001,
+        self.nn = MLP(
+                    layers=[L("Gaussian")], learning_rate=0.001,
                     n_iter=None, n_stable=1, f_stable=0.1,
                     valid_size=0.25)
 
@@ -40,14 +45,14 @@ class TestTrainingOutput(unittest.TestCase):
         sknn.mlp.log.removeHandler(self.hnd)
 
     def test_VerboseRegressor(self):
-        nn = sknn.mlp.MultiLayerPerceptronRegressor(layers=[("Linear",)], verbose=1, n_iter=1)
+        nn = MLPR(layers=[L("Linear")], verbose=1, n_iter=1)
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
         nn.fit(a_in, a_out)
         assert_in("Epoch    Validation Error    Time", self.buf.getvalue())
         assert_in("    0           N/A          ", self.buf.getvalue())
 
     def test_VerboseClassifier(self):
-        nn = sknn.mlp.MultiLayerPerceptronClassifier(layers=[("Linear",)], verbose=1, n_iter=1)
+        nn = MLPC(layers=[L("Linear")], verbose=1, n_iter=1)
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,1), dtype=numpy.int32)
         nn.fit(a_in, a_out)
         assert_in("Epoch    Validation Error    Time", self.buf.getvalue())

@@ -35,10 +35,10 @@ if 'dbn' in sys.argv:
     classifiers.append(('nolearn.dbn', clf))
 
 if 'sknn' in sys.argv:
-    from sknn.mlp import MultiLayerPerceptronClassifier
+    from sknn import mlp
 
-    clf = MultiLayerPerceptronClassifier(
-        layers=[("Rectifier", 300), ("Softmax",)],
+    clf = mlp.Classifier(
+        layers=[mlp.Layer("Rectifier", units=300), mlp.Layer("Softmax")],
         learning_rate=0.02,
         learning_rule='momentum',
         batch_size=25,
