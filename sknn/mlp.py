@@ -98,12 +98,20 @@ class Layer(object):
         self.pieces = pieces
         self.dropout = dropout
 
+    def set_params(self, **params):
+        for k, v in params.items():
+            if k not in self.__dict__:
+                raise ValueError("Invalid parameter `%s` for layer `%s`." % (k, self.name))
+            self.__dict__[k] = v
+
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
     def __repr__(self):
-        params = ", ".join(["%s=%r" % (k, v) for k, v in self.__dict__.items() if v is not None])
-        return "<sknn.mlp.Layer %s: %s>" % (self.type, params)
+        copy = self.__dict__.copy()
+        del copy['type']
+        params = ", ".join(["%s=%r" % (k, v) for k, v in copy.items() if v is not None])
+        return "<sknn.mlp.Layer `%s`: %s>" % (self.type, params)
 
 
 class Convolution(Layer):
@@ -183,7 +191,7 @@ class Convolution(Layer):
         self.pool_type = pool_type
 
 
-class BaseMLP(sklearn.base.BaseEstimator):
+class MultiLayerPerceptron(sklearn.base.BaseEstimator):
     """
     Abstract base class for wrapping the multi-layer perceptron functionality
     from PyLearn2.
@@ -281,8 +289,8 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 "Specify each layer as an instance of a `sknn.mlp.Layer` object."
 
             if layer.name is None:
-                label = "Hidden" if i < len(layers)-1 else "Output"
-                layer.name = "%s_%i_%s" % (label, i, layer.type)
+                label = "hidden" if i < len(layers)-1 else "output"
+                layer.name = "%s%i" % (label, i)
 
             self.layers.append(layer)
 
@@ -693,9 +701,16 @@ Epoch    Validation Error    Time
 
         return self.f(X)
 
+    def get_params(self, deep=True):
+        result = super(MultiLayerPerceptron, self).get_params(deep=True)
+        for l in self.layers:
+            result[l.name] = l
+        return result
+
+BaseMLP = MultiLayerPerceptron
 
 
-class Regressor(BaseMLP, sklearn.base.RegressorMixin):
+class Regressor(MultiLayerPerceptron, sklearn.base.RegressorMixin):
     """Regressor compatible with sklearn that wraps PyLearn2.
     """
 
@@ -737,7 +752,7 @@ class Regressor(BaseMLP, sklearn.base.RegressorMixin):
 MultiLayerPerceptronRegressor = Regressor
 
 
-class Classifier(BaseMLP, sklearn.base.ClassifierMixin):
+class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
     """Classifier compatible with sklearn that wraps PyLearn2.
     """
 
