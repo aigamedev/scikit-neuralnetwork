@@ -10,7 +10,7 @@ import logging
 from sklearn.base import clone
 
 import sknn
-from sknn.mlp import MultiLayerPerceptronRegressor as MLPR
+from sknn.mlp import Regressor as MLPR
 from sknn.mlp import Layer as L
 
 from . import test_linear

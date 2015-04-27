@@ -2,7 +2,7 @@ import unittest
 from nose.tools import (assert_is_not_none, assert_raises, assert_equal)
 
 import scipy.sparse
-from sknn.mlp import BaseMLP as MLP
+from sknn.mlp import MultiLayerPerceptron as MLP
 from sknn.mlp import Layer as L
 
 

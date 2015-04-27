@@ -5,7 +5,7 @@ import numpy
 from sklearn.grid_search import GridSearchCV
 from sklearn.cross_validation import cross_val_score
 
-from sknn.mlp import MultiLayerPerceptronRegressor as MLPR
+from sknn.mlp import Regressor as MLPR
 from sknn.mlp import Layer as L
 
 

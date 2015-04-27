@@ -1,6 +1,6 @@
 from __future__ import (absolute_import, unicode_literals, print_function)
 
-__all__ = ['MultiLayerPerceptronRegressor', 'MultiLayerPerceptronClassifier']
+__all__ = ['Regressor', 'Classifier']
 
 import os
 import time
@@ -350,7 +350,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         self._setup()
 
     def _setup(self):
-        # raise NotImplementedError("BaseMLP is an abstract class; "
+        # raise NotImplementedError("MultiLayerPerceptron is an abstract class; "
         #                           "use the Classifier or Regressor instead.")
         pass
 
@@ -715,8 +715,6 @@ Epoch    Validation Error    Time
             result[l.name] = l
         return result
 
-BaseMLP = MultiLayerPerceptron
-
 
 class Regressor(MultiLayerPerceptron, sklearn.base.RegressorMixin):
     """Regressor compatible with sklearn that wraps PyLearn2.
@@ -757,8 +755,6 @@ class Regressor(MultiLayerPerceptron, sklearn.base.RegressorMixin):
         """
         return super(Regressor, self)._predict(X)
 
-MultiLayerPerceptronRegressor = Regressor
-
 
 class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
     """Classifier compatible with sklearn that wraps PyLearn2.
@@ -772,8 +768,8 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
         # The LabelBinarizer is also implemented in a way that this cannot be
         # customized without a providing a complete rewrite, so here we patch
         # the `type_of_target` function for this to work correctly,
-        import sklearn.preprocessing.label as L
-        L.type_of_target = lambda _: "multiclass"
+        import sklearn.preprocessing.label as spl
+        spl.type_of_target = lambda _: "multiclass"
 
         self.label_binarizer = sklearn.preprocessing.LabelBinarizer()
 
@@ -826,5 +822,3 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
         """
         y = self.predict_proba(X)
         return self.label_binarizer.inverse_transform(y, threshold=0.5)
-
-MultiLayerPerceptronClassifier = Classifier

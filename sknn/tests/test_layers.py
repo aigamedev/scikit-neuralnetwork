@@ -1,7 +1,7 @@
 import unittest
 from nose.tools import (assert_equal, assert_raises, assert_in, assert_not_in)
 
-from sknn.mlp import MultiLayerPerceptronRegressor as MLPR
+from sknn.mlp import Regressor as MLPR
 from sknn.mlp import Layer as L
 
 

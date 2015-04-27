@@ -6,7 +6,7 @@ import io
 import pickle
 import numpy
 
-from sknn.mlp import MultiLayerPerceptronRegressor as MLPR
+from sknn.mlp import Regressor as MLPR
 from sknn.mlp import Layer as L
 
 
