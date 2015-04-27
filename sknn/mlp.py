@@ -62,7 +62,7 @@ class Layer(object):
         if name is set to `hidden1`, then the parameter `hidden1__units` from the network
         is bound to this layer's `units` variable.
 
-    units: int, optional
+    units: int
         The number of units (also known as neurons) in this layer.  This applies to all
         layer types except for convolution.
 
@@ -138,11 +138,11 @@ class Convolution(Layer):
         The number of piecewise linear segments in the Maxout activation.  This is
         optional and only applies when `Maxout` is selected as the layer type.
 
-    channels: int, optional
+    channels: int
         Number of output channels for the convolution layers.  Each channel has its own
         set of shared weights which are trained by applying the kernel over the image.
 
-    kernel_shape: tuple of ints, optional
+    kernel_shape: tuple of ints
         A two-dimensional tuple of integers corresponding to the shape of the kernel when
         convolution is used.  For example, this could be a square kernel `(3,3)` or a full
         horizontal or vertical kernel on the input matrix, e.g. `(N,1)` or `(1,N)`.
