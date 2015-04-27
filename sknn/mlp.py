@@ -45,16 +45,64 @@ class ansi:
 
 class Layer(object):
 
-    def __init__(self, type, name=None, units=None, pieces=None,
-                 channels=None, kernel_shape=None, dropout=None,
-                 pool_shape=None, pool_type=None):
+    def __init__(
+            self,
+            type,
+            name=None,
+            units=None,
+            pieces=None,
+            channels=None,
+            kernel_shape=None,
+            pool_shape=None,
+            pool_type=None,
+            dropout=None):
         """
         Parameters
         ----------
 
-        pool_type: str
+        type: str
+            Select which activation function this layer should use, as a string.
+                * For hidden layers, you can use the following layer types:
+                ``Rectifier``, ``Sigmoid``, ``Tanh``, ``Maxout`` or ``Convolution``.
+                * For output layers, you can use the following layer types:
+                ``Linear``, ``Softmax`` or ``Gaussian``.
+
+        name: str, optional
+            You optionally can specify a name for this layer, and its parameters
+            will then be accessible to `scikit-learn` via a nested sub-object.  For example,
+            if name is set to `hidden1`, then the parameter `hidden1__units` from the network
+            is bound to this layer's `units` variable.
+
+        units: int, optional
+            The number of units (also known as neurons) in this layer.  This applies to all
+            layer types except for convolution.
+
+        pieces: int, optional
+            The number of piecewise linear segments in the Maxout activation.  This is
+            optional and only applies when `Maxout` is selected as the layer type.
+
+        channels: int, optional
+            Number of output channels for the convolution layers.  Each channel has its own
+            set of shared weights which are trained by applying the kernel over the image.
+
+        kernel_shape: tuple of ints, optional
+            A two-dimensional tuple of integers corresponding to the shape of the kernel when
+            convolution is used.  For example, this could be a square kernel `(3,3)` or a full
+            horizontal or vertical kernel on the input matrix, e.g. `(N,1)` or `(1,N)`.
+
+        pool_shape: tuple of ints, optional
+            A two-dimensional tuple of integers corresponding to the pool size.  This should be
+            square, for example `(2,2)` to reduce the size by half, or `(4,4)` to make the output
+            a quarter of the original.
+
+        pool_type: str, optional
             Type of the pooling to be used; can be either `max` or `mean`.  The default is 
             to take the maximum value of all inputs that fall into this pool.
+
+        dropout: float, optional
+            The ratio of inputs to drop out for this layer during training.  For example, 0.25
+            means that 25% of the inputs will be excluded for each training sample, with the
+            remaining inputs being renormalized accordingly.
         """
 
         self.name = name
