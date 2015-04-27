@@ -635,7 +635,7 @@ Epoch    Validation Error    Time
 
 
 
-class MultiLayerPerceptronRegressor(BaseMLP, sklearn.base.RegressorMixin):
+class Regressor(BaseMLP, sklearn.base.RegressorMixin):
     """Regressor compatible with sklearn that wraps PyLearn2.
     """
 
@@ -657,7 +657,7 @@ class MultiLayerPerceptronRegressor(BaseMLP, sklearn.base.RegressorMixin):
         self : object
             Returns this instance.
         """
-        return super(MultiLayerPerceptronRegressor, self)._fit(X, y)
+        return super(Regressor, self)._fit(X, y)
 
     def predict(self, X):
         """Calculate predictions for specified inputs.
@@ -672,11 +672,12 @@ class MultiLayerPerceptronRegressor(BaseMLP, sklearn.base.RegressorMixin):
         y : array, shape (n_samples, n_outputs)
             The predicted values as real numbers.
         """
-        return super(MultiLayerPerceptronRegressor, self)._predict(X)
+        return super(Regressor, self)._predict(X)
+
+MultiLayerPerceptronRegressor = Regressor
 
 
-
-class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
+class Classifier(BaseMLP, sklearn.base.ClassifierMixin):
     """Classifier compatible with sklearn that wraps PyLearn2.
     """
 
@@ -702,7 +703,7 @@ class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
         self.label_binarizer.fit(y)
         yp = self.label_binarizer.transform(y)
         # Now train based on a problem transformed into regression.
-        return super(MultiLayerPerceptronClassifier, self)._fit(X, yp, test=y)
+        return super(Classifier, self)._fit(X, yp, test=y)
 
     def partial_fit(self, X, y, classes=None):
         if classes is not None:
@@ -723,7 +724,7 @@ class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
             The predicted probability of the sample for each class in the
             model, in the same order as the classes.
         """
-        proba = super(MultiLayerPerceptronClassifier, self)._predict(X)
+        proba = super(Classifier, self)._predict(X)
 
         return proba / proba.sum(1, keepdims=True)
 
@@ -742,3 +743,5 @@ class MultiLayerPerceptronClassifier(BaseMLP, sklearn.base.ClassifierMixin):
         """
         y = self.predict_proba(X)
         return self.label_binarizer.inverse_transform(y, threshold=0.5)
+
+MultiLayerPerceptronClassifier = Classifier

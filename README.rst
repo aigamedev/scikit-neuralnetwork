@@ -73,17 +73,17 @@ The library supports both regressors (to estimate continuous outputs) and classi
 
 .. code:: python
 
-    import sknn.mlp
+    from sknn import mlp
 
-    nn = sknn.mlp.MultiLayerPerceptronClassifier(
-        layers=[("Rectifier", 100), ("Linear",)],
+    nn = mlp.Classifier(
+        layers=[mlp.Layer("Rectifier", units=100), mlp.Layer("Linear")],
         learning_rate=0.02,
         n_iter=10)
 
     nn.fit(X_train, y_train)
-    nn.predict(X_test)
+    nn.predict(X_valid)
 
-    nn.score(X_valid, y_valid)
+    nn.score(X_test, y_test)
 
 We currently recommend reading ``sknn/mlp.py`` for more information about the parameters.  There's also `generated documentation <http://scikit-neuralnetwork.readthedocs.org/>`_ as a standalone page.
 
