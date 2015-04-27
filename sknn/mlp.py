@@ -281,18 +281,30 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             f_stable=0.001,
             valid_set=None,
             valid_size=0.0,            
-            verbose=False):
+            verbose=False,
+            **params):
 
         self.layers = []
         for i, layer in enumerate(layers):
             assert isinstance(layer, Layer),\
                 "Specify each layer as an instance of a `sknn.mlp.Layer` object."
 
+            # Layer names are optional, if not specified then generate one.
             if layer.name is None:
                 label = "hidden" if i < len(layers)-1 else "output"
                 layer.name = "%s%i" % (label, i)
 
+            # sklearn may pass layers in as additional named parameters, remove them.
+            if layer.name in params:
+                del params[layer.name]
+
             self.layers.append(layer)
+
+        # Don't support any additional parameters that are not in the constructor.
+        # These are specified only so `get_params()` can return named layers, for double-
+        # underscore syntax to work.
+        assert len(params) == 0,\
+            "The specified additional parameters are unknown."
 
         self.random_state = random_state
         self.learning_rule = learning_rule
