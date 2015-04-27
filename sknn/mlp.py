@@ -46,15 +46,25 @@ class ansi:
 class Layer(object):
 
     def __init__(self, type, name=None, units=None, pieces=None,
-                 channels=None, kernel=None, pool=None,
-                 dropout=None):
+                 channels=None, kernel_shape=None, dropout=None,
+                 pool_shape=None, pool_type=None):
+        """
+        Parameters
+        ----------
+
+        pool_type: str
+            Type of the pooling to be used; can be either `max` or `mean`.  The default is 
+            to take the maximum value of all inputs that fall into this pool.
+        """
+
         self.name = name
         self.type = type
         self.units = units
         self.pieces = pieces
         self.channels = channels
-        self.kernel = kernel
-        self.pool = pool
+        self.kernel_shape = kernel_shape
+        self.pool_shape = pool_shape
+        self.pool_type = pool_type
         self.dropout = dropout
 
     def __eq__(self, other):
@@ -280,8 +290,9 @@ class BaseMLP(sklearn.base.BaseEstimator):
             return mlp.ConvRectifiedLinear(
                 layer_name=name,
                 output_channels=layer.channels,
-                kernel_shape=layer.kernel,
-                pool_shape=layer.pool or (1,1),
+                kernel_shape=layer.kernel_shape,
+                pool_shape=layer.pool_shape or (1,1),
+                pool_type=layer.pool_type or 'max',
                 pool_stride=(1,1),
                 irange=irange)
 
