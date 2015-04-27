@@ -43,6 +43,22 @@ class ansi:
     ENDC = '\033[0m'
 
 
+class Layer(object):
+
+    def __init__(self, type, name=None, units=None, pieces=None, channels=None, shape=None, dropout=0.0):
+        self.name = name
+        self.type = type
+        self.units = units
+        self.pieces = pieces
+        self.channels = channels
+        self.shape = shape
+        self.dropout = dropout
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+
+
 class BaseMLP(sklearn.base.BaseEstimator):
     """
     Abstract base class for wrapping the multi-layer perceptron functionality
@@ -132,7 +148,20 @@ class BaseMLP(sklearn.base.BaseEstimator):
             valid_size=0.0,            
             verbose=False):
 
-        self.layers = layers
+        self.layers = []
+        for i, layer in enumerate(layers):
+            if isinstance(layer, tuple):
+                if len(layer) == 1:
+                    layer = (layer[0], None)
+                layer = Layer(layer[0], units=layer[1])
+
+            if layer.name is None:
+                label = "Hidden" if i < len(layers)-1 else "Output"
+                layer.name = "%s_%i_%s" % (label, i, layer.type)
+
+            assert type(layer) == Layer
+            self.layers.append(layer)
+
         self.random_state = random_state
         self.learning_rule = learning_rule
         self.learning_rate = learning_rate
@@ -185,10 +214,9 @@ class BaseMLP(sklearn.base.BaseEstimator):
         sgd.log.setLevel(logging.WARNING)
 
         if self.cost == "Dropout":
-            first_hidden_name = "Hidden_0_"+self.layers[0][0]
             self.cost = Dropout(
-                input_include_probs={first_hidden_name: 1.0},
-                input_scales={first_hidden_name: 1.})
+                input_include_probs={self.layers[0].name: 1.0},
+                input_scales={self.layers[0].name: 1.})
 
         logging.getLogger('pylearn2.monitor').setLevel(logging.WARNING)
         if dataset is not None:
@@ -207,76 +235,73 @@ class BaseMLP(sklearn.base.BaseEstimator):
             termination_criterion=termination_criterion,
             monitoring_dataset=dataset)
 
-    def _create_hidden_layer(self, name, args, irange=0.1):
-        activation_type = args[0]
-        if activation_type == "Rectifier":
+    def _create_hidden_layer(self, name, layer, irange=0.1):
+        if layer.type == "Rectifier":
             return mlp.RectifiedLinear(
                 layer_name=name,
-                dim=args[1],
+                dim=layer.units,
                 irange=irange)
 
-        if activation_type == "Sigmoid":
+        if layer.type == "Sigmoid":
             return mlp.Sigmoid(
                 layer_name=name,
-                dim=args[1],
+                dim=layer.units,
                 irange=irange)
 
-        if activation_type == "Tanh":
+        if layer.type == "Tanh":
             return mlp.Tanh(
                 layer_name=name,
-                dim=args[1],
+                dim=layer.units,
                 irange=irange)
 
-        if activation_type == "Maxout":
+        if layer.type == "Maxout":
             return maxout.Maxout(
                 layer_name=name,
-                num_units=args[1],
-                num_pieces=args[2],
+                num_units=layer.units,
+                num_pieces=layer.pieces,
                 irange=irange)
 
-        if activation_type == "Convolution":
+        if layer.type == "Convolution":
             return mlp.ConvRectifiedLinear(
                 layer_name=name,
-                output_channels=args[1],
-                kernel_shape=args[2],
+                output_channels=layer.channels,
+                kernel_shape=layer.shape,
                 pool_shape=(1,1),
                 pool_stride=(1,1),
                 irange=irange)
 
         raise NotImplementedError(
-            "Hidden layer type `%s` is not implemented." % activation_type)
+            "Hidden layer type `%s` is not implemented." % layer.type)
 
-    def _create_output_layer(self, name, args):
-        activation_type = args[0]
-
+    def _create_output_layer(self, layer):
         fan_in = self.unit_counts[-2]
         fan_out = self.unit_counts[-1]
         lim = numpy.sqrt(6) / (numpy.sqrt(fan_in + fan_out))
 
-        if activation_type == "Linear":
+        if layer.type == "Linear":
             return mlp.Linear(
-                dim=args[1],
-                layer_name=name,
+                dim=layer.units,
+                layer_name=layer.name,
                 irange=lim)
 
-        if activation_type == "Gaussian":
+        if layer.type == "Gaussian":
             return mlp.LinearGaussian(
                 init_beta=0.1,
                 min_beta=0.001,
                 max_beta=1000,
                 beta_lr_scale=None,
-                dim=args[1],
-                layer_name=name,
+                dim=layer.units,
+                layer_name=layer.name,
                 irange=lim)
 
-        if activation_type == "Softmax":
+        if layer.type == "Softmax":
             return mlp.Softmax(
-                layer_name=name,
-                n_classes=args[1],
+                layer_name=layer.name,
+                n_classes=layer.units,
                 irange=lim)
 
         raise NotImplementedError(
-            "Output layer type `%s` is not implemented." % activation_type)
+            "Output layer type `%s` is not implemented." % layer.type)
 
     def _create_mlp(self):
         # Create the layers one by one, connecting to previous.
@@ -286,24 +311,19 @@ class BaseMLP(sklearn.base.BaseEstimator):
             fan_out = self.unit_counts[i + 1]
 
             lim = numpy.sqrt(6) / numpy.sqrt(fan_in + fan_out)
-            if layer[0] == "Tanh":
-               lim *= 1.1 * lim
-            elif layer[0] in ("Rectifier", "Maxout", "Convolution"):
+            if layer.type == "Tanh":
+                lim *= 1.1 * lim
+            elif layer.type in ("Rectifier", "Maxout", "Convolution"):
                 # He, Rang, Zhen and Sun, converted to uniform.
-               lim *= numpy.sqrt(2)
-            elif layer[0] == "Sigmoid":
+                lim *= numpy.sqrt(2)
+            elif layer.type == "Sigmoid":
                 lim *= 4
 
-            layer_name = "Hidden_%i_%s" % (i, layer[0])
-            hidden_layer = self._create_hidden_layer(layer_name, layer, irange=lim)
+            hidden_layer = self._create_hidden_layer(layer.name, layer, irange=lim)
             mlp_layers.append(hidden_layer)
 
         # Deal with output layer as a special case.
-        output_layer_info = list(self.layers[-1])
-        output_layer_info.append(self.unit_counts[-1])
-
-        output_layer_name = "Output_%s" % output_layer_info[0]
-        output_layer = self._create_output_layer(output_layer_name, output_layer_info)
+        output_layer = self._create_output_layer(self.layers[-1])
         mlp_layers.append(output_layer)
 
         self.mlp = mlp.MLP(
@@ -340,12 +360,22 @@ class BaseMLP(sklearn.base.BaseEstimator):
             len(self.layers), X.shape[1], y.shape[1])
 
         # Calculate and store all layer sizes.
-        self.layers[-1] = (self.layers[-1][0], y.shape[1])
+        if self.layers[-1].units is None:
+            self.layers[-1].units = y.shape[1]
+        else:
+            assert self.layers[-1].units == y.shape[1],\
+                "Mismatch between dataset size and units in output layer."
+
         self.unit_counts = [X.shape[1]]
         for layer in self.layers:
-            self.unit_counts += [layer[1]]
+            if layer.units is not None:
+                self.unit_counts.append(layer.units)
+            else:
+                # TODO: Compute correct number of outputs for convolution.
+                self.unit_counts.append(layer.channels)
+
             log.debug("  - Type: {}{: <10}{}  Units: {}{: <4}{}".format(
-                ansi.BOLD, layer[0], ansi.ENDC, ansi.BOLD, layer[1], ansi.ENDC))
+                ansi.BOLD, layer.type, ansi.ENDC, ansi.BOLD, layer.units, ansi.ENDC))
         log.debug("")
 
         if self.valid_size > 0.0:
@@ -381,7 +411,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
     def is_convolution(self):
         """Check whether this neural network includes convolution layers.
         """
-        return "Conv" in self.layers[0][0]
+        return "Conv" in self.layers[0].type
 
     def __getstate__(self):
         assert self.mlp is not None,\
