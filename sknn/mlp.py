@@ -200,8 +200,8 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
     ----------
 
     layers: list of Layer
-        An iterable sequence of each layer each as a Layer instance that contains
-        its type, optional name, and any paramaters required.
+        An iterable sequence of each layer each as a :class:`sknn.mlp.Layer` instance that
+        contains its type, optional name, and any paramaters required.
 
             * For hidden layers, you can use the following layer types:
               ``Rectifier``, ``Sigmoid``, ``Tanh``, ``Maxout`` or ``Convolution``.
