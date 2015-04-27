@@ -2,8 +2,13 @@ import cPickle
 import numpy as np
 
 def load(name):
-    with open(name, 'rb') as f:
-        return cPickle.load(f)
+    try:
+        with open(name, 'rb') as f:
+            return cPickle.load(f)
+    except IOError:
+        import gzip
+        with gzip.open(name+'.gz', 'rb') as f:
+            return cPickle.load(f)
 
 dataset1 = load('data_batch_1')
 dataset2 = load('data_batch_2')
@@ -24,12 +29,15 @@ import sys
 import logging
 logging.basicConfig(format="%(message)s", level=logging.DEBUG, stream=sys.stdout)
 
-from sknn.mlp import MultiLayerPerceptronClassifier
-net = MultiLayerPerceptronClassifier(
-    [("Rectifier", n_feat*2/3), ("Rectifier", n_feat*1/3), ("Linear", n_targets)],
+from sknn import mlp
+net = mlp.Classifier(
+    layers=[
+        mlp.Layer("Rectifier", units=n_feat*2/3),
+        mlp.Layer("Rectifier", units=n_feat*1/3),
+        mlp.Layer("Softmax", units=n_targets)],
     n_iter=50,
     n_stable=10,
-    learning_rate=0.005,
+    learning_rate=0.001,
     valid_size=0.1,
     verbose=1)
 net.fit(data_train, labels_train)
