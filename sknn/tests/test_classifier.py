@@ -4,7 +4,7 @@ from nose.tools import (assert_is_not_none, assert_true, assert_raises, assert_e
 import numpy
 from sklearn.base import clone
 
-from sknn.mlp import MultiLayerPerceptronClassifier as MLPC
+from sknn.mlp import Classifier as MLPC
 from sknn.mlp import Layer as L
 
 

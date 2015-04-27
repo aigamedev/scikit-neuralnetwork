@@ -24,6 +24,7 @@ Once that's done, you can grab this repository and install from ``setup.py`` in 
 
 Then, you can run the samples and benchmarks available in the ``examples/`` folder, or launch the tests to check everything is working::
 
+    > pip install nose
     > nosetests -v sknn
 
 .. image:: docs/console_tests.png
@@ -73,10 +74,12 @@ The library supports both regressors (to estimate continuous outputs) and classi
 
 .. code:: python
 
-    from sknn import mlp
+    from sknn.mlp import Classifier, Layer
 
-    nn = mlp.Classifier(
-        layers=[mlp.Layer("Rectifier", units=100), mlp.Layer("Linear")],
+    nn = Classifier(
+        layers=[
+            Layer("Rectifier", units=100),
+            Layer("Linear")],
         learning_rate=0.02,
         n_iter=10)
 

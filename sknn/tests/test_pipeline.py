@@ -8,7 +8,7 @@ import numpy
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler
 
-from sknn.mlp import MultiLayerPerceptronRegressor as MLPR
+from sknn.mlp import Regressor as MLPR
 from sknn.mlp import Layer as L
 
 

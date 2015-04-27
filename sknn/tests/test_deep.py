@@ -10,7 +10,7 @@ import logging
 from sklearn.base import clone
 
 import sknn
-from sknn.mlp import MultiLayerPerceptronRegressor as MLPR
+from sknn.mlp import Regressor as MLPR
 from sknn.mlp import Layer as L
 
 from . import test_linear
@@ -31,15 +31,8 @@ class TestDeepNetwork(test_linear.TestLinearNetwork):
     def test_UnknownLayer(self):
         assert_raises(NotImplementedError, L, "Unknown")
 
-    def test_UnknownOuputActivation(self):
-        nn = MLPR(layers=[L("Rectifier", units=16)])
-        a_in = numpy.zeros((8,16))
-        assert_raises(NotImplementedError, nn.fit, a_in, a_in)
-
-    def test_UnknownHiddenActivation(self):
-        nn = MLPR(layers=[L("Gaussian", units=8), L("Linear")])
-        a_in = numpy.zeros((8,16))
-        assert_raises(NotImplementedError, nn.fit, a_in, a_in)
+    def test_UnknownActivation(self):
+        assert_raises(NotImplementedError, L, "Wrong", units=16)
 
     # This class also runs all the tests from the linear network too.
 
@@ -106,10 +99,10 @@ class TestActivations(unittest.TestCase):
         assert_raises(ValueError, nn._initialize, a_in, a_in)
 
     def test_UnusedParameterWarning(self):
-        nn = MLPR(layers=[L("Linear", kernel_shape=(1,1))], n_iter=1)
+        nn = MLPR(layers=[L("Linear", pieces=2)], n_iter=1)
         a_in = numpy.zeros((8,16))
         nn._initialize(a_in, a_in)
 
-        assert_in('Parameter `kernel_shape` is unused', self.buf.getvalue())
+        assert_in('Parameter `pieces` is unused', self.buf.getvalue())
         self.buf = io.StringIO() # clear
 

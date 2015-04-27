@@ -1,6 +1,6 @@
 from __future__ import (absolute_import, unicode_literals, print_function)
 
-__all__ = ['MultiLayerPerceptronRegressor', 'MultiLayerPerceptronClassifier']
+__all__ = ['Regressor', 'Classifier']
 
 import os
 import time
@@ -44,71 +44,51 @@ class ansi:
 
 
 class Layer(object):
+    """
+    Specification for a layer to be passed to the neural network during construction.  This
+    includes a variety of parameters to configure each layer based on its activation type.
+
+    Parameters
+    ----------
+
+    type: str
+        Select which activation function this layer should use, as a string.  Specifically,
+        options are ``Rectifier``, ``Sigmoid``, ``Tanh``, and ``Maxout`` for non-linear layers
+        and ``Linear``, ``Softmax`` or ``Gaussian`` for linear layers.
+
+    name: str, optional
+        You optionally can specify a name for this layer, and its parameters
+        will then be accessible to `scikit-learn` via a nested sub-object.  For example,
+        if name is set to `hidden1`, then the parameter `hidden1__units` from the network
+        is bound to this layer's `units` variable.
+
+    units: int
+        The number of units (also known as neurons) in this layer.  This applies to all
+        layer types except for convolution.
+
+    pieces: int, optional
+        The number of piecewise linear segments in the Maxout activation.  This is
+        optional and only applies when `Maxout` is selected as the layer type.
+
+    dropout: float, optional
+        The ratio of inputs to drop out for this layer during training.  For example, 0.25
+        means that 25% of the inputs will be excluded for each training sample, with the
+        remaining inputs being renormalized accordingly.
+    """
 
     def __init__(
             self,
             type,
-            nop=None,
+            warning=None,
             name=None,
             units=None,
             pieces=None,
-            channels=None,
-            kernel_shape=None,
-            pool_shape=None,
-            pool_type=None,
             dropout=None):
-        """
-        Parameters
-        ----------
 
-        type: str
-            Select which activation function this layer should use, as a string.
-                * For hidden layers, you can use the following layer types:
-                ``Rectifier``, ``Sigmoid``, ``Tanh``, ``Maxout`` or ``Convolution``.
-                * For output layers, you can use the following layer types:
-                ``Linear``, ``Softmax`` or ``Gaussian``.
-
-        name: str, optional
-            You optionally can specify a name for this layer, and its parameters
-            will then be accessible to `scikit-learn` via a nested sub-object.  For example,
-            if name is set to `hidden1`, then the parameter `hidden1__units` from the network
-            is bound to this layer's `units` variable.
-
-        units: int, optional
-            The number of units (also known as neurons) in this layer.  This applies to all
-            layer types except for convolution.
-
-        pieces: int, optional
-            The number of piecewise linear segments in the Maxout activation.  This is
-            optional and only applies when `Maxout` is selected as the layer type.
-
-        channels: int, optional
-            Number of output channels for the convolution layers.  Each channel has its own
-            set of shared weights which are trained by applying the kernel over the image.
-
-        kernel_shape: tuple of ints, optional
-            A two-dimensional tuple of integers corresponding to the shape of the kernel when
-            convolution is used.  For example, this could be a square kernel `(3,3)` or a full
-            horizontal or vertical kernel on the input matrix, e.g. `(N,1)` or `(1,N)`.
-
-        pool_shape: tuple of ints, optional
-            A two-dimensional tuple of integers corresponding to the pool size.  This should be
-            square, for example `(2,2)` to reduce the size by half, or `(4,4)` to make the output
-            a quarter of the original.
-
-        pool_type: str, optional
-            Type of the pooling to be used; can be either `max` or `mean`.  The default is 
-            to take the maximum value of all inputs that fall into this pool.
-
-        dropout: float, optional
-            The ratio of inputs to drop out for this layer during training.  For example, 0.25
-            means that 25% of the inputs will be excluded for each training sample, with the
-            remaining inputs being renormalized accordingly.
-        """
-        assert nop is None,\
+        assert warning is None,\
             "Specify layer parameters as keyword arguments, not positional arguments."
 
-        if type not in ['Rectifier', 'Sigmoid', 'Tanh', 'Maxout', 'Convolution',
+        if type not in ['Rectifier', 'Sigmoid', 'Tanh', 'Maxout',
                         'Linear', 'Softmax', 'Gaussian']:
             raise NotImplementedError("Layer type `%s` is not implemented." % type)
 
@@ -116,90 +96,173 @@ class Layer(object):
         self.type = type
         self.units = units
         self.pieces = pieces
-        self.channels = channels
-        self.kernel_shape = kernel_shape
-        self.pool_shape = pool_shape
-        self.pool_type = pool_type
         self.dropout = dropout
+
+    def set_params(self, **params):
+        for k, v in params.items():
+            if k not in self.__dict__:
+                raise ValueError("Invalid parameter `%s` for layer `%s`." % (k, self.name))
+            self.__dict__[k] = v
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
     def __repr__(self):
-        params = ", ".join(["%s=%r" % (k, v) for k, v in self.__dict__.items() if v is not None])
-        return "<sknn.mlp.Layer %s: %s>" % (self.type, params)
+        copy = self.__dict__.copy()
+        del copy['type']
+        params = ", ".join(["%s=%r" % (k, v) for k, v in copy.items() if v is not None])
+        return "<sknn.mlp.Layer `%s`: %s>" % (self.type, params)
 
 
-class BaseMLP(sklearn.base.BaseEstimator):
+class Convolution(Layer):
+    """
+    Specification for a convolution layer to be passed to the neural network in construction.
+    This includes a variety of convolution-specific parameters to configure each layer, as well
+    as activation-specific parameters.
+
+    Parameters
+    ----------
+
+    type: str
+        Select which activation function this convolution layer should use, as a string.
+        For hidden layers, you can use the following convolution types ``Rectifier``,
+        ``Sigmoid``, ``Tanh`` or ``Linear``.
+
+    name: str, optional
+        You optionally can specify a name for this layer, and its parameters
+        will then be accessible to `scikit-learn` via a nested sub-object.  For example,
+        if name is set to `hidden1`, then the parameter `hidden1__units` from the network
+        is bound to this layer's `units` variable.
+
+    pieces: int, optional
+        The number of piecewise linear segments in the Maxout activation.  This is
+        optional and only applies when `Maxout` is selected as the layer type.
+
+    channels: int
+        Number of output channels for the convolution layers.  Each channel has its own
+        set of shared weights which are trained by applying the kernel over the image.
+
+    kernel_shape: tuple of ints
+        A two-dimensional tuple of integers corresponding to the shape of the kernel when
+        convolution is used.  For example, this could be a square kernel `(3,3)` or a full
+        horizontal or vertical kernel on the input matrix, e.g. `(N,1)` or `(1,N)`.
+
+    pool_shape: tuple of ints, optional
+        A two-dimensional tuple of integers corresponding to the pool size.  This should be
+        square, for example `(2,2)` to reduce the size by half, or `(4,4)` to make the output
+        a quarter of the original.
+
+    pool_type: str, optional
+        Type of the pooling to be used; can be either `max` or `mean`.  The default is 
+        to take the maximum value of all inputs that fall into this pool.
+
+    dropout: float, optional
+        The ratio of inputs to drop out for this layer during training.  For example, 0.25
+        means that 25% of the inputs will be excluded for each training sample, with the
+        remaining inputs being renormalized accordingly.
+    """
+    def __init__(
+            self,
+            type,
+            warning=None,
+            name=None,
+            channels=None,
+            pieces=None,
+            kernel_shape=None,
+            pool_shape=None,
+            pool_type=None,
+            dropout=None):
+
+        assert warning is None,\
+            "Specify layer parameters as keyword arguments, not positional arguments."
+
+        if type not in ['Rectifier', 'Sigmoid', 'Tanh', 'Linear']:
+            raise NotImplementedError("Convolution type `%s` is not implemented." % type)
+
+        super(Convolution, self).__init__(
+                type,
+                name=name,
+                pieces=pieces,
+                dropout=dropout)
+
+        self.channels = channels
+        self.kernel_shape = kernel_shape
+        self.pool_shape = pool_shape
+        self.pool_type = pool_type
+
+
+class MultiLayerPerceptron(sklearn.base.BaseEstimator):
     """
     Abstract base class for wrapping the multi-layer perceptron functionality
     from PyLearn2.
 
     Parameters
     ----------
-    layers : list[Layer]
-        An iterable sequence of each layer each as a Layer instance that contains
-        its type, optional name, and any paramaters required.
+
+    layers: list of Layer
+        An iterable sequence of each layer each as a :class:`sknn.mlp.Layer` instance that
+        contains its type, optional name, and any paramaters required.
 
             * For hidden layers, you can use the following layer types:
               ``Rectifier``, ``Sigmoid``, ``Tanh``, ``Maxout`` or ``Convolution``.
             * For output layers, you can use the following layer types:
               ``Linear``, ``Softmax`` or ``Gaussian``.
 
-        You must specify exactly one output layer type, so the last entry in your
-        ``layers`` list should contain ``Linear`` for regression, or ``Softmax`` for
-        classification (recommended).
+        It's possible to mix and match any of the layer types, though most often
+        you should probably use hidden and output types as recommended here.  Typically,
+        the last entry in this ``layers`` list should contain ``Linear`` for regression,
+        or ``Softmax`` for classification.
 
-    random_state : int
+    random_state: int
         Seed for the initialization of the neural network parameters (e.g.
         weights and biases).  This is fully deterministic.
 
-    learning_rule : str
+    learning_rule: str
         Name of the learning rule used during stochastic gradient descent,
         one of ``sgd``, ``momentum``, ``nesterov``, ``adadelta`` or ``rmsprop``
         at the moment.
 
-    learning_rate : float
+    learning_rate: float
         Real number indicating the default/starting rate of adjustment for
         the weights during gradient descent.  Different learning rules may
         take this into account differently.
 
-    learning_momentum : float
+    learning_momentum: float
         Real number indicating the momentum factor to be used for the
         learning rule 'momentum'.
 
-    batch_size : int
+    batch_size: int
         Number of training samples to group together when performing stochastic
         gradient descent.  By default each sample is treated on its own.
 
-    n_iter : int
+    n_iter: int
         The number of iterations of gradient descent to perform on the
         neural network's weights when training with ``fit()``.
 
-    valid_set : tuple of array-like
+    valid_set: tuple of array-like
         Validation set (X_v, y_v) to be used explicitly while training.  Both
         arrays should have the same size for the first dimention, and the second
         dimention should match with the training data specified in ``fit()``.
 
-    valid_size : float
+    valid_size: float
         Ratio of the training data to be used for validation.  0.0 means no
         validation, and 1.0 would mean there's no training data!  Common values are
         0.1 or 0.25.
 
-    n_stable : int
+    n_stable: int
         Number of interations after which training should return when the validation
         error remains constant.  This is a sign that the data has been fitted.
 
-    f_stable : float
+    f_stable: float
         Threshold under which the validation error change is assumed to be stable, to
         be used in combination with `n_stable`.
 
-    dropout : bool or float
+    dropout: bool or float
         Whether to use drop-out training for the inputs (jittering) and the
         hidden layers, for each training example. If a float is specified, that
         ratio of inputs will be randomly excluded during training (e.g. 0.5).
 
-    verbose : bool
+    verbose: bool
         If True, print the score at each epoch via the logger called 'sknn'.  You can
         control the detail of the output by customising the logger level and formatter.
     """
@@ -218,18 +281,30 @@ class BaseMLP(sklearn.base.BaseEstimator):
             f_stable=0.001,
             valid_set=None,
             valid_size=0.0,            
-            verbose=False):
+            verbose=False,
+            **params):
 
         self.layers = []
         for i, layer in enumerate(layers):
             assert isinstance(layer, Layer),\
                 "Specify each layer as an instance of a `sknn.mlp.Layer` object."
 
+            # Layer names are optional, if not specified then generate one.
             if layer.name is None:
-                label = "Hidden" if i < len(layers)-1 else "Output"
-                layer.name = "%s_%i_%s" % (label, i, layer.type)
+                label = "hidden" if i < len(layers)-1 else "output"
+                layer.name = "%s%i" % (label, i)
+
+            # sklearn may pass layers in as additional named parameters, remove them.
+            if layer.name in params:
+                del params[layer.name]
 
             self.layers.append(layer)
+
+        # Don't support any additional parameters that are not in the constructor.
+        # These are specified only so `get_params()` can return named layers, for double-
+        # underscore syntax to work.
+        assert len(params) == 0,\
+            "The specified additional parameters are unknown."
 
         self.random_state = random_state
         self.learning_rule = learning_rule
@@ -275,7 +350,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
         self._setup()
 
     def _setup(self):
-        # raise NotImplementedError("BaseMLP is an abstract class; "
+        # raise NotImplementedError("MultiLayerPerceptron is an abstract class; "
         #                           "use the Classifier or Regressor instead.")
         pass
 
@@ -332,7 +407,35 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 log.warning("Parameter `%s` is unused for layer type `%s`."\
                             % (a, layer.type))
 
-    def _create_hidden_layer(self, name, layer, irange=0.1):
+    def _create_convolution_layer(self, name, layer, irange):
+        self._check_layer(layer, ['channels', 'kernel_shape'],
+                                 ['pool_shape', 'pool_type'])
+
+        if layer.type == "Rectifier":
+            nl = mlp.RectifierConvNonlinearity(0.0)
+        elif layer.type == "Sigmoid":
+            nl = mlp.SigmoidConvNonlinearity()
+        elif layer.type == "Tanh":
+            nl = mlp.TanhConvNonlinearity()
+        else:
+            assert layer.type == "Linear",\
+                "Convolution layer type `%s` is not supported." % layer.type
+            nl = mlp.IdentityConvNonlinearity()
+
+        return mlp.ConvElemwise(
+            layer_name=name,
+            nonlinearity=nl,
+            output_channels=layer.channels,
+            kernel_shape=layer.kernel_shape,
+            pool_shape=layer.pool_shape or (1,1),
+            pool_type=layer.pool_type or 'max',
+            pool_stride=(1,1),
+            irange=irange)
+
+    def _create_layer(self, name, layer, irange):
+        if isinstance(layer, Convolution):
+            return self._create_convolution_layer(name, layer, irange)
+
         if layer.type == "Rectifier":
             self._check_layer(layer, ['units'])
             return mlp.RectifiedLinear(
@@ -362,32 +465,12 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 num_pieces=layer.pieces,
                 irange=irange)
 
-        if layer.type == "Convolution":
-            self._check_layer(layer, ['channels', 'kernel_shape'],
-                                     ['pool_shape', 'pool_type'])
-            return mlp.ConvRectifiedLinear(
-                layer_name=name,
-                output_channels=layer.channels,
-                kernel_shape=layer.kernel_shape,
-                pool_shape=layer.pool_shape or (1,1),
-                pool_type=layer.pool_type or 'max',
-                pool_stride=(1,1),
-                irange=irange)
-
-        raise NotImplementedError(
-            "Hidden layer type `%s` is not supported." % layer.type)
-
-    def _create_output_layer(self, layer):
-        fan_in = self.unit_counts[-2]
-        fan_out = self.unit_counts[-1]
-        lim = numpy.sqrt(6) / (numpy.sqrt(fan_in + fan_out))
-
         if layer.type == "Linear":
             self._check_layer(layer, ['units'])
             return mlp.Linear(
                 layer_name=layer.name,
                 dim=layer.units,
-                irange=lim)
+                irange=irange)
 
         if layer.type == "Gaussian":
             self._check_layer(layer, ['units'])
@@ -398,22 +481,19 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 max_beta=1000,
                 beta_lr_scale=None,
                 dim=layer.units,
-                irange=lim)
+                irange=irange)
 
         if layer.type == "Softmax":
             self._check_layer(layer, ['units'])
             return mlp.Softmax(
                 layer_name=layer.name,
                 n_classes=layer.units,
-                irange=lim)
-
-        raise NotImplementedError(
-            "Output layer type `%s` is not supported." % layer.type)
+                irange=irange)
 
     def _create_mlp(self):
         # Create the layers one by one, connecting to previous.
         mlp_layers = []
-        for i, layer in enumerate(self.layers[:-1]):
+        for i, layer in enumerate(self.layers):
             fan_in = self.unit_counts[i]
             fan_out = self.unit_counts[i + 1]
 
@@ -426,12 +506,8 @@ class BaseMLP(sklearn.base.BaseEstimator):
             elif layer.type == "Sigmoid":
                 lim *= 4
 
-            hidden_layer = self._create_hidden_layer(layer.name, layer, irange=lim)
-            mlp_layers.append(hidden_layer)
-
-        # Deal with output layer as a special case.
-        output_layer = self._create_output_layer(self.layers[-1])
-        mlp_layers.append(output_layer)
+            mlp_layer = self._create_layer(layer.name, layer, irange=lim)
+            mlp_layers.append(mlp_layer)
 
         self.mlp = mlp.MLP(
             mlp_layers,
@@ -518,7 +594,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
     def is_convolution(self):
         """Check whether this neural network includes convolution layers.
         """
-        return "Conv" in self.layers[0].type
+        return isinstance(self.layers[0], Convolution)
 
     def __getstate__(self):
         assert self.mlp is not None,\
@@ -633,9 +709,14 @@ Epoch    Validation Error    Time
 
         return self.f(X)
 
+    def get_params(self, deep=True):
+        result = super(MultiLayerPerceptron, self).get_params(deep=True)
+        for l in self.layers:
+            result[l.name] = l
+        return result
 
 
-class Regressor(BaseMLP, sklearn.base.RegressorMixin):
+class Regressor(MultiLayerPerceptron, sklearn.base.RegressorMixin):
     """Regressor compatible with sklearn that wraps PyLearn2.
     """
 
@@ -674,10 +755,8 @@ class Regressor(BaseMLP, sklearn.base.RegressorMixin):
         """
         return super(Regressor, self)._predict(X)
 
-MultiLayerPerceptronRegressor = Regressor
 
-
-class Classifier(BaseMLP, sklearn.base.ClassifierMixin):
+class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
     """Classifier compatible with sklearn that wraps PyLearn2.
     """
 
@@ -689,8 +768,8 @@ class Classifier(BaseMLP, sklearn.base.ClassifierMixin):
         # The LabelBinarizer is also implemented in a way that this cannot be
         # customized without a providing a complete rewrite, so here we patch
         # the `type_of_target` function for this to work correctly,
-        import sklearn.preprocessing.label as L
-        L.type_of_target = lambda _: "multiclass"
+        import sklearn.preprocessing.label as spl
+        spl.type_of_target = lambda _: "multiclass"
 
         self.label_binarizer = sklearn.preprocessing.LabelBinarizer()
 
@@ -743,5 +822,3 @@ class Classifier(BaseMLP, sklearn.base.ClassifierMixin):
         """
         y = self.predict_proba(X)
         return self.label_binarizer.inverse_transform(y, threshold=0.5)
-
-MultiLayerPerceptronClassifier = Classifier

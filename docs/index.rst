@@ -7,8 +7,8 @@ Deep neural network implementation without the learning cliff! This library impl
 
 ----
 
-Modules
--------
+Module Reference
+----------------
 
 .. toctree::
     :maxdepth: 2
@@ -32,26 +32,32 @@ Once that's done, you can grab this repository and install from ``setup.py`` in 
 With that done, you can run the samples and benchmarks available in the ``examples/`` folder.
 
 
-Getting Started
----------------
+Running Tests
+-------------
 
-The library supports both regressors (to estimate continuous outputs) and classifiers (to predict classes).  This is the ``sklearn``-compatible API:
+You can launch the tests to check everything is working using the following commands::
 
-.. code:: python
+    > pip install nose
+    > nosetests -v sknn
 
-    from sknn import mlp
+Use the additional parameters ``--processes=8 --process-timeout=60`` to speed things up on powerful machines.  The result should look as follows in your terminal.
 
-    nn = mlp.Classifier(
-        layers=[mlp.Layer("Rectifier", units=100), mlp.Layer("Linear")],
-        learning_rate=0.02,
-        n_iter=10)
+.. image:: docs/console_tests.png
 
-    nn.fit(X_train, y_train)
-    nn.predict(X_valid)
+We strive to maintain 100% test coverage for all code-paths, to ensure that rapid changes in the underlying ``pylearn2`` library are caught automatically.
 
-    nn.score(X_test, y_test)
 
-You can also use a ``MultiLayerPerceptronRegressor`` in the exact same way.  See the documentation in :mod:`sknn.mlp` for details about the construction parameters.
+User Guide
+----------
+
+.. toctree::
+    :maxdepth: 2
+
+    guide
+
+
+User Guide
+----------
 
 
 Indices & Search

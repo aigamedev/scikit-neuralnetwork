@@ -5,9 +5,9 @@ import io
 import logging
 
 import numpy
-from sknn.mlp import BaseMLP as MLP
-from sknn.mlp import MultiLayerPerceptronRegressor as MLPR
-from sknn.mlp import MultiLayerPerceptronClassifier as MLPC
+from sknn.mlp import MultiLayerPerceptron as MLP
+from sknn.mlp import Regressor as MLPR
+from sknn.mlp import Classifier as MLPC
 from sknn.mlp import Layer as L
 
 import sknn.mlp

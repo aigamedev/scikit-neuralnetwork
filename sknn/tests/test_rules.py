@@ -6,7 +6,7 @@ import numpy
 import logging
 
 import sknn
-from sknn.mlp import MultiLayerPerceptronRegressor as MLPR
+from sknn.mlp import Regressor as MLPR
 from sknn.mlp import Layer as L
 
 
