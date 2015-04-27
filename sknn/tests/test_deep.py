@@ -31,15 +31,8 @@ class TestDeepNetwork(test_linear.TestLinearNetwork):
     def test_UnknownLayer(self):
         assert_raises(NotImplementedError, L, "Unknown")
 
-    def test_UnknownOuputActivation(self):
-        nn = MLPR(layers=[L("Rectifier", units=16)])
-        a_in = numpy.zeros((8,16))
-        assert_raises(NotImplementedError, nn.fit, a_in, a_in)
-
-    def test_UnknownHiddenActivation(self):
-        nn = MLPR(layers=[L("Gaussian", units=8), L("Linear")])
-        a_in = numpy.zeros((8,16))
-        assert_raises(NotImplementedError, nn.fit, a_in, a_in)
+    def test_UnknownActivation(self):
+        assert_raises(NotImplementedError, L, "Wrong", units=16)
 
     # This class also runs all the tests from the linear network too.
 

@@ -52,11 +52,9 @@ class Layer(object):
     ----------
 
     type: str
-        Select which activation function this layer should use, as a string.
-            * For hidden layers, you can use the following layer types:
-            ``Rectifier``, ``Sigmoid``, ``Tanh``, or ``Maxout``.
-            * For output layers, you can use the following layer types:
-            ``Linear``, ``Softmax`` or ``Gaussian``.
+        Select which activation function this layer should use, as a string.  Specifically,
+        options are ``Rectifier``, ``Sigmoid``, ``Tanh``, and ``Maxout`` for non-linear layers
+        and ``Linear``, ``Softmax`` or ``Gaussian`` for linear layers.
 
     name: str, optional
         You optionally can specify a name for this layer, and its parameters
@@ -193,7 +191,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
     Parameters
     ----------
 
-    layers : list[Layer]
+    layers: list of Layer
         An iterable sequence of each layer each as a Layer instance that contains
         its type, optional name, and any paramaters required.
 
@@ -202,60 +200,61 @@ class BaseMLP(sklearn.base.BaseEstimator):
             * For output layers, you can use the following layer types:
               ``Linear``, ``Softmax`` or ``Gaussian``.
 
-        You must specify exactly one output layer type, so the last entry in your
-        ``layers`` list should contain ``Linear`` for regression, or ``Softmax`` for
-        classification (recommended).
+        It's possible to mix and match any of the layer types, though most often
+        you should probably use hidden and output types as recommended here.  Typically,
+        the last entry in this ``layers`` list should contain ``Linear`` for regression,
+        or ``Softmax`` for classification.
 
-    random_state : int
+    random_state: int
         Seed for the initialization of the neural network parameters (e.g.
         weights and biases).  This is fully deterministic.
 
-    learning_rule : str
+    learning_rule: str
         Name of the learning rule used during stochastic gradient descent,
         one of ``sgd``, ``momentum``, ``nesterov``, ``adadelta`` or ``rmsprop``
         at the moment.
 
-    learning_rate : float
+    learning_rate: float
         Real number indicating the default/starting rate of adjustment for
         the weights during gradient descent.  Different learning rules may
         take this into account differently.
 
-    learning_momentum : float
+    learning_momentum: float
         Real number indicating the momentum factor to be used for the
         learning rule 'momentum'.
 
-    batch_size : int
+    batch_size: int
         Number of training samples to group together when performing stochastic
         gradient descent.  By default each sample is treated on its own.
 
-    n_iter : int
+    n_iter: int
         The number of iterations of gradient descent to perform on the
         neural network's weights when training with ``fit()``.
 
-    valid_set : tuple of array-like
+    valid_set: tuple of array-like
         Validation set (X_v, y_v) to be used explicitly while training.  Both
         arrays should have the same size for the first dimention, and the second
         dimention should match with the training data specified in ``fit()``.
 
-    valid_size : float
+    valid_size: float
         Ratio of the training data to be used for validation.  0.0 means no
         validation, and 1.0 would mean there's no training data!  Common values are
         0.1 or 0.25.
 
-    n_stable : int
+    n_stable: int
         Number of interations after which training should return when the validation
         error remains constant.  This is a sign that the data has been fitted.
 
-    f_stable : float
+    f_stable: float
         Threshold under which the validation error change is assumed to be stable, to
         be used in combination with `n_stable`.
 
-    dropout : bool or float
+    dropout: bool or float
         Whether to use drop-out training for the inputs (jittering) and the
         hidden layers, for each training example. If a float is specified, that
         ratio of inputs will be randomly excluded during training (e.g. 0.5).
 
-    verbose : bool
+    verbose: bool
         If True, print the score at each epoch via the logger called 'sknn'.  You can
         control the detail of the output by customising the logger level and formatter.
     """
@@ -414,7 +413,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
             pool_stride=(1,1),
             irange=irange)
 
-    def _create_hidden_layer(self, name, layer, irange):
+    def _create_layer(self, name, layer, irange):
         if isinstance(layer, Convolution):
             return self._create_convolution_layer(name, layer, irange)
 
@@ -447,20 +446,12 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 num_pieces=layer.pieces,
                 irange=irange)
 
-        raise NotImplementedError(
-            "Hidden layer type `%s` is not supported." % layer.type)
-
-    def _create_output_layer(self, layer):
-        fan_in = self.unit_counts[-2]
-        fan_out = self.unit_counts[-1]
-        lim = numpy.sqrt(6) / (numpy.sqrt(fan_in + fan_out))
-
         if layer.type == "Linear":
             self._check_layer(layer, ['units'])
             return mlp.Linear(
                 layer_name=layer.name,
                 dim=layer.units,
-                irange=lim)
+                irange=irange)
 
         if layer.type == "Gaussian":
             self._check_layer(layer, ['units'])
@@ -471,22 +462,22 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 max_beta=1000,
                 beta_lr_scale=None,
                 dim=layer.units,
-                irange=lim)
+                irange=irange)
 
         if layer.type == "Softmax":
             self._check_layer(layer, ['units'])
             return mlp.Softmax(
                 layer_name=layer.name,
                 n_classes=layer.units,
-                irange=lim)
+                irange=irange)
 
         raise NotImplementedError(
-            "Output layer type `%s` is not supported." % layer.type)
+            "Layer type `%s` is not supported." % layer.type)
 
     def _create_mlp(self):
         # Create the layers one by one, connecting to previous.
         mlp_layers = []
-        for i, layer in enumerate(self.layers[:-1]):
+        for i, layer in enumerate(self.layers):
             fan_in = self.unit_counts[i]
             fan_out = self.unit_counts[i + 1]
 
@@ -499,12 +490,8 @@ class BaseMLP(sklearn.base.BaseEstimator):
             elif layer.type == "Sigmoid":
                 lim *= 4
 
-            hidden_layer = self._create_hidden_layer(layer.name, layer, irange=lim)
-            mlp_layers.append(hidden_layer)
-
-        # Deal with output layer as a special case.
-        output_layer = self._create_output_layer(self.layers[-1])
-        mlp_layers.append(output_layer)
+            mlp_layer = self._create_layer(layer.name, layer, irange=lim)
+            mlp_layers.append(mlp_layer)
 
         self.mlp = mlp.MLP(
             mlp_layers,
