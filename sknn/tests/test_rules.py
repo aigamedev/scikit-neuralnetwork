@@ -4,21 +4,22 @@ from nose.tools import (assert_is_not_none, assert_false, assert_raises, assert_
 import numpy
 
 from sknn.mlp import MultiLayerPerceptronRegressor as MLPR
+from sknn.mlp import Layer as L
 
 
 class TestLearningRules(unittest.TestCase):
 
-    def test_default(self):
+    def test_Default(self):
         self._run(MLPR(layers=[("Linear",)],
                        learning_rule='sgd',
                        n_iter=1))
 
-    def test_momentum(self):
+    def test_Momentum(self):
         self._run(MLPR(layers=[("Linear",)],
                        learning_rule='momentum',
                        n_iter=1))
 
-    def test_nesterov(self):
+    def test_Nesterov(self):
         self._run(MLPR(layers=[("Linear",)],
                        learning_rule='nesterov',
                        n_iter=1))
@@ -31,22 +32,32 @@ class TestLearningRules(unittest.TestCase):
     #                     batch_size=100,
     #                     n_iter=1))
 
-    def test_adadelta(self):
+    def test_AdaDelta(self):
         self._run(MLPR(layers=[("Linear",)],
                        learning_rule='adadelta',
                        n_iter=1))
 
-    def test_rmsprop(self):
+    def test_RmsProp(self):
         self._run(MLPR(layers=[("Linear",)],
                        learning_rule='rmsprop',
                        n_iter=1))
 
-    def test_dropout(self):
+    def test_DropoutAsBool(self):
         self._run(MLPR(layers=[("Sigmoid", 8), ("Linear",)],
                        dropout=True,
                        n_iter=1))
 
-    def test_unknown(self):
+    def test_DropoutAsFloat(self):
+        self._run(MLPR(layers=[("Tanh", 8), ("Linear",)],
+                       dropout=0.25,
+                       n_iter=1))
+
+    def test_DropoutPerLayer(self):
+        self._run(MLPR(layers=[L("Tanh", units=8, dropout=0.25), ("Linear",)],
+                       dropout=True,
+                       n_iter=1))
+
+    def test_UnknownRule(self):
         assert_raises(NotImplementedError, MLPR,
                       layers=[], learning_rule='unknown')
 

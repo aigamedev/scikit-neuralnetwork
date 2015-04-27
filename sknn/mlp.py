@@ -45,13 +45,16 @@ class ansi:
 
 class Layer(object):
 
-    def __init__(self, type, name=None, units=None, pieces=None, channels=None, shape=None, dropout=None):
+    def __init__(self, type, name=None, units=None, pieces=None,
+                 channels=None, kernel=None, pool=None,
+                 dropout=None):
         self.name = name
         self.type = type
         self.units = units
         self.pieces = pieces
         self.channels = channels
-        self.shape = shape
+        self.kernel = kernel
+        self.pool = pool
         self.dropout = dropout
 
     def __eq__(self, other):
@@ -277,8 +280,8 @@ class BaseMLP(sklearn.base.BaseEstimator):
             return mlp.ConvRectifiedLinear(
                 layer_name=name,
                 output_channels=layer.channels,
-                kernel_shape=layer.shape,
-                pool_shape=(1,1),
+                kernel_shape=layer.kernel,
+                pool_shape=layer.pool or (1,1),
                 pool_stride=(1,1),
                 irange=irange)
 

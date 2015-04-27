@@ -18,36 +18,42 @@ class TestConvolution(unittest.TestCase):
     def test_SquareKernel(self):
         self._run(MLPR(
             layers=[
-                L("Convolution", channels=4, shape=(2,2)),
+                L("Convolution", channels=4, kernel=(3,3)),
+                ("Linear",)],
+            n_iter=1))
+
+    def test_KernelPooling(self):
+        self._run(MLPR(
+            layers=[
+                L("Convolution", channels=4, kernel=(3,3), pool=(2,2)),
                 ("Linear",)],
             n_iter=1))
 
     def test_VerticalKernel(self):
         self._run(MLPR(
             layers=[
-                L("Convolution", channels=4, shape=(16,1)),
+                L("Convolution", channels=4, kernel=(16,1)),
                 ("Linear",)],
             n_iter=1))
-
 
     def test_VerticalVerbose(self):
         self._run(MLPR(
             layers=[
-                L("Convolution", channels=4, shape=(16,1)),
+                L("Convolution", channels=4, kernel=(16,1)),
                 ("Linear",)],
             n_iter=1, verbose=1, valid_size=0.1))
 
     def test_HorizontalKernel(self):
         self._run(MLPR(
             layers=[
-                L("Convolution", channels=4, shape=(1,16)),
+                L("Convolution", channels=4, kernel=(1,16)),
                 ("Linear",)],
             n_iter=1))
 
     def test_ValidationSet(self):
         self._run(MLPR(
             layers=[
-                L("Convolution", channels=4, shape=(2,2)),
+                L("Convolution", channels=4, kernel=(3,3)),
                 ("Linear",)],
             n_iter=1,
             valid_size=0.5))
@@ -55,9 +61,9 @@ class TestConvolution(unittest.TestCase):
     def test_MultipleLayers(self):
         self._run(MLPR(
             layers=[
-                L("Convolution", channels=6, shape=(3,3)),
-                L("Convolution", channels=4, shape=(5,5)),
-                L("Convolution", channels=8, shape=(3,3)),
+                L("Convolution", channels=6, kernel=(3,3)),
+                L("Convolution", channels=4, kernel=(5,5)),
+                L("Convolution", channels=8, kernel=(3,3)),
                 ("Linear",)],
             n_iter=1))
 
