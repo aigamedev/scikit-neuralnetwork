@@ -61,18 +61,18 @@ class TestClassifierInterface(unittest.TestCase):
         assert_equal(params['learning_rate'], 0.05)
         assert_equal(params['n_iter'], 456)
         assert_equal(params['n_stable'], 123)
-        assert_equal(params['dropout'], True)
+        assert_equal(params['dropout'], 0.25)
         assert_equal(params['valid_size'], 0.2)
 
     def test_GetParamValues(self):
         nn = MLPC(layers=[("Linear",)], learning_rate=0.05, n_iter=456,
-                  n_stable=123, valid_size=0.2, dropout=True)
+                  n_stable=123, valid_size=0.2, dropout=0.25)
         params = nn.get_params()
         self.check_values(params)
 
     def test_CloneWithValues(self):
         nn = MLPC(layers=[("Linear",)], learning_rate=0.05, n_iter=456,
-                  n_stable=123, valid_size=0.2, dropout=True)
+                  n_stable=123, valid_size=0.2, dropout=0.25)
         cc = clone(nn)
         params = cc.get_params()
         self.check_values(params)
@@ -81,7 +81,7 @@ class TestClassifierInterface(unittest.TestCase):
         assert_equal(params['learning_rate'], 0.01)
         assert_equal(params['n_iter'], None)
         assert_equal(params['n_stable'], 50)
-        assert_equal(params['dropout'], False)
+        assert_equal(params['dropout'], 0.0)
         assert_equal(params['valid_size'], 0.0)
 
     def test_GetParamDefaults(self):

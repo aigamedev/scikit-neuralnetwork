@@ -45,7 +45,7 @@ class ansi:
 
 class Layer(object):
 
-    def __init__(self, type, name=None, units=None, pieces=None, channels=None, shape=None, dropout=0.0):
+    def __init__(self, type, name=None, units=None, pieces=None, channels=None, shape=None, dropout=None):
         self.name = name
         self.type = type
         self.units = units
@@ -123,9 +123,10 @@ class BaseMLP(sklearn.base.BaseEstimator):
         Threshold under which the validation error change is assumed to be stable, to
         be used in combination with `n_stable`.
 
-    dropout : bool
+    dropout : bool or float
         Whether to use drop-out training for the inputs (jittering) and the
-        hidden layers, for each training example.
+        hidden layers, for each training example. If a float is specified, that
+        ratio of inputs will be randomly excluded during training (e.g. 0.5).
 
     verbose : bool
         If True, print the score at each epoch via the logger called 'sknn'.  You can
@@ -166,7 +167,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
         self.learning_rule = learning_rule
         self.learning_rate = learning_rate
         self.learning_momentum = learning_momentum
-        self.dropout = dropout
+        self.dropout = dropout if type(dropout) is float else (0.5 if dropout else 0.0)
         self.batch_size = batch_size
         self.n_iter = n_iter
         self.n_stable = n_stable
@@ -214,9 +215,20 @@ class BaseMLP(sklearn.base.BaseEstimator):
         sgd.log.setLevel(logging.WARNING)
 
         if self.cost == "Dropout":
+            probs, scales = {}, {}
+            for l in [l for l in self.layers if l.dropout is not None]:
+                incl = 1.0 - l.dropout
+                probs[l.name] = incl
+                scales[l.name] = 1.0 / incl
+
+            # Use the globally specified dropout rate when there are no layer-specific ones.
+            incl = 1.0 - self.dropout
+            default_prob, default_scale = incl, 1.0 / incl
+
             self.cost = Dropout(
-                input_include_probs={self.layers[0].name: 1.0},
-                input_scales={self.layers[0].name: 1.})
+                default_input_include_prob=default_prob,
+                default_input_scale=default_scale,
+                input_include_probs=probs, input_scales=scales)
 
         logging.getLogger('pylearn2.monitor').setLevel(logging.WARNING)
         if dataset is not None:
@@ -375,7 +387,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 self.unit_counts.append(layer.channels)
 
             log.debug("  - Type: {}{: <10}{}  Units: {}{: <4}{}".format(
-                ansi.BOLD, layer.type, ansi.ENDC, ansi.BOLD, layer.units, ansi.ENDC))
+                ansi.BOLD, layer.type, ansi.ENDC, ansi.BOLD, layer.units or "N/A", ansi.ENDC))
         log.debug("")
 
         if self.valid_size > 0.0:
