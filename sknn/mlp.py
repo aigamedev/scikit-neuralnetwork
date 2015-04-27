@@ -44,71 +44,53 @@ class ansi:
 
 
 class Layer(object):
+    """
+    Specification for a layer to be passed to the neural network during construction.  This
+    includes a variety of parameters to configure each layer based on its activation type.
+
+    Parameters
+    ----------
+
+    type: str
+        Select which activation function this layer should use, as a string.
+            * For hidden layers, you can use the following layer types:
+            ``Rectifier``, ``Sigmoid``, ``Tanh``, or ``Maxout``.
+            * For output layers, you can use the following layer types:
+            ``Linear``, ``Softmax`` or ``Gaussian``.
+
+    name: str, optional
+        You optionally can specify a name for this layer, and its parameters
+        will then be accessible to `scikit-learn` via a nested sub-object.  For example,
+        if name is set to `hidden1`, then the parameter `hidden1__units` from the network
+        is bound to this layer's `units` variable.
+
+    units: int, optional
+        The number of units (also known as neurons) in this layer.  This applies to all
+        layer types except for convolution.
+
+    pieces: int, optional
+        The number of piecewise linear segments in the Maxout activation.  This is
+        optional and only applies when `Maxout` is selected as the layer type.
+
+    dropout: float, optional
+        The ratio of inputs to drop out for this layer during training.  For example, 0.25
+        means that 25% of the inputs will be excluded for each training sample, with the
+        remaining inputs being renormalized accordingly.
+    """
 
     def __init__(
             self,
             type,
-            nop=None,
+            warning=None,
             name=None,
             units=None,
             pieces=None,
-            channels=None,
-            kernel_shape=None,
-            pool_shape=None,
-            pool_type=None,
             dropout=None):
-        """
-        Parameters
-        ----------
 
-        type: str
-            Select which activation function this layer should use, as a string.
-                * For hidden layers, you can use the following layer types:
-                ``Rectifier``, ``Sigmoid``, ``Tanh``, ``Maxout`` or ``Convolution``.
-                * For output layers, you can use the following layer types:
-                ``Linear``, ``Softmax`` or ``Gaussian``.
-
-        name: str, optional
-            You optionally can specify a name for this layer, and its parameters
-            will then be accessible to `scikit-learn` via a nested sub-object.  For example,
-            if name is set to `hidden1`, then the parameter `hidden1__units` from the network
-            is bound to this layer's `units` variable.
-
-        units: int, optional
-            The number of units (also known as neurons) in this layer.  This applies to all
-            layer types except for convolution.
-
-        pieces: int, optional
-            The number of piecewise linear segments in the Maxout activation.  This is
-            optional and only applies when `Maxout` is selected as the layer type.
-
-        channels: int, optional
-            Number of output channels for the convolution layers.  Each channel has its own
-            set of shared weights which are trained by applying the kernel over the image.
-
-        kernel_shape: tuple of ints, optional
-            A two-dimensional tuple of integers corresponding to the shape of the kernel when
-            convolution is used.  For example, this could be a square kernel `(3,3)` or a full
-            horizontal or vertical kernel on the input matrix, e.g. `(N,1)` or `(1,N)`.
-
-        pool_shape: tuple of ints, optional
-            A two-dimensional tuple of integers corresponding to the pool size.  This should be
-            square, for example `(2,2)` to reduce the size by half, or `(4,4)` to make the output
-            a quarter of the original.
-
-        pool_type: str, optional
-            Type of the pooling to be used; can be either `max` or `mean`.  The default is 
-            to take the maximum value of all inputs that fall into this pool.
-
-        dropout: float, optional
-            The ratio of inputs to drop out for this layer during training.  For example, 0.25
-            means that 25% of the inputs will be excluded for each training sample, with the
-            remaining inputs being renormalized accordingly.
-        """
-        assert nop is None,\
+        assert warning is None,\
             "Specify layer parameters as keyword arguments, not positional arguments."
 
-        if type not in ['Rectifier', 'Sigmoid', 'Tanh', 'Maxout', 'Convolution',
+        if type not in ['Rectifier', 'Sigmoid', 'Tanh', 'Maxout',
                         'Linear', 'Softmax', 'Gaussian']:
             raise NotImplementedError("Layer type `%s` is not implemented." % type)
 
@@ -116,10 +98,6 @@ class Layer(object):
         self.type = type
         self.units = units
         self.pieces = pieces
-        self.channels = channels
-        self.kernel_shape = kernel_shape
-        self.pool_shape = pool_shape
-        self.pool_type = pool_type
         self.dropout = dropout
 
     def __eq__(self, other):
@@ -130,6 +108,83 @@ class Layer(object):
         return "<sknn.mlp.Layer %s: %s>" % (self.type, params)
 
 
+class Convolution(Layer):
+    """
+    Specification for a convolution layer to be passed to the neural network in construction.
+    This includes a variety of convolution-specific parameters to configure each layer, as well
+    as activation-specific parameters.
+
+    Parameters
+    ----------
+
+    type: str
+        Select which activation function this convolution layer should use, as a string.
+        For hidden layers, you can use the following convolution types ``Rectifier``,
+        ``Sigmoid``, ``Tanh`` or ``Linear``.
+
+    name: str, optional
+        You optionally can specify a name for this layer, and its parameters
+        will then be accessible to `scikit-learn` via a nested sub-object.  For example,
+        if name is set to `hidden1`, then the parameter `hidden1__units` from the network
+        is bound to this layer's `units` variable.
+
+    pieces: int, optional
+        The number of piecewise linear segments in the Maxout activation.  This is
+        optional and only applies when `Maxout` is selected as the layer type.
+
+    channels: int, optional
+        Number of output channels for the convolution layers.  Each channel has its own
+        set of shared weights which are trained by applying the kernel over the image.
+
+    kernel_shape: tuple of ints, optional
+        A two-dimensional tuple of integers corresponding to the shape of the kernel when
+        convolution is used.  For example, this could be a square kernel `(3,3)` or a full
+        horizontal or vertical kernel on the input matrix, e.g. `(N,1)` or `(1,N)`.
+
+    pool_shape: tuple of ints, optional
+        A two-dimensional tuple of integers corresponding to the pool size.  This should be
+        square, for example `(2,2)` to reduce the size by half, or `(4,4)` to make the output
+        a quarter of the original.
+
+    pool_type: str, optional
+        Type of the pooling to be used; can be either `max` or `mean`.  The default is 
+        to take the maximum value of all inputs that fall into this pool.
+
+    dropout: float, optional
+        The ratio of inputs to drop out for this layer during training.  For example, 0.25
+        means that 25% of the inputs will be excluded for each training sample, with the
+        remaining inputs being renormalized accordingly.
+    """
+    def __init__(
+            self,
+            type,
+            warning=None,
+            name=None,
+            channels=None,
+            pieces=None,
+            kernel_shape=None,
+            pool_shape=None,
+            pool_type=None,
+            dropout=None):
+
+        assert warning is None,\
+            "Specify layer parameters as keyword arguments, not positional arguments."
+
+        if type not in ['Rectifier', 'Sigmoid', 'Tanh', 'Linear']:
+            raise NotImplementedError("Convolution type `%s` is not implemented." % type)
+
+        super(Convolution, self).__init__(
+                type,
+                name=name,
+                pieces=pieces,
+                dropout=dropout)
+
+        self.channels = channels
+        self.kernel_shape = kernel_shape
+        self.pool_shape = pool_shape
+        self.pool_type = pool_type
+
+
 class BaseMLP(sklearn.base.BaseEstimator):
     """
     Abstract base class for wrapping the multi-layer perceptron functionality
@@ -137,6 +192,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
 
     Parameters
     ----------
+
     layers : list[Layer]
         An iterable sequence of each layer each as a Layer instance that contains
         its type, optional name, and any paramaters required.
@@ -332,7 +388,36 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 log.warning("Parameter `%s` is unused for layer type `%s`."\
                             % (a, layer.type))
 
-    def _create_hidden_layer(self, name, layer, irange=0.1):
+    def _create_convolution_layer(self, name, layer, irange):
+        self._check_layer(layer, ['channels', 'kernel_shape'],
+                                 ['pool_shape', 'pool_type'])
+
+        if layer.type == "Rectifier":
+            nl = mlp.RectifierConvNonlinearity(0.0)
+        elif layer.type == "Sigmoid":
+            nl = mlp.SigmoidConvNonlinearity()
+        elif layer.type == "Tanh":
+            nl = mlp.TanhConvNonlinearity()
+        elif layer.type == "Linear":
+            nl = mlp.IdentityConvNonlinearity()
+        else:
+            raise NotImplementedError(
+                "Convolution layer type `%s` is not supported." % layer.type)
+
+        return mlp.ConvElemwise(
+            layer_name=name,
+            nonlinearity=nl,
+            output_channels=layer.channels,
+            kernel_shape=layer.kernel_shape,
+            pool_shape=layer.pool_shape or (1,1),
+            pool_type=layer.pool_type or 'max',
+            pool_stride=(1,1),
+            irange=irange)
+
+    def _create_hidden_layer(self, name, layer, irange):
+        if isinstance(layer, Convolution):
+            return self._create_convolution_layer(name, layer, irange)
+
         if layer.type == "Rectifier":
             self._check_layer(layer, ['units'])
             return mlp.RectifiedLinear(
@@ -360,18 +445,6 @@ class BaseMLP(sklearn.base.BaseEstimator):
                 layer_name=name,
                 num_units=layer.units,
                 num_pieces=layer.pieces,
-                irange=irange)
-
-        if layer.type == "Convolution":
-            self._check_layer(layer, ['channels', 'kernel_shape'],
-                                     ['pool_shape', 'pool_type'])
-            return mlp.ConvRectifiedLinear(
-                layer_name=name,
-                output_channels=layer.channels,
-                kernel_shape=layer.kernel_shape,
-                pool_shape=layer.pool_shape or (1,1),
-                pool_type=layer.pool_type or 'max',
-                pool_stride=(1,1),
                 irange=irange)
 
         raise NotImplementedError(
@@ -518,7 +591,7 @@ class BaseMLP(sklearn.base.BaseEstimator):
     def is_convolution(self):
         """Check whether this neural network includes convolution layers.
         """
-        return "Conv" in self.layers[0].type
+        return isinstance(self.layers[0], Convolution)
 
     def __getstate__(self):
         assert self.mlp is not None,\

@@ -106,10 +106,10 @@ class TestActivations(unittest.TestCase):
         assert_raises(ValueError, nn._initialize, a_in, a_in)
 
     def test_UnusedParameterWarning(self):
-        nn = MLPR(layers=[L("Linear", kernel_shape=(1,1))], n_iter=1)
+        nn = MLPR(layers=[L("Linear", pieces=2)], n_iter=1)
         a_in = numpy.zeros((8,16))
         nn._initialize(a_in, a_in)
 
-        assert_in('Parameter `kernel_shape` is unused', self.buf.getvalue())
+        assert_in('Parameter `pieces` is unused', self.buf.getvalue())
         self.buf = io.StringIO() # clear
 
