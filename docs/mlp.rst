@@ -1,15 +1,16 @@
 :mod:`sknn.mlp` — Multi-Layer Perceptrons
 =========================================
 
-Layer Specifications
---------------------
-
 In this module, a neural network is made up of multiple layers — hence the name multi-layer perceptron!  You need to specify these layers by instantiating one of two types of specifications:
 
 * :mod:`sknn.mlp.Layer`: A standard feed-forward layer that can use linear or non-linear activations.
 * :mod:`sknn.mlp.Convolution`: An image-based convolve operation with shared weights, linear or not.
 
 In practice, you need to create a list of these specifications and provide them as the ``layers`` parameter to the :class:`sknn.mlp.Regressor` or :class:`sknn.mlp.Classifier` constructors.
+
+
+Layer Specifications
+--------------------
 
 .. autoclass:: sknn.mlp.Layer
 

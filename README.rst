@@ -82,13 +82,13 @@ The library supports both regressors (to estimate continuous outputs) and classi
             Layer("Linear")],
         learning_rate=0.02,
         n_iter=10)
-
     nn.fit(X_train, y_train)
-    nn.predict(X_valid)
 
-    nn.score(X_test, y_test)
+    y_valid = nn.predict(X_valid)
 
-We currently recommend reading ``sknn/mlp.py`` for more information about the parameters.  There's also `generated documentation <http://scikit-neuralnetwork.readthedocs.org/>`_ as a standalone page.
+    score = nn.score(X_test, y_test)
+
+The `generated documentation <http://scikit-neuralnetwork.readthedocs.org/>`_ as a standalone page where you can find more information about parameters, as well as examples in the User Guide.
 
 
 .. |Build Status| image:: https://travis-ci.org/aigamedev/scikit-neuralnetwork.svg?branch=master

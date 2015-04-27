@@ -74,6 +74,10 @@ class Layer(object):
         The ratio of inputs to drop out for this layer during training.  For example, 0.25
         means that 25% of the inputs will be excluded for each training sample, with the
         remaining inputs being renormalized accordingly.
+
+    warning: None
+        You should use keyword arguments after `type` when initializing this object. If not,
+        the code will raise an AssertionError.
     """
 
     def __init__(
@@ -99,6 +103,8 @@ class Layer(object):
         self.dropout = dropout
 
     def set_params(self, **params):
+        """Setter for internal variables that's compatible with ``scikit-learn``.
+        """
         for k, v in params.items():
             if k not in self.__dict__:
                 raise ValueError("Invalid parameter `%s` for layer `%s`." % (k, self.name))
@@ -160,6 +166,10 @@ class Convolution(Layer):
         The ratio of inputs to drop out for this layer during training.  For example, 0.25
         means that 25% of the inputs will be excluded for each training sample, with the
         remaining inputs being renormalized accordingly.
+
+    warning: None
+        You should use keyword arguments after `type` when initializing this object. If not,
+        the code will raise an AssertionError.
     """
     def __init__(
             self,

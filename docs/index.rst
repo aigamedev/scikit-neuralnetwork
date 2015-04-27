@@ -29,35 +29,31 @@ Once that's done, you can grab this repository and install from ``setup.py`` in 
     > git clone https://github.com/aigamedev/scikit-neuralnetwork.git
     > cd scikit-neuralnetwork; python setup.py develop
 
-With that done, you can run the samples and benchmarks available in the ``examples/`` folder.
+Then, you can run the samples and benchmarks available in the ``examples/`` folder.
 
 
 Running Tests
 -------------
 
-You can launch the tests to check everything is working using the following commands::
+We encourage you to launch the tests to check everything is working using the following commands::
 
     > pip install nose
     > nosetests -v sknn
 
-Use the additional parameters ``--processes=8 --process-timeout=60`` to speed things up on powerful machines.  The result should look as follows in your terminal.
+Use the additional command-line parameters in the test runner ``--processes=8 --process-timeout=60`` to speed things up on powerful machines.  The result should look as follows in your terminal.
 
-.. image:: docs/console_tests.png
+.. image:: console_tests.png
 
 We strive to maintain 100% test coverage for all code-paths, to ensure that rapid changes in the underlying ``pylearn2`` library are caught automatically.
 
 
-User Guide
-----------
+Getting Started
+---------------
 
 .. toctree::
     :maxdepth: 2
 
     guide
-
-
-User Guide
-----------
 
 
 Indices & Search
