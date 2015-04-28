@@ -18,7 +18,7 @@ Thanks to the underlying ``pylearn2`` implementation, this library supports the 
     * Nonlinear: ``Sigmoid``, ``Tanh``, ``Rectifier``, ``Maxout``.
     * Linear: ``Linear``, ``Gaussian``, ``Softmax``.
 * **Layer Types —** ``Convolution`` (greyscale and color, 2D), ``Dense`` (standard, 1D).
-* **Learning Rules —** ``sgd``, ``nesterov``, ``adadelta``, ``adagrad``, ``rmsprop``.
+* **Learning Rules —** ``sgd``, ``momentum``, ``nesterov``, ``adadelta``, ``rmsprop``.
 * **Dataset Types —** ``numpy.ndarray``, coming soon ``scipy.sparse``.
 
 If a feature you need is missing, consider opening a `GitHub Issue <https://github.com/aigamedev/scikit-neuralnetwork/issues>`_ with a detailed explanation about the use case and we'll see what we can do.
@@ -78,7 +78,7 @@ You can run the following command to reproduce the benchmarks on your machine::
 ==========  ==================  =========================  ==================  =========================
    MNIST      sknn.mlp (CPU)      nolearn.lasagne (CPU)      sknn.mlp (GPU)      nolearn.lasagne (GPU)
 ==========  ==================  =========================  ==================  =========================
- Accuracy    **97.99% ±0.046**          97.77% ±0.054       **97.99% ±0.068**      97.76% ±0.061
+ Accuracy    **97.99%±0.046**          97.77% ±0.054       **97.99%±0.068**      97.76% ±0.061
  Training     **20.1s ±1.07**            45.7s ±1.10           36.7s ±0.41        **31.4s ±0.42**
 ==========  ==================  =========================  ==================  =========================
 
