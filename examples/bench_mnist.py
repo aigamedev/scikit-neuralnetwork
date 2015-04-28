@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from __future__ import (absolute_import, unicode_literals, print_function)
+
 import sys
 import time
 import logging
@@ -15,6 +18,8 @@ logging.basicConfig(format="%(message)s", level=logging.DEBUG, stream=sys.stdout
 from sklearn.base import clone
 from sklearn.cross_validation import train_test_split
 from sklearn.datasets import fetch_mldata
+from sklearn.metrics import classification_report
+
 
 mnist = fetch_mldata('mnist-original')
 X_train, X_test, y_train, y_test = train_test_split(
@@ -22,8 +27,8 @@ X_train, X_test, y_train, y_test = train_test_split(
         mnist.target.astype(np.int32),
         test_size=0.33, random_state=1234)
 
-classifiers = []
 
+classifiers = []
 
 if 'dbn' in sys.argv:
     from nolearn.dbn import DBN
@@ -83,26 +88,27 @@ if 'lasagne' in sys.argv:
     classifiers.append(('nolearn.lasagne', clf))
 
 
+RUNS = 1
+
 for name, orig in classifiers:
     times = []
     accuracies = []
-    for i in range(25):
-        print i,
+    for i in range(RUNS):
         start = time.time()
 
         clf = clone(orig)
         clf.random_state = int(time.time())
         clf.fit(X_train, y_train)
 
-        # from sklearn.metrics import classification_report
-
+        y_pred = clf.predict(X_test)
         accuracies.append(clf.score(X_test, y_test))
         times.append(time.time() - start)
-        # print "\tReport:"
-        # print classification_report(y_test, y_pred)
 
     a_t = np.array(times)
     a_s = np.array(accuracies)
 
-    print "\nAccuracy", a_s.mean(), a_s.std()
-    print "Times", a_t.mean(), a_t.std()
+    print("\n"+name)
+    print("\tAccuracy: %5.2f%% ±%4.2f" % (100.0 * a_s.mean(), 100.0 * a_s.std()))
+    print("\tTimes:    %5.2fs ±%4.2f" % (a_t.mean(), a_t.std()))
+    print("\tReport:")
+    print(classification_report(y_test, y_pred))

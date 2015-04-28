@@ -17,9 +17,9 @@ Thanks to the underlying ``pylearn2`` implementation, this library supports the 
 * **Activation Types —**
     * Nonlinear: ``Sigmoid``, ``Tanh``, ``Rectifier``, ``Maxout``.
     * Linear: ``Linear``, ``Gaussian``, ``Softmax``.
-* **Layer Types —** ``Convolution`` (greyscale and color), ``Dense`` (standard).
+* **Layer Types —** ``Convolution`` (greyscale and color, 2D), ``Dense`` (standard, 1D).
 * **Learning Rules —** ``sgd``, ``nesterov``, ``adadelta``, ``adagrad``, ``rmsprop``.
-* **Dataset Types —** ``numpy.ndarray``, ``scipy.sparse``, custom iterator.
+* **Dataset Types —** ``numpy.ndarray``, coming soon ``scipy.sparse``.
 
 If a feature you need is missing, consider opening a `GitHub Issue <https://github.com/aigamedev/scikit-neuralnetwork/issues>`_ with a detailed explanation about the use case and we'll see what we can do.
 
@@ -73,16 +73,16 @@ You can run the following command to reproduce the benchmarks on your machine::
 
     > python examples/bench_mnist.py (sknn|lasagne)
 
-... to generate the statistics below (e.g. for 25 samples).
+... to generate the statistics below (e.g. over 25 runs).
 
 ==========  ==================  =========================  ==================  =========================
    MNIST      sknn.mlp (CPU)      nolearn.lasagne (CPU)      sknn.mlp (GPU)      nolearn.lasagne (GPU)
 ==========  ==================  =========================  ==================  =========================
- Accuracy    **97.99%** ±0.046          97.77% ±0.054       **97.99%** ±0.068      97.76% ±0.061
+ Accuracy    **97.99%**±0.046          97.77% ±0.054       **97.99%**±0.068      97.76% ±0.061
  Training     **20.1s** ±1.07            45.7s ±1.10           36.7s ±0.41        **31.4s** ±0.42
 ==========  ==================  =========================  ==================  =========================
 
-All the neural networks were setup as similarly as possible, given parameters that can be controlled within the implementation.  In particular, the model has a single hidden layer with 300 hidden units of type Rectified Linear (ReLU) and trained with the same data with validation and monitoring disabled.  The remaining third of the MNIST dataset was only used to test the score once training terminated.
+All the neural networks were setup as similarly as possible, given parameters that can be controlled within the implementation and their interfaces.  In particular, this model has a single hidden layer with 300 hidden units of type Rectified Linear (ReLU) and trained with the same data with validation and monitoring disabled.  The remaining third of the MNIST dataset was only used to test the score once training terminated.
 
 **WARNING**: These numbers are certainly not final and fluctuate as the underlying libraries change.  If you have any explanations of these scores, or ideas how to make the results similar, then please submit a Pull Request on the benchmark script!
 
