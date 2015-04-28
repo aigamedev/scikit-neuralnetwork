@@ -95,7 +95,7 @@ Working with images as inputs in 2D or 3D ``numpy.ndarray``, you can use convolu
 
     from sknn.mlp import Classifier, Convolution, Layer
 
-    nn = Regressor(
+    nn = Classifier(
         layers=[
             Convolution("Rectifier", channels=8, kernel_shape=(3,3)),
             Layer("Softmax")],

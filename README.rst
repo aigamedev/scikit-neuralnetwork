@@ -9,6 +9,21 @@ Deep neural network implementation without the learning cliff!  This library imp
 
 ----
 
+Features
+--------
+
+Thanks to the underlying ``pylearn2`` implementation, this library supports the following neural network features, which are exposed in an intuitive and `well documented <http://scikit-neuralnetwork.readthedocs.org/>`_ API:
+
+* **Activation Types —**
+    * Nonlinear: ``Sigmoid``, ``Tanh``, ``Rectifier``, ``Maxout``.
+    * Linear: ``Linear``, ``Gaussian``, ``Softmax``.
+* **Layer Types —** ``Convolution`` (greyscale and color, 2D), ``Dense`` (standard, 1D).
+* **Learning Rules —** ``sgd``, ``momentum``, ``nesterov``, ``adadelta``, ``rmsprop``.
+* **Dataset Types —** ``numpy.ndarray``, coming soon ``scipy.sparse``.
+
+If a feature you need is missing, consider opening a `GitHub Issue <https://github.com/aigamedev/scikit-neuralnetwork/issues>`_ with a detailed explanation about the use case and we'll see what we can do.
+
+
 Installation & Testing
 ----------------------
 
@@ -35,7 +50,7 @@ We strive to maintain 100% test coverage for all code-paths, to ensure that rapi
 Demonstration
 -------------
 
-To run a visualization that uses the ``sknn.mlp.MultiLayerPerceptronClassifier`` just run the following command in the project's root folder::
+To run a visualization that uses the ``sknn.mlp.Classifier`` just run the following command in the project's root folder::
 
     > python examples/plot_mlp.py --params activation
 
@@ -47,30 +62,35 @@ There are multiple parameters you can plot as well, for example ``iterations``, 
 Benchmarks
 ----------
 
-Here are the results of testing 10 epochs of training for two-thirds of the original MNIST data, on Ubuntu 14.04 and a GeForce GTX 650 (Memory: 1024Mb, Cores: 384).  You can run the following command::
+The following section compares ``nolearn`` (and ``lasagne``) vs. ``sknn`` (and ``pylearn2``) by evaluating them as a black box.  In theory, these neural network models are all the same, but in practice every implementation detail can impact the result.  Here we attempt to measure the differences in the underlying libraries.
+
+The results shown are from training for 10 epochs for two-thirds of the original MNIST data, on two different machines:
+
+1. **GPU Results**: NVIDIA GeForce GTX 650 (Memory: 1024Mb, Cores: 384) on Ubuntu 14.04.
+2. **CPU Results**: Intel Core i7 2Ghz (256kb L2, 6MB L3) on OSX Mavericks 10.9.5.
+
+You can run the following command to reproduce the benchmarks on your machine::
 
     > python examples/bench_mnist.py (sknn|lasagne)
 
-... to generate the results below.
+... to generate the statistics below (e.g. over 25 runs).
 
-.. class:: center
+==========  ==================  =========================  ==================  =========================
+   MNIST      sknn.mlp (CPU)      nolearn.lasagne (CPU)      sknn.mlp (GPU)      nolearn.lasagne (GPU)
+==========  ==================  =========================  ==================  =========================
+ Accuracy    **97.99%±0.046**          97.77% ±0.054       **97.99%±0.068**      97.76% ±0.061
+ Training     **20.1s ±1.07**            45.7s ±1.10           36.7s ±0.41        **31.4s ±0.42**
+==========  ==================  =========================  ==================  =========================
 
-==========  ============  ===============  ===================
-   MNIST      sknn.mlp      nolearn.dbn      nolearn.lasagne
-==========  ============  ===============  ===================
- Accuracy    **98.05%**       97.80%             97.78%
- Training        36s           274s              **32s**
-==========  ============  ===============  ===================
+All the neural networks were setup as similarly as possible, given parameters that can be controlled within the implementation and their interfaces.  In particular, this model has a single hidden layer with 300 hidden units of type Rectified Linear (ReLU) and trained with the same data with validation and monitoring disabled.  The remaining third of the MNIST dataset was only used to test the score once training terminated.
 
-All the networks have a single hidden layer with 300 hidden units of the default type, and were given the same data with validation and monitoring disabled.  The remaining third of the MNIST dataset was only used to test the score once training terminated.
-
-**WARNING**: For the ``theano`` powered libraries, these numbers are somewhat sensitive to parameter changes so please do not consider them definitive!  It's likely tweaking parameters in both libraries would make training times very similar...
+**WARNING**: These numbers are certainly not final and fluctuate as the underlying libraries change. The relative speed of PyLearn2 on CPU (better) and on GPU (worse) is `under investigation <https://github.com/aigamedev/scikit-neuralnetwork/issues/26>`_!  If you have any explanations of these scores, or ideas how to make the results similar, then please submit a Pull Request on the benchmark script.
 
 
 Getting Started
 ---------------
 
-The library supports both regressors (to estimate continuous outputs) and classifiers (to predict classes).  This is the ``sklearn``-compatible API:
+The library supports both regressors (to estimate continuous outputs from inputs) and classifiers (to predict labels from features).  This is the ``sklearn``-compatible API:
 
 .. code:: python
 
@@ -90,6 +110,10 @@ The library supports both regressors (to estimate continuous outputs) and classi
 
 The `generated documentation <http://scikit-neuralnetwork.readthedocs.org/>`_ as a standalone page where you can find more information about parameters, as well as examples in the `User Guide <http://scikit-neuralnetwork.readthedocs.org/en/latest/guide.html>`_.
 
+
+----
+
+|Build Status| |Documentation Status| |Code Coverage|
 
 .. |Build Status| image:: https://travis-ci.org/aigamedev/scikit-neuralnetwork.svg?branch=master
    :target: https://travis-ci.org/aigamedev/scikit-neuralnetwork

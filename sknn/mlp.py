@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import (absolute_import, unicode_literals, print_function)
 
 __all__ = ['Regressor', 'Classifier']
@@ -647,7 +648,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         if not isinstance(y, numpy.ndarray):
             y = y.toarray()
 
-        if not self.is_initialized:            
+        if not self.is_initialized:
             self._initialize(X, y)
             X, y = self.train_set
         else:
@@ -669,9 +670,9 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         if self.n_stable:
             log.debug("  - Early termination after {} stable iterations.".format(self.n_stable))
 
-        log.debug("""
-Epoch    Validation Error    Time
----------------------------------""")
+        if self.verbose:
+            log.debug("\nEpoch    Validation Error    Time"
+                      "\n---------------------------------")
 
         for i in itertools.count(0):
             start = time.time()
