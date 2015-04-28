@@ -78,8 +78,8 @@ You can run the following command to reproduce the benchmarks on your machine::
 ==========  ==================  =========================  ==================  =========================
    MNIST      sknn.mlp (CPU)      nolearn.lasagne (CPU)      sknn.mlp (GPU)      nolearn.lasagne (GPU)
 ==========  ==================  =========================  ==================  =========================
- Accuracy    **97.99%**±0.046          97.77% ±0.054       **97.99%**±0.068      97.76% ±0.061
- Training     **20.1s** ±1.07            45.7s ±1.10           36.7s ±0.41        **31.4s** ±0.42
+ Accuracy    **97.99% ±0.046**          97.77% ±0.054       **97.99% ±0.068**      97.76% ±0.061
+ Training     **20.1s ±1.07**            45.7s ±1.10           36.7s ±0.41        **31.4s ±0.42**
 ==========  ==================  =========================  ==================  =========================
 
 All the neural networks were setup as similarly as possible, given parameters that can be controlled within the implementation and their interfaces.  In particular, this model has a single hidden layer with 300 hidden units of type Rectified Linear (ReLU) and trained with the same data with validation and monitoring disabled.  The remaining third of the MNIST dataset was only used to test the score once training terminated.
@@ -90,7 +90,7 @@ All the neural networks were setup as similarly as possible, given parameters th
 Getting Started
 ---------------
 
-The library supports both regressors (to estimate continuous outputs) and classifiers (to predict classes).  This is the ``sklearn``-compatible API:
+The library supports both regressors (to estimate continuous outputs from inputs) and classifiers (to predict labels from features).  This is the ``sklearn``-compatible API:
 
 .. code:: python
 
