@@ -14,11 +14,14 @@ Features
 
 Thanks to the underlying ``PyLearn2`` implementation, this library supports the following: 
 
-* **Activation Types** — Nonlinear: ``Sigmoid``, ``Tanh``, ``Rectifier``, ``Maxout``; Linear: ``Linear``, ``Gaussian``, ``Softmax``.
-* **Layer Types** — ``Convolution`` (greyscale and color).
+* **Activation Types** —
+    * Nonlinear: ``Sigmoid``, ``Tanh``, ``Rectifier``, ``Maxout``.
+    * Linear: ``Linear``, ``Gaussian``, ``Softmax``.
+* **Layer Types** — ``Convolution`` (greyscale and color), ``Feed Forward`` (standard).
 * **Learning Rules** — ``sgd``, ``nesterov``, ``adadelta``, ``adagrad``, ``rmsprop``.
 * **Dataset Types** — ``numpy.ndarray``, ``scipy.sparse``, custom iterator.
 
+If a feature you need is missing, consider opening an `Issue <https://github.com/aigamedev/scikit-neuralnetwork/issues>`_ with a detailed explanation about the use case.
 
 Installation & Testing
 ----------------------
@@ -58,24 +61,26 @@ There are multiple parameters you can plot as well, for example ``iterations``, 
 Benchmarks
 ----------
 
-Here are the results of testing 10 epochs of training for two-thirds of the original MNIST data, on Ubuntu 14.04 and a GeForce GTX 650 (Memory: 1024Mb, Cores: 384).  You can run the following command::
+The following section compares ``nolearn`` (and ``lasagne``) with ``sknn`` (and ``pylearn2``) by evaluating them as a black box.  In theory, neural network models are all the same, but in practice every implementation detail can impact the result.  Here we attempt to 
+
+The results shown are from training for 10 epochs for two-thirds of the original MNIST data, on Ubuntu 14.04 and a GeForce GTX 650 (Memory: 1024Mb, Cores: 384).  You can run the following command::
 
     > python examples/bench_mnist.py (sknn|lasagne)
 
-... to generate the results below.
+... to generate the statistics below (e.g. for 25 samples).
 
 .. class:: center
 
-==========  ============  ===============  ===================
-   MNIST      sknn.mlp      nolearn.dbn      nolearn.lasagne
-==========  ============  ===============  ===================
- Accuracy    **98.05%**       97.80%             97.78%
- Training        36s           274s              **32s**
-==========  ============  ===============  ===================
+==========  ==================  =========================
+   MNIST      sknn.mlp (CPU)      nolearn.lasagne (CPU)
+==========  ==================  =========================
+ Accuracy      97.99% ±0.046          97.77% ±0.054
+ Training       20.1s ±1.07           45.70s ±1.10
+==========  ==================  =========================
 
-All the networks have a single hidden layer with 300 hidden units of the default type, and were given the same data with validation and monitoring disabled.  The remaining third of the MNIST dataset was only used to test the score once training terminated.
+All the neural networks were setup as similarly as possible, given parameters that can be controlled within the implementation.  The model has a single hidden layer with 300 hidden units of type Rectified Linear (ReLU), and were given the same data with validation and monitoring disabled.  The remaining third of the MNIST dataset was only used to test the score once training terminated.
 
-**WARNING**: For the ``theano`` powered libraries, these numbers are somewhat sensitive to parameter changes so please do not consider them definitive!  It's likely tweaking parameters in both libraries would make training times very similar...
+**WARNING**: These numbers are certainly not final and fluctuate as the underlying libraries change.  If you have any explanations of these scores, or ideas how to make the results similar, then please submit a Pull Request on the benchmark script!
 
 
 Getting Started
