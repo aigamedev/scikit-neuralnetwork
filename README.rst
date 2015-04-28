@@ -84,7 +84,7 @@ You can run the following command to reproduce the benchmarks on your machine::
 
 All the neural networks were setup as similarly as possible, given parameters that can be controlled within the implementation and their interfaces.  In particular, this model has a single hidden layer with 300 hidden units of type Rectified Linear (ReLU) and trained with the same data with validation and monitoring disabled.  The remaining third of the MNIST dataset was only used to test the score once training terminated.
 
-**WARNING**: These numbers are certainly not final and fluctuate as the underlying libraries change.  If you have any explanations of these scores, or ideas how to make the results similar, then please submit a Pull Request on the benchmark script!
+**WARNING**: These numbers are certainly not final and fluctuate as the underlying libraries change. The relative speed of PyLearn2 on CPU (better) and on GPU (worse) is `under investigation <https://github.com/aigamedev/scikit-neuralnetwork/issues/26>`_!  If you have any explanations of these scores, or ideas how to make the results similar, then please submit a Pull Request on the benchmark script.
 
 
 Getting Started
