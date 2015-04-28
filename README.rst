@@ -12,16 +12,17 @@ Deep neural network implementation without the learning cliff!  This library imp
 Features
 --------
 
-Thanks to the underlying ``PyLearn2`` implementation, this library supports the following: 
+Thanks to the underlying ``pylearn2`` implementation, this library supports the following neural network features, which are exposed in an intuitive and `well documented <http://scikit-neuralnetwork.readthedocs.org/>`_ API:
 
-* **Activation Types** —
+* **Activation Types —**
     * Nonlinear: ``Sigmoid``, ``Tanh``, ``Rectifier``, ``Maxout``.
     * Linear: ``Linear``, ``Gaussian``, ``Softmax``.
-* **Layer Types** — ``Convolution`` (greyscale and color), ``Feed Forward`` (standard).
-* **Learning Rules** — ``sgd``, ``nesterov``, ``adadelta``, ``adagrad``, ``rmsprop``.
-* **Dataset Types** — ``numpy.ndarray``, ``scipy.sparse``, custom iterator.
+* **Layer Types —** ``Convolution`` (greyscale and color), ``Feed Forward`` (standard).
+* **Learning Rules —** ``sgd``, ``nesterov``, ``adadelta``, ``adagrad``, ``rmsprop``.
+* **Dataset Types —** ``numpy.ndarray``, ``scipy.sparse``, custom iterator.
 
-If a feature you need is missing, consider opening an `Issue <https://github.com/aigamedev/scikit-neuralnetwork/issues>`_ with a detailed explanation about the use case.
+If a feature you need is missing, consider opening a `GitHub Issue <https://github.com/aigamedev/scikit-neuralnetwork/issues>`_ with a detailed explanation about the use case and we'll see what we can do.
+
 
 Installation & Testing
 ----------------------
@@ -61,7 +62,7 @@ There are multiple parameters you can plot as well, for example ``iterations``, 
 Benchmarks
 ----------
 
-The following section compares ``nolearn`` (and ``lasagne``) with ``sknn`` (and ``pylearn2``) by evaluating them as a black box.  In theory, neural network models are all the same, but in practice every implementation detail can impact the result.  Here we attempt to 
+The following section compares ``nolearn`` (and ``lasagne``) vs. ``sknn`` (and ``pylearn2``) by evaluating them as a black box.  In theory, these neural network models are all the same, but in practice every implementation detail can impact the result.  Here we attempt to measure the differences in the underlying libraries.
 
 The results shown are from training for 10 epochs for two-thirds of the original MNIST data, on Ubuntu 14.04 and a GeForce GTX 650 (Memory: 1024Mb, Cores: 384).  You can run the following command::
 
@@ -69,16 +70,14 @@ The results shown are from training for 10 epochs for two-thirds of the original
 
 ... to generate the statistics below (e.g. for 25 samples).
 
-.. class:: center
-
-==========  ==================  =========================
-   MNIST      sknn.mlp (CPU)      nolearn.lasagne (CPU)
-==========  ==================  =========================
+==========  ==================  =========================  ==================  =========================
+   MNIST      sknn.mlp (CPU)      nolearn.lasagne (CPU)      sknn.mlp (GPU)      nolearn.lasagne (GPU)
+==========  ==================  =========================  ==================  =========================
  Accuracy      97.99% ±0.046          97.77% ±0.054
  Training       20.1s ±1.07           45.70s ±1.10
-==========  ==================  =========================
+==========  ==================  =========================  ==================  =========================
 
-All the neural networks were setup as similarly as possible, given parameters that can be controlled within the implementation.  The model has a single hidden layer with 300 hidden units of type Rectified Linear (ReLU), and were given the same data with validation and monitoring disabled.  The remaining third of the MNIST dataset was only used to test the score once training terminated.
+All the neural networks were setup as similarly as possible, given parameters that can be controlled within the implementation.  In particular, the model has a single hidden layer with 300 hidden units of type Rectified Linear (ReLU), and were given the same data with validation and monitoring disabled.  The remaining third of the MNIST dataset was only used to test the score once training terminated.
 
 **WARNING**: These numbers are certainly not final and fluctuate as the underlying libraries change.  If you have any explanations of these scores, or ideas how to make the results similar, then please submit a Pull Request on the benchmark script!
 
@@ -106,6 +105,10 @@ The library supports both regressors (to estimate continuous outputs) and classi
 
 The `generated documentation <http://scikit-neuralnetwork.readthedocs.org/>`_ as a standalone page where you can find more information about parameters, as well as examples in the `User Guide <http://scikit-neuralnetwork.readthedocs.org/en/latest/guide.html>`_.
 
+
+----
+
+|Build Status| |Documentation Status| |Code Coverage|
 
 .. |Build Status| image:: https://travis-ci.org/aigamedev/scikit-neuralnetwork.svg?branch=master
    :target: https://travis-ci.org/aigamedev/scikit-neuralnetwork
