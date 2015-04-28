@@ -647,7 +647,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         if not isinstance(y, numpy.ndarray):
             y = y.toarray()
 
-        if not self.is_initialized:            
+        if not self.is_initialized:
             self._initialize(X, y)
             X, y = self.train_set
         else:

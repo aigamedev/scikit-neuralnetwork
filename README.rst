@@ -9,6 +9,17 @@ Deep neural network implementation without the learning cliff!  This library imp
 
 ----
 
+Features
+--------
+
+Thanks to the underlying ``PyLearn2`` implementation, this library supports the following: 
+
+* **Activation Types** — Nonlinear: ``Sigmoid``, ``Tanh``, ``Rectifier``, ``Maxout``; Linear: ``Linear``, ``Gaussian``, ``Softmax``.
+* **Layer Types** — ``Convolution`` (greyscale and color).
+* **Learning Rules** — ``sgd``, ``nesterov``, ``adadelta``, ``adagrad``, ``rmsprop``.
+* **Dataset Types** — ``numpy.ndarray``, ``scipy.sparse``, custom iterator.
+
+
 Installation & Testing
 ----------------------
 
@@ -35,7 +46,7 @@ We strive to maintain 100% test coverage for all code-paths, to ensure that rapi
 Demonstration
 -------------
 
-To run a visualization that uses the ``sknn.mlp.MultiLayerPerceptronClassifier`` just run the following command in the project's root folder::
+To run a visualization that uses the ``sknn.mlp.Classifier`` just run the following command in the project's root folder::
 
     > python examples/plot_mlp.py --params activation
 
