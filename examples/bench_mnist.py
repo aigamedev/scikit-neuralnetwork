@@ -12,6 +12,7 @@ np.set_printoptions(suppress=True)
 logging.basicConfig(format="%(message)s", level=logging.DEBUG, stream=sys.stdout)
 
 
+from sklearn.base import clone
 from sklearn.cross_validation import train_test_split
 from sklearn.datasets import fetch_mldata
 
@@ -35,22 +36,23 @@ if 'dbn' in sys.argv:
     classifiers.append(('nolearn.dbn', clf))
 
 if 'sknn' in sys.argv:
-    from sknn import mlp
+    from sknn.mlp import Classifier, Layer
 
-    clf = mlp.Classifier(
-        layers=[mlp.Layer("Rectifier", units=300), mlp.Layer("Softmax")],
+    clf = Classifier(
+        layers=[Layer("Rectifier", units=300), Layer("Softmax")],
         learning_rate=0.02,
         learning_rule='momentum',
+        learning_momentum=0.9,
         batch_size=25,
         valid_size=0.0,
-        n_stable=10,
-        n_iter=10,
-        verbose=1,
+        n_stable=5,
+        n_iter=5,
+        # verbose=1,
     )
     classifiers.append(('sknn.mlp', clf))
 
 if 'lasagne' in sys.argv:
-    from nolearn.lasagne import NeuralNet
+    from nolearn.lasagne import NeuralNet, BatchIterator
     from lasagne.layers import InputLayer, DenseLayer
     from lasagne.nonlinearities import softmax
     from lasagne.updates import nesterov_momentum
@@ -73,22 +75,34 @@ if 'lasagne' in sys.argv:
         update=nesterov_momentum,
         update_learning_rate=0.02,
         update_momentum=0.9,
+        batch_iterator_train=BatchIterator(batch_size=25),
 
-        max_epochs=10,
-        verbose=1
+        max_epochs=5,
+        # verbose=1
         )
     classifiers.append(('nolearn.lasagne', clf))
 
 
-for name, clf in classifiers:
-    start = time.time()
-    clf.fit(X_train, y_train)
+for name, orig in classifiers:
+    times = []
+    accuracies = []
+    for i in range(10):
+        print i,
+        start = time.time()
 
-    from sklearn.metrics import classification_report
+        clf = clone(orig)
+        clf.random_state = int(time.time())
+        clf.fit(X_train, y_train)
 
-    y_pred = clf.predict(X_test)
-    print name
-    print "\tAccuracy:", clf.score(X_test, y_test)
-    print "\tTime:", time.time() - start
-    print "\tReport:"
-    print classification_report(y_test, y_pred)
+        # from sklearn.metrics import classification_report
+
+        accuracies.append(clf.score(X_test, y_test))
+        times.append(time.time() - start)
+        # print "\tReport:"
+        # print classification_report(y_test, y_pred)
+
+    a_t = numpy.array(times)
+    a_s = numpy.array(accuracies)
+
+    print "\nAccuracy", a_s.mean(), a_s.std()
+    print "Times", a_t.mean(), a_t.std()
