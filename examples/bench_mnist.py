@@ -45,8 +45,8 @@ if 'sknn' in sys.argv:
         learning_momentum=0.9,
         batch_size=25,
         valid_size=0.0,
-        n_stable=5,
-        n_iter=5,
+        n_stable=10,
+        n_iter=10,
         # verbose=1,
     )
     classifiers.append(('sknn.mlp', clf))
@@ -77,7 +77,7 @@ if 'lasagne' in sys.argv:
         update_momentum=0.9,
         batch_iterator_train=BatchIterator(batch_size=25),
 
-        max_epochs=5,
+        max_epochs=10,
         # verbose=1
         )
     classifiers.append(('nolearn.lasagne', clf))
@@ -86,7 +86,7 @@ if 'lasagne' in sys.argv:
 for name, orig in classifiers:
     times = []
     accuracies = []
-    for i in range(10):
+    for i in range(25):
         print i,
         start = time.time()
 
@@ -101,8 +101,8 @@ for name, orig in classifiers:
         # print "\tReport:"
         # print classification_report(y_test, y_pred)
 
-    a_t = numpy.array(times)
-    a_s = numpy.array(accuracies)
+    a_t = np.array(times)
+    a_s = np.array(accuracies)
 
     print "\nAccuracy", a_s.mean(), a_s.std()
     print "Times", a_t.mean(), a_t.std()

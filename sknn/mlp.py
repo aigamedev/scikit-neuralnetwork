@@ -669,9 +669,9 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         if self.n_stable:
             log.debug("  - Early termination after {} stable iterations.".format(self.n_stable))
 
-        log.debug("""
-Epoch    Validation Error    Time
----------------------------------""")
+        if self.verbose:
+            log.debug("\nEpoch    Validation Error    Time"
+                      "\n---------------------------------")
 
         for i in itertools.count(0):
             start = time.time()
