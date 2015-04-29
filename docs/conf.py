@@ -22,7 +22,7 @@ class Mock(MagicMock):
         return Mock()
 
 MOCK_MODULES = ['numpy', 'theano', 'sklearn.cross_validation',
-                'sklearn.base', 'sklearn.pipeline', 'sklearn.preprocessing',
+                'sklearn', 'sklearn.base', 'sklearn.pipeline', 'sklearn.preprocessing',
                 'pylearn2.termination_criteria', 'pylearn2.datasets', 'pylearn2.models',
                 'pylearn2.training_algorithms', 'pylearn2.costs.mlp.dropout',
                 'pylearn2.space', 'pylearn2.training_algorithms.learning_rule']
