@@ -118,7 +118,7 @@ Links & References
 * `Theano <https://github.com/Theano/Theano>`_ by LISA Lab — Underlying array/math library for efficient computation.
 * `scikit-learn <http://scikit-learn.org/>`_ by INRIA — Machine learning library with an elegant Pythonic interface.
 * `nolearn <https://github.com/dnouri/nolearn>`_ by dnouri — Similar wrapper library for Lasagne compatible with ``scikit-learn``.
-* `Lasagne <https://github.com/Lasagne/Lasagne>`_ by benanne — Theano-powered neural network library using ``Theano`` too.
+* `Lasagne <https://github.com/Lasagne/Lasagne>`_ by benanne — Alternative deep learning implementation using ``Theano`` too.
 
 ----
 
