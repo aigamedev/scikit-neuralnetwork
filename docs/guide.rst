@@ -89,7 +89,7 @@ This code will output a table containing validation scores at each of the twenty
 Convolution
 -----------
 
-Working with images as inputs in 2D or 3D ``numpy.ndarray``, you can use convolution to train a neural network with shared weights.  Here's an example how classification would work:
+Working with images as inputs in 2D (as greyscale) or 3D (as RGB) images stored in ``numpy.ndarray``, you can use convolution to train a neural network with shared weights.  Here's an example how classification would work:
 
 .. code:: python
 

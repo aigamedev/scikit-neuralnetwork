@@ -1,9 +1,9 @@
-Welcome to scikit-neuralnetwork's documentation!
-================================================
+Welcome to sknn's documentation!
+================================
 
 Deep neural network implementation without the learning cliff! This library implements multi-layer perceptrons as a wrapper for the powerful ``pylearn2`` library that's compatible with ``scikit-learn`` for a more user-friendly and Pythonic interface.
 
-|Build Status| |Documentation Status| |Code Coverage|
+|Build Status| |Documentation Status| |Code Coverage| |License| |Source Code|
 
 ----
 
@@ -40,7 +40,7 @@ We encourage you to launch the tests to check everything is working using the fo
     > pip install nose
     > nosetests -v sknn
 
-Use the additional command-line parameters in the test runner ``--processes=8 --process-timeout=60`` to speed things up on powerful machines.  The result should look as follows in your terminal.
+Use the additional command-line parameters in the test runner ``--processes=8`` and ``--process-timeout=60`` to speed things up on powerful machines.  The result should look as follows in your terminal.
 
 .. image:: console_tests.png
 
@@ -57,12 +57,17 @@ Getting Started
 
 .. image:: plot_activation.png
 
+
 Indices & Search
 ----------------
 
 * :ref:`genindex`
 * :ref:`search`
 
+
+----
+
+|Build Status| |Documentation Status| |Code Coverage| |License Type| |Source Code|
 
 .. |Build Status| image:: https://travis-ci.org/aigamedev/scikit-neuralnetwork.svg?branch=master
    :target: https://travis-ci.org/aigamedev/scikit-neuralnetwork
@@ -72,3 +77,9 @@ Indices & Search
 
 .. |Code Coverage| image:: https://coveralls.io/repos/aigamedev/scikit-neuralnetwork/badge.svg?branch=master
     :target: https://coveralls.io/r/aigamedev/scikit-neuralnetwork?branch=master
+
+.. |License Type| image:: https://img.shields.io/badge/license-New%20BSD-blue.svg
+    :target: https://github.com/aigamedev/scikit-neuralnetwork/blob/master/LICENSE
+
+.. |Source Code| image:: https://img.shields.io/github/stars/aigamedev/scikit-neuralnetwork.svg
+    :target: https://github.com/aigamedev/scikit-neuralnetwork/

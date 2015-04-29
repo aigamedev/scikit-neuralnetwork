@@ -5,7 +5,7 @@ Deep neural network implementation without the learning cliff!  This library imp
 
 **NOTE**: This project is possible thanks to the `nucl.ai Conference <http://nucl.ai/>`_ on **July 20-22**. Join us in **Vienna**!
 
-|Build Status| |Documentation Status| |Code Coverage|
+|Build Status| |Documentation Status| |Code Coverage| |License Type| |Project Stars|
 
 ----
 
@@ -111,9 +111,18 @@ The library supports both regressors (to estimate continuous outputs from inputs
 The `generated documentation <http://scikit-neuralnetwork.readthedocs.org/>`_ as a standalone page where you can find more information about parameters, as well as examples in the `User Guide <http://scikit-neuralnetwork.readthedocs.org/en/latest/guide.html>`_.
 
 
+Links & References
+------------------
+
+* `PyLearn2 <https://github.com/lisa-lab/pylearn2>`_ by LISA Lab — The amazing neural network library that powers ``sknn``.
+* `Theano <https://github.com/Theano/Theano>`_ by LISA Lab — Underlying array/math library for efficient computation.
+* `scikit-learn <http://scikit-learn.org/>`_ by INRIA — Machine learning library with an elegant Pythonic interface.
+* `nolearn <https://github.com/dnouri/nolearn>`_ by dnouri — Similar wrapper library for Lasagne compatible with ``scikit-learn``.
+* `Lasagne <https://github.com/Lasagne/Lasagne>`_ by benanne — Theano-powered neural network library using ``Theano`` too.
+
 ----
 
-|Build Status| |Documentation Status| |Code Coverage|
+|Build Status| |Documentation Status| |Code Coverage| |License Type| |Project Stars|
 
 .. |Build Status| image:: https://travis-ci.org/aigamedev/scikit-neuralnetwork.svg?branch=master
    :target: https://travis-ci.org/aigamedev/scikit-neuralnetwork
@@ -123,3 +132,9 @@ The `generated documentation <http://scikit-neuralnetwork.readthedocs.org/>`_ as
 
 .. |Code Coverage| image:: https://coveralls.io/repos/aigamedev/scikit-neuralnetwork/badge.svg?branch=master
     :target: https://coveralls.io/r/aigamedev/scikit-neuralnetwork?branch=master
+
+.. |License Type| image:: https://img.shields.io/badge/license-New%20BSD-blue.svg
+    :target: https://github.com/aigamedev/scikit-neuralnetwork/blob/master/LICENSE
+
+.. |Project Stars| image:: https://img.shields.io/github/stars/aigamedev/scikit-neuralnetwork.svg
+    :target: https://github.com/aigamedev/scikit-neuralnetwork/stargazers    
