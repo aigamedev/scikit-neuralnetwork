@@ -35,6 +35,8 @@ from pylearn2.training_algorithms.learning_rule import RMSProp, Momentum, AdaGra
 from pylearn2.space import Conv2DSpace
 from pylearn2.termination_criteria import MonitorBased
 
+from .dataset import SparseDesignMatrix
+
 
 class ansi:
     BOLD = '\033[1;97m'
@@ -543,7 +545,10 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             view = input_space.get_origin_batch(X.shape[0])
             return DenseDesignMatrix(topo_view=view, y=y), input_space
         else:
-            return DenseDesignMatrix(X=X, y=y), None
+            if all([isinstance(a, numpy.ndarray) for a in (X, y)]):
+                return DenseDesignMatrix(X=X, y=y), None
+            else:
+                return SparseDesignMatrix(X=X, y=y), None
 
     def _initialize(self, X, y):
         assert not self.is_initialized,\
@@ -643,10 +648,6 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
 
         if y.ndim == 1:
             y = y.reshape((y.shape[0], 1))
-        if not isinstance(X, numpy.ndarray):
-            X = X.toarray()
-        if not isinstance(y, numpy.ndarray):
-            y = y.toarray()
 
         if not self.is_initialized:
             self._initialize(X, y)
