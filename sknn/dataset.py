@@ -33,10 +33,7 @@ class SparseDesignMatrix(Dataset):
         X_space = VectorSpace(dim=self.X.shape[1])
         X_source = 'features'
 
-        if self.y.ndim == 1:
-            dim = 1
-        else:
-            dim = self.y.shape[-1]
+        dim = self.y.shape[-1] if self.y.ndim > 1 else 1
         y_space = VectorSpace(dim=dim)
         y_source = 'targets'
 
@@ -48,9 +45,6 @@ class SparseDesignMatrix(Dataset):
 
     def get_num_examples(self):
         return self.num_examples
-
-    def has_targets(self):
-        return self.y is not None
 
     def get_data_specs(self):
         """
@@ -69,10 +63,7 @@ class SparseDesignMatrix(Dataset):
             The definition and format of these data are described in
             `self.get_data_specs()`.
         """
-        if self.y is None:
-            return self.X
-        else:
-            return (self.X, self.y)
+        return (self.X, self.y)
 
     @functools.wraps(Dataset.iterator)
     def iterator(self, mode=None, batch_size=None, num_batches=None,
