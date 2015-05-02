@@ -45,7 +45,6 @@ class SparseDesignMatrix(Dataset):
 
         self.data_specs = (space, source)
         self.X_space = X_space
-        self._iter_data_specs = (self.X_space, 'features')
 
     def get_num_examples(self):
         return self.num_examples
@@ -84,56 +83,27 @@ class SparseDesignMatrix(Dataset):
         self.mode = mode
         self.batch_size = batch_size
         self._return_tuple = return_tuple
-        if data_specs is None:
-            data_specs = self._iter_data_specs
 
         # TODO: If there is a view_converter, we have to use it to convert
         # the stored data for "features" into one that the iterator can return.
+        space, source = data_specs or (self.X_space, 'features')
+        assert isinstance(space, CompositeSpace),\
+            "Unexpected input space for the data."
+        sub_spaces = space.components
+        sub_sources = source
 
-        def convertion_function(x):
-            print(type(x), x.dtype, x.shape)
-            return x.todense().astype(floatX)
-
-        self.conv_fn = convertion_function
-
-        space, source = data_specs
-        if isinstance(space, CompositeSpace):
-            sub_spaces = space.components
-            sub_sources = source
-        else:
-            sub_spaces = (space,)
-            sub_sources = (source,)
-
+        conv_fn = lambda x: x.todense().astype(floatX)
         convert = []
         for sp, src in safe_zip(sub_spaces, sub_sources):
-            if src == 'features' or 'targets':
-                conv_fn = self.conv_fn
-            else:
-                conv_fn = None
-            convert.append(conv_fn)
+            convert.append(conv_fn if src in ('features', 'targets') else None)
 
-        if mode is None:
-            if hasattr(self, '_iter_subset_class'):
-                mode = self._iter_subset_class
-            else:
-                raise ValueError('iteration mode not provided and no default '
-                                 'mode set for %s' % str(self))
-        else:
-            mode = resolve_iterator_class(mode)
-
+        assert mode is not None,\
+                "Iteration mode not provided for %s" % str(self)
+        mode = resolve_iterator_class(mode)
         subset_iterator = mode(self.X.shape[0], batch_size, num_batches, rng)
+
         return FiniteDatasetIterator(self,
                                      subset_iterator,
                                      data_specs=data_specs,
                                      return_tuple=return_tuple,
                                      convert=convert)
-
-    def __iter__(self):
-        return self
-
-    def next(self):
-        indx = self.subset_iterator.next()
-        rval = tuple(self.X[indx].todense())
-        if not self._return_tuple and len(rval) == 1:
-            rval, = rval
-        return rval
