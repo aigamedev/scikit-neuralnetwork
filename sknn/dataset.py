@@ -1,16 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, unicode_literals, print_function)
 
-from pylearn2.datasets.dataset import Dataset
-
-from pylearn2.utils.iteration import (SequentialSubsetIterator,
-                                      FiniteDatasetIterator,
-                                      resolve_iterator_class)
-
-import functools
-
 from pylearn2.space import CompositeSpace, VectorSpace
 from pylearn2.utils import safe_zip
+from pylearn2.datasets.dataset import Dataset
+from pylearn2.utils.iteration import (FiniteDatasetIterator, resolve_iterator_class)
+
+import functools
 
 import theano
 floatX = theano.config.floatX
@@ -18,13 +14,17 @@ floatX = theano.config.floatX
 
 class SparseDesignMatrix(Dataset):
     """
-    SparseExpanderDataset takes a numpy/scipy sparse matrix and calls .todense()
-    as the batches are passed out of the iterator.
+    SparseDesignMatrix is a type of Dataset used in training by PyLearn2 that takes
+    a numpy/scipy sparse matrix and calls ``.todense()`` as the batches are passed
+    out of the iterator.
+
+    This is used internally by :class:`sknn.mlp.MultiLayerPerceptron` and transparently
+    based on the data that's passed to the function ``fit()``.
     """
 
     def __init__(self, X, y):
-        self.X = X.astype(floatX)
-        self.y = y.astype(floatX)
+        self.X = X
+        self.y = y
 
         self.data_n_rows = self.X.shape[0]
         self.num_examples = self.data_n_rows
@@ -50,51 +50,34 @@ class SparseDesignMatrix(Dataset):
     def get_num_examples(self):
         return self.num_examples
 
-    def get_design_matrix(self):
-        return self.X
-
-    def get_batch_design(self, batch_size, include_labels=False):
-        """
-        method inherited from Dataset
-        """
-        self.iterator(mode='sequential', batch_size=batch_size)
-        return self.next()
-
-    def get_data_specs(self):
-        """
-        Returns the data_specs specifying how the data is internally stored.
-
-        This is the format the data returned by `self.get_data()` will be.
-        """
-        return self.data_specs
+    def has_targets(self):
+        return self.y is not None
 
     def get_data(self):
-      """
-      Returns
-      -------
-      data : numpy matrix or 2-tuple of matrices
-          Returns all the data, as it is internally stored.
-          The definition and format of these data are described in
-          `self.get_data_specs()`.
-      """
-      if self.y is None:
-          return self.X
-      else:
-          return (self.X, self.y)
+        """
+        Returns
+        -------
+        data : numpy matrix or 2-tuple of matrices
+            Returns all the data, as it is internally stored.
+            The definition and format of these data are described in
+            `self.get_data_specs()`.
+        """
+        if self.y is None:
+            return self.X
+        else:
+            return (self.X, self.y)
 
     @functools.wraps(Dataset.iterator)
     def iterator(self, mode=None, batch_size=None, num_batches=None,
-      topo=None, targets=None, rng=None, data_specs=None,
-      return_tuple=False):
+                 rng=None, data_specs=None, return_tuple=False):
         """
-        method inherited from Dataset
+        Method inherited from `pylearn2.datasets.dataset.Dataset`.
         """
         self.mode = mode
         self.batch_size = batch_size
-        self._targets = targets
         self._return_tuple = return_tuple
         if data_specs is None:
-                data_specs = self._iter_data_specs
+            data_specs = self._iter_data_specs
 
         # TODO: If there is a view_converter, we have to use it to convert
         # the stored data for "features" into one that the iterator can return.
@@ -119,7 +102,6 @@ class SparseDesignMatrix(Dataset):
                 conv_fn = self.conv_fn
             else:
                 conv_fn = None
-
             convert.append(conv_fn)
 
         if mode is None:
@@ -143,12 +125,7 @@ class SparseDesignMatrix(Dataset):
 
     def next(self):
         indx = self.subset_iterator.next()
-        try:
-            rval = self.X[indx].todense()
-        except IndexError:
-            # the ind of minibatch goes beyond the boundary
-            import ipdb; ipdb.set_trace()
-        rval = tuple(rval)
+        rval = tuple(self.X[indx].todense())
         if not self._return_tuple and len(rval) == 1:
             rval, = rval
         return rval
