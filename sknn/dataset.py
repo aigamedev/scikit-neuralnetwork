@@ -53,6 +53,14 @@ class SparseDesignMatrix(Dataset):
     def has_targets(self):
         return self.y is not None
 
+    def get_data_specs(self):
+        """
+        Returns the data_specs specifying how the data is internally stored.
+
+        This is the format the data returned by `self.get_data()` will be.
+        """
+        return self.data_specs
+
     def get_data(self):
         """
         Returns
