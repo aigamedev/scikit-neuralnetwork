@@ -84,6 +84,46 @@ class TestConvolution(unittest.TestCase):
             n_iter=1))
 
 
+class TestConvolutionSpecs(unittest.TestCase):
+
+    def test_SmallSquareKernel(self):
+        nn = MLPR(layers=[
+                    C("Rectifier", channels=4, kernel_shape=(3,3)),
+                    L("Linear", units=5)])
+
+        a_in = numpy.zeros((8,32,32,1))
+        nn._create_specs(a_in)
+        assert_equal(nn.unit_counts, [1024, 30 * 30 * 4, 5])
+
+    def test_HorizontalKernel(self):
+        nn = MLPR(layers=[
+                    C("Rectifier", channels=7, kernel_shape=(16,1)),
+                    L("Linear", units=5)])
+
+        a_in = numpy.zeros((8,16,16,1))
+        nn._create_specs(a_in)
+        assert_equal(nn.unit_counts, [256, 16 * 7, 5])
+
+    def test_VerticalKernel(self):
+        nn = MLPR(layers=[
+                    C("Rectifier", channels=4, kernel_shape=(1,16)),
+                    L("Linear", units=7)])
+
+        a_in = numpy.zeros((8,16,16,1))
+        nn._create_specs(a_in)
+        assert_equal(nn.unit_counts, [256, 16 * 4, 7])
+
+    def test_SquareKernelPool(self):
+        # TODO: After creation the outputs don't seem to correspond; pooling enabled?
+        nn = MLPR(layers=[
+                    C("Rectifier", channels=4, kernel_shape=(3,3), pool_shape=(2,2)),
+                    L("Linear", units=5)])
+
+        a_in = numpy.zeros((8,32,32,1))
+        nn._create_specs(a_in)
+        assert_equal(nn.unit_counts, [1024, 15 * 15 * 4, 5])
+
+
 class TestActivationTypes(unittest.TestCase):
 
     def _run(self, activation):

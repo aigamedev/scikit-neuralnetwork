@@ -180,7 +180,7 @@ class Convolution(Layer):
             channels=None,
             pieces=None,
             kernel_shape=None,
-            pool_shape=None,
+            pool_shape=(1,1),
             pool_type=None,
             dropout=None):
 
@@ -422,14 +422,14 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         self._check_layer(layer, ['channels', 'kernel_shape'],
                                  ['pool_shape', 'pool_type'])
 
-        if layer.type == "Rectifier":
+        if layer.type == 'Rectifier':
             nl = mlp.RectifierConvNonlinearity(0.0)
-        elif layer.type == "Sigmoid":
+        elif layer.type == 'Sigmoid':
             nl = mlp.SigmoidConvNonlinearity()
-        elif layer.type == "Tanh":
+        elif layer.type == 'Tanh':
             nl = mlp.TanhConvNonlinearity()
         else:
-            assert layer.type == "Linear",\
+            assert layer.type == 'Linear',\
                 "Convolution layer type `%s` is not supported." % layer.type
             nl = mlp.IdentityConvNonlinearity()
 
@@ -438,7 +438,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             nonlinearity=nl,
             output_channels=layer.channels,
             kernel_shape=layer.kernel_shape,
-            pool_shape=layer.pool_shape or (1,1),
+            pool_shape=layer.pool_shape,
             pool_type=layer.pool_type or 'max',
             pool_stride=(1,1),
             irange=irange)
@@ -447,28 +447,28 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         if isinstance(layer, Convolution):
             return self._create_convolution_layer(name, layer, irange)
 
-        if layer.type == "Rectifier":
+        if layer.type == 'Rectifier':
             self._check_layer(layer, ['units'])
             return mlp.RectifiedLinear(
                 layer_name=name,
                 dim=layer.units,
                 irange=irange)
 
-        if layer.type == "Sigmoid":
+        if layer.type == 'Sigmoid':
             self._check_layer(layer, ['units'])
             return mlp.Sigmoid(
                 layer_name=name,
                 dim=layer.units,
                 irange=irange)
 
-        if layer.type == "Tanh":
+        if layer.type == 'Tanh':
             self._check_layer(layer, ['units'])
             return mlp.Tanh(
                 layer_name=name,
                 dim=layer.units,
                 irange=irange)
 
-        if layer.type == "Maxout":
+        if layer.type == 'Maxout':
             self._check_layer(layer, ['units', 'pieces'])
             return maxout.Maxout(
                 layer_name=name,
@@ -476,14 +476,14 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
                 num_pieces=layer.pieces,
                 irange=irange)
 
-        if layer.type == "Linear":
+        if layer.type == 'Linear':
             self._check_layer(layer, ['units'])
             return mlp.Linear(
                 layer_name=layer.name,
                 dim=layer.units,
                 irange=irange)
 
-        if layer.type == "Gaussian":
+        if layer.type == 'Gaussian':
             self._check_layer(layer, ['units'])
             return mlp.LinearGaussian(
                 layer_name=layer.name,
@@ -494,7 +494,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
                 dim=layer.units,
                 irange=irange)
 
-        if layer.type == "Softmax":
+        if layer.type == 'Softmax':
             self._check_layer(layer, ['units'])
             return mlp.Softmax(
                 layer_name=layer.name,
@@ -509,12 +509,12 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             fan_out = self.unit_counts[i + 1]
 
             lim = numpy.sqrt(6) / numpy.sqrt(fan_in + fan_out)
-            if layer.type == "Tanh":
+            if layer.type == 'Tanh':
                 lim *= 1.1 * lim
-            elif layer.type in ("Rectifier", "Maxout", "Convolution"):
+            elif layer.type in ('Rectifier', 'Maxout'):
                 # He, Rang, Zhen and Sun, converted to uniform.
                 lim *= numpy.sqrt(2)
-            elif layer.type == "Sigmoid":
+            elif layer.type == 'Sigmoid':
                 lim *= 4
 
             mlp_layer = self._create_layer(layer.name, layer, irange=lim)
@@ -557,13 +557,15 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             "Initializing neural network with %i layers, %i inputs and %i outputs.",
             len(self.layers), X.shape[1], self.layers[-1].units)
 
-        self.unit_counts = [X.shape[1]]
+        self.unit_counts = [numpy.product(X.shape[1:]) if self.is_convolution else X.shape[1]]
+        resolution = X.shape[1:3] if self.is_convolution else None 
         for layer in self.layers:
-            if layer.units is not None:
-                self.unit_counts.append(layer.units)
+            if isinstance(layer, Convolution):
+                resolution = ((resolution[0] - layer.kernel_shape[0] + 1) / layer.pool_shape[0],
+                              (resolution[1] - layer.kernel_shape[1] + 1) / layer.pool_shape[1])
+                self.unit_counts.append(numpy.prod(resolution) * layer.channels)
             else:
-                # TODO: Compute correct number of outputs for convolution.
-                self.unit_counts.append(layer.channels)
+                self.unit_counts.append(layer.units)
 
             log.debug("  - Type: {}{: <10}{}  Units: {}{: <4}{}".format(
                 ansi.BOLD, layer.type, ansi.ENDC, ansi.BOLD, layer.units or "N/A", ansi.ENDC))
