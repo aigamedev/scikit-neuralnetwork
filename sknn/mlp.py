@@ -545,20 +545,17 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         else:
             return DenseDesignMatrix(X=X, y=y), None
 
-    def _initialize(self, X, y):
-        assert not self.is_initialized,\
-            "This neural network has already been initialized."
+    def _create_specs(self, X, y=None):
+        # Calculate and store all layer sizes.
+        if y is not None and self.layers[-1].units is None:
+            self.layers[-1].units = y.shape[1]
+        else:
+            assert y is None or self.layers[-1].units == y.shape[1],\
+                "Mismatch between dataset size and units in output layer."
 
         log.info(
             "Initializing neural network with %i layers, %i inputs and %i outputs.",
-            len(self.layers), X.shape[1], y.shape[1])
-
-        # Calculate and store all layer sizes.
-        if self.layers[-1].units is None:
-            self.layers[-1].units = y.shape[1]
-        else:
-            assert self.layers[-1].units == y.shape[1],\
-                "Mismatch between dataset size and units in output layer."
+            len(self.layers), X.shape[1], self.layers[-1].units)
 
         self.unit_counts = [X.shape[1]]
         for layer in self.layers:
@@ -571,6 +568,11 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             log.debug("  - Type: {}{: <10}{}  Units: {}{: <4}{}".format(
                 ansi.BOLD, layer.type, ansi.ENDC, ansi.BOLD, layer.units or "N/A", ansi.ENDC))
         log.debug("")
+
+    def _initialize(self, X, y):
+        assert not self.is_initialized,\
+            "This neural network has already been initialized."
+        self._create_specs(X, y)
 
         if self.valid_size > 0.0:
             assert self.valid_set is None, "Can't specify valid_size and valid_set together."
@@ -711,7 +713,12 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
 
     def _predict(self, X):
         if not self.is_initialized:
-            raise ValueError("The neural network has not been trained.")
+            assert self.layers[-1].units is not None,\
+                "You must specify the number of units to predict without fitting."
+            log.warning("Computing estimates with an untrained network.")
+
+            self._create_specs(X)
+            self._create_mlp()
 
         if X.dtype != numpy.float32:
             X = X.astype(numpy.float32)
