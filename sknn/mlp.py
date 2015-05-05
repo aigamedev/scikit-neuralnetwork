@@ -154,6 +154,11 @@ class Convolution(Layer):
         convolution is used.  For example, this could be a square kernel `(3,3)` or a full
         horizontal or vertical kernel on the input matrix, e.g. `(N,1)` or `(1,N)`.
 
+    kernel_stride: tuple of ints, optional
+        A two-dimensional tuple of integers that represents the steps taken by the kernel
+        through the input image.  By default, this is set to the same as `pool_shape` but can
+        be customized separately even if pooling is turned off.
+
     border_mode: str
         String indicating the way borders in the image should be processed, one of two options:
 
@@ -189,9 +194,10 @@ class Convolution(Layer):
             channels=None,
             pieces=None,
             kernel_shape=None,
+            kernel_stride=None,
             border_mode='valid',
             pool_shape=(1,1),
-            pool_type=None,
+            pool_type='max',
             dropout=None):
 
         assert warning is None,\
@@ -208,6 +214,7 @@ class Convolution(Layer):
 
         self.channels = channels
         self.kernel_shape = kernel_shape
+        self.kernel_stride = kernel_stride
         self.border_mode = border_mode
         self.pool_shape = pool_shape
         self.pool_type = pool_type
@@ -431,7 +438,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
 
     def _create_convolution_layer(self, name, layer, irange):
         self._check_layer(layer, ['channels', 'kernel_shape'],
-                                 ['pool_shape', 'pool_type'])
+                                 ['border_mode', 'pool_shape', 'pool_type'])
 
         if layer.type == 'Rectifier':
             nl = mlp.RectifierConvNonlinearity(0.0)
@@ -449,8 +456,10 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             nonlinearity=nl,
             output_channels=layer.channels,
             kernel_shape=layer.kernel_shape,
+            kernel_stride=layer.kernel_stride or layer.pool_shape,
+            border_mode=layer.border_mode,
             pool_shape=layer.pool_shape,
-            pool_type=layer.pool_type or 'max',
+            pool_type=layer.pool_type,
             pool_stride=(1,1),
             irange=irange)
 
