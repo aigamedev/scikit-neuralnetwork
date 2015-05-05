@@ -23,7 +23,12 @@ class TestClassifierFunctionality(unittest.TestCase):
         self.nn.partial_fit(a_in, a_out, classes=[0,1,2,3])
         self.nn.partial_fit(a_in*2.0, a_out+1, classes=[0,1,2,3])
 
-    def test_PredictUninitialized(self):
+    def test_PredictUninitializedNoUnitCount(self):
+        a_in = numpy.zeros((8,16))
+        assert_raises(AssertionError, self.nn.predict, a_in)
+
+    def test_PredictUninitializedNoLabels(self):
+        self.nn.layers[-1].units = 4
         a_in = numpy.zeros((8,16))
         assert_raises(ValueError, self.nn.predict, a_in)
 
