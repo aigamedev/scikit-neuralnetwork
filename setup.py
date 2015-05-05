@@ -19,8 +19,10 @@ except ImportError:
 
 
 install_requires = [
-    'pylearn2',
     'scikit-learn',
+    'theano',
+    'pyyaml',
+    # 'pylearn2',
 ]
 
 tests_require = [
@@ -31,7 +33,7 @@ docs_require = [
     'Sphinx',
 ]
 
-setup(name='sknn',
+setup(name='scikit-neuralnetwork',
       version=VERSION,
       description="Neural Network wrapper for pylearn2 compatible with scikit-learn.",
       long_description=README,

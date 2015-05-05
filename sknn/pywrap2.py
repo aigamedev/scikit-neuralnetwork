@@ -6,9 +6,9 @@ import sys
 
 
 # Self-contained distributions on PIP package PyLearn2.
-pwd = os.path.join(os.path.dirname(__file__), 'pylearn2')
-if os.path.exists(pwd):
-    sys.insert(0, pwd)
+pwd = os.path.dirname(__file__)
+if os.path.exists(os.path.join(pwd, 'pylearn2')):
+    sys.path.insert(0, pwd)
 
 
 # This wrapper module can only contain 'leaf' modules.
