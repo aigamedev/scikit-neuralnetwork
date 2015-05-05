@@ -95,6 +95,15 @@ class TestConvolutionSpecs(unittest.TestCase):
         nn._create_specs(a_in)
         assert_equal(nn.unit_counts, [1024, 30 * 30 * 4, 5])
 
+    def test_SquareKernelFull(self):
+        nn = MLPR(layers=[
+                    C("Rectifier", channels=4, kernel_shape=(3,3), border_mode='full'),
+                    L("Linear", units=5)])
+
+        a_in = numpy.zeros((8,32,32,1))
+        nn._create_specs(a_in)
+        assert_equal(nn.unit_counts, [1024, 32 * 32 * 4, 5])
+
     def test_HorizontalKernel(self):
         nn = MLPR(layers=[
                     C("Rectifier", channels=7, kernel_shape=(16,1)),
@@ -122,6 +131,15 @@ class TestConvolutionSpecs(unittest.TestCase):
         a_in = numpy.zeros((8,32,32,1))
         nn._create_specs(a_in)
         assert_equal(nn.unit_counts, [1024, 15 * 15 * 4, 5])
+
+    def test_SquarePoolFull(self):
+        nn = MLPR(layers=[
+                    C("Rectifier", channels=4, kernel_shape=(3,3), pool_shape=(2,2), border_mode='full'),
+                    L("Linear", units=5)])
+
+        a_in = numpy.zeros((8,32,32,1))
+        nn._create_specs(a_in)
+        assert_equal(nn.unit_counts, [1024, 16 * 16 * 4, 5])
 
 
 class TestActivationTypes(unittest.TestCase):

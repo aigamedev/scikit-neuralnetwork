@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, unicode_literals, print_function)
 
-__all__ = ['Regressor', 'Classifier']
+__all__ = ['Regressor', 'Classifier', 'Layer', 'Convolution']
 
 import os
 import time
@@ -118,7 +118,7 @@ class Layer(object):
         copy = self.__dict__.copy()
         del copy['type']
         params = ", ".join(["%s=%r" % (k, v) for k, v in copy.items() if v is not None])
-        return "<sknn.mlp.Layer `%s`: %s>" % (self.type, params)
+        return "<sknn.mlp.%s `%s`: %s>" % (self.__class__.__name__, self.type, params)
 
 
 class Convolution(Layer):
@@ -154,6 +154,20 @@ class Convolution(Layer):
         convolution is used.  For example, this could be a square kernel `(3,3)` or a full
         horizontal or vertical kernel on the input matrix, e.g. `(N,1)` or `(1,N)`.
 
+    kernel_stride: tuple of ints, optional
+        A two-dimensional tuple of integers that represents the steps taken by the kernel
+        through the input image.  By default, this is set to the same as `pool_shape` but can
+        be customized separately even if pooling is turned off.
+
+    border_mode: str
+        String indicating the way borders in the image should be processed, one of two options:
+
+            * `valid` — Only pixels from input where the kernel fits within bounds are processed.
+            * `full` — All pixels from input are processed, and the boundaries are zero-padded.
+
+        The size of the output will depend on this mode, for `full` it's identical to the input,
+        but for `valid` it will be smaller or equal.
+
     pool_shape: tuple of ints, optional
         A two-dimensional tuple of integers corresponding to the pool size.  This should be
         square, for example `(2,2)` to reduce the size by half, or `(4,4)` to make the output
@@ -180,8 +194,10 @@ class Convolution(Layer):
             channels=None,
             pieces=None,
             kernel_shape=None,
+            kernel_stride=None,
+            border_mode='valid',
             pool_shape=(1,1),
-            pool_type=None,
+            pool_type='max',
             dropout=None):
 
         assert warning is None,\
@@ -198,6 +214,8 @@ class Convolution(Layer):
 
         self.channels = channels
         self.kernel_shape = kernel_shape
+        self.kernel_stride = kernel_stride
+        self.border_mode = border_mode
         self.pool_shape = pool_shape
         self.pool_type = pool_type
 
@@ -420,7 +438,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
 
     def _create_convolution_layer(self, name, layer, irange):
         self._check_layer(layer, ['channels', 'kernel_shape'],
-                                 ['pool_shape', 'pool_type'])
+                                 ['border_mode', 'pool_shape', 'pool_type'])
 
         if layer.type == 'Rectifier':
             nl = mlp.RectifierConvNonlinearity(0.0)
@@ -438,8 +456,10 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             nonlinearity=nl,
             output_channels=layer.channels,
             kernel_shape=layer.kernel_shape,
+            kernel_stride=layer.kernel_stride or layer.pool_shape,
+            border_mode=layer.border_mode,
             pool_shape=layer.pool_shape,
-            pool_type=layer.pool_type or 'max',
+            pool_type=layer.pool_type,
             pool_stride=(1,1),
             irange=irange)
 
@@ -561,8 +581,14 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         resolution = X.shape[1:3] if self.is_convolution else None 
         for layer in self.layers:
             if isinstance(layer, Convolution):
-                resolution = ((resolution[0] - layer.kernel_shape[0] + 1) / layer.pool_shape[0],
-                              (resolution[1] - layer.kernel_shape[1] + 1) / layer.pool_shape[1])
+                if layer.border_mode == 'valid':
+                    r = (resolution[0] - layer.kernel_shape[0] + 1,
+                         resolution[1] - layer.kernel_shape[1] + 1)
+                else:                 # 'full'
+                    r = resolution
+
+                resolution = (r[0] / layer.pool_shape[0],
+                              r[1] / layer.pool_shape[1])
                 self.unit_counts.append(numpy.prod(resolution) * layer.channels)
             else:
                 self.unit_counts.append(layer.units)
