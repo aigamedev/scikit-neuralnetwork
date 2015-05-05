@@ -40,7 +40,7 @@ Once that's done, you can grab this repository and install from ``setup.py`` in 
 Then, you can run the samples and benchmarks available in the ``examples/`` folder, or launch the tests to check everything is working::
 
     > pip install nose
-    > nosetests -v sknn
+    > nosetests -v sknn.tests
 
 .. image:: docs/console_tests.png
 
