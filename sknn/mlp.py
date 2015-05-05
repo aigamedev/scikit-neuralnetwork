@@ -27,13 +27,8 @@ import sklearn.pipeline
 import sklearn.preprocessing
 import sklearn.cross_validation
 
-from pylearn2.datasets import DenseDesignMatrix
-from pylearn2.training_algorithms import sgd
-from pylearn2.models import mlp, maxout
-from pylearn2.costs.mlp.dropout import Dropout
-from pylearn2.training_algorithms.learning_rule import RMSProp, Momentum, AdaGrad, AdaDelta
-from pylearn2.space import Conv2DSpace
-from pylearn2.termination_criteria import MonitorBased
+from .pywrap2 import (datasets, space, sgd, mlp, maxout, dropout)
+from .pywrap2 import learning_rule as lr, termination_criteria as tc
 
 from .dataset import SparseDesignMatrix
 
@@ -367,13 +362,13 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         # elif learning_rule == 'adagrad':
         #     self._learning_rule = AdaGrad()
         elif learning_rule == 'adadelta':
-            self._learning_rule = AdaDelta()
+            self._learning_rule = lr.AdaDelta()
         elif learning_rule == 'momentum':
-            self._learning_rule = Momentum(learning_momentum)
+            self._learning_rule = lr.Momentum(learning_momentum)
         elif learning_rule == 'nesterov':
-            self._learning_rule = Momentum(learning_momentum, nesterov_momentum=True)
+            self._learning_rule = lr.Momentum(learning_momentum, nesterov_momentum=True)
         elif learning_rule == 'rmsprop':
-            self._learning_rule = RMSProp()
+            self._learning_rule = lr.RMSProp()
         else:
             raise NotImplementedError(
                 "Learning rule type `%s` is not supported." % learning_rule)
@@ -401,14 +396,14 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             default_prob, default_scale = incl, 1.0 / incl
 
             # Pass all the parameters to pylearn2 as a custom cost function.
-            self.cost = Dropout(
+            self.cost = dropout.Dropout(
                 default_input_include_prob=default_prob,
                 default_input_scale=default_scale,
                 input_include_probs=probs, input_scales=scales)
 
         logging.getLogger('pylearn2.monitor').setLevel(logging.WARNING)
         if dataset is not None:
-            termination_criterion = MonitorBased(
+            termination_criterion = tc.MonitorBased(
                 channel_name='objective',
                 N=self.n_stable,
                 prop_decrease=self.f_stable)
@@ -561,12 +556,12 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             #   http://benanne.github.io/2014/04/03/faster-convolutions-in-theano.html
             # input: (batch size, channels, rows, columns)
             # filters: (number of filters, channels, rows, columns)
-            input_space = Conv2DSpace(shape=X.shape[1:3], num_channels=X.shape[-1])
+            input_space = space.Conv2DSpace(shape=X.shape[1:3], num_channels=X.shape[-1])
             view = input_space.get_origin_batch(X.shape[0])
-            return DenseDesignMatrix(topo_view=view, y=y), input_space
+            return datasets.DenseDesignMatrix(topo_view=view, y=y), input_space
         else:
             if all([isinstance(a, numpy.ndarray) for a in (X, y)]):
-                return DenseDesignMatrix(X=X, y=y), None
+                return datasets.DenseDesignMatrix(X=X, y=y), None
             else:
                 return SparseDesignMatrix(X=X, y=y), None
 
