@@ -18,9 +18,14 @@ class TestLinearNetwork(unittest.TestCase):
     def test_LifeCycle(self):
         del self.nn
 
-    def test_PredictUninitialized(self):
+    def test_PredictNoOutputUnitsAssertion(self):
         a_in = numpy.zeros((8,16))
-        assert_raises(ValueError, self.nn.predict, a_in)
+        assert_raises(AssertionError, self.nn.predict, a_in)
+
+    def test_AutoInitializeWithOutputUnits(self):
+        self.nn.layers[-1].units = 4
+        a_in = numpy.zeros((8,16))
+        self.nn.predict(a_in)
 
     def test_FitAutoInitialize(self):
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
@@ -87,7 +92,7 @@ class TestSerializedNetwork(TestLinearNetwork):
         # was serialized and deserialized.
         pass
 
-    def test_PredictUninitialized(self):
+    def test_PredictNoOutputUnitsAssertion(self):
         # Override base class test, this is not initialized but it
         # should be able to predict without throwing assert.
         assert_true(self.nn.is_initialized)
