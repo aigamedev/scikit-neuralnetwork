@@ -1,11 +1,12 @@
 import unittest
-from nose.tools import (assert_is_not_none, assert_true, assert_raises, assert_equal)
+from nose.tools import (assert_is_not_none, assert_true, assert_raises,
+                        assert_in, assert_equal)
 
 import numpy
 from sklearn.base import clone
 
 from sknn.mlp import Classifier as MLPC
-from sknn.mlp import Layer as L
+from sknn.mlp import Layer as L, Convolution as C
 
 
 class TestClassifierFunctionality(unittest.TestCase):
@@ -105,6 +106,14 @@ class TestClassifierInterface(unittest.TestCase):
         nn = MLPC(layers=[L("Gaussian")])
         assert_equal(str, type(str(nn)))
 
-    def test_Representation(self):
+    def test_RepresentationDenseLayer(self):
         nn = MLPC(layers=[L("Gaussian")])
-        assert_equal(str, type(repr(nn)))
+        r = repr(nn)
+        assert_equal(str, type(r))
+        assert_in("sknn.mlp.Layer `Gaussian`", r)
+
+    def test_RepresentationConvolution(self):
+        nn = MLPC(layers=[C("Rectifier")])
+        r = repr(nn)
+        assert_equal(str, type(r))
+        assert_in("sknn.mlp.Convolution `Rectifier`", r)

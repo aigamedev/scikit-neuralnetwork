@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, unicode_literals, print_function)
 
-__all__ = ['Regressor', 'Classifier']
+__all__ = ['Regressor', 'Classifier', 'Layer', 'Convolution']
 
 import os
 import time
@@ -118,7 +118,7 @@ class Layer(object):
         copy = self.__dict__.copy()
         del copy['type']
         params = ", ".join(["%s=%r" % (k, v) for k, v in copy.items() if v is not None])
-        return "<sknn.mlp.Layer `%s`: %s>" % (self.type, params)
+        return "<sknn.mlp.%s `%s`: %s>" % (self.__class__.__name__, self.type, params)
 
 
 class Convolution(Layer):
