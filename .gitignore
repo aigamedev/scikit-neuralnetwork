@@ -62,3 +62,4 @@ docs/_build/
 # PyBuilder
 target/
 pylearn2
+examples/*.gz
