@@ -558,7 +558,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             if isinstance(l, Convolution):                
                 log.debug("  - Convl: {}{: <10}{} Output: {}{: <10}{} Channels: {}{}{}".format(
                     ansi.BOLD, l.type, ansi.ENDC,
-                    ansi.BOLD, space.shape, ansi.ENDC,
+                    ansi.BOLD, repr(space.shape), ansi.ENDC,
                     ansi.BOLD, space.num_channels, ansi.ENDC))
 
                 # NOTE: Numbers don't match up exactly for pooling; one off. The logic is convoluted!
