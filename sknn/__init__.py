@@ -16,7 +16,12 @@ class TheanoConfigurator(object):
         self.configured = False
 
     def configure(self, flags):
-        if self.configured or 'theano' in sys.modules:
+        if self.configured is True:
+            return
+
+        if 'theano' in sys.modules:
+            log = logging.getLogger('sknn')
+            log.warn('Theano was already imported and cannot be reconfigured.')
             return
 
         os.environ.setdefault('THEANO_FLAGS', flags+',print_active_device=False')

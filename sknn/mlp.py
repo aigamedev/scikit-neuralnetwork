@@ -12,6 +12,7 @@ log = logging.getLogger('sknn')
 
 
 import numpy
+import theano
 import sklearn.base
 import sklearn.pipeline
 import sklearn.preprocessing
