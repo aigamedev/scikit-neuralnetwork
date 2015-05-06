@@ -214,7 +214,7 @@ class Convolution(Layer):
 
         self.channels = channels
         self.pool_shape = pool_shape or (1,1)
-        self.pool_type = (pool_type or 'max') if pool_shape else None
+        self.pool_type = pool_type or ('max' if pool_shape else None)
         self.kernel_shape = kernel_shape
         self.kernel_stride = kernel_stride or self.pool_shape
         self.border_mode = border_mode
@@ -607,10 +607,8 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         for l in self.layers:
             if isinstance(l, Convolution):
                 if l.border_mode == 'valid':
-                    print('res', res, 'shp', l.kernel_shape, 'str', l.kernel_stride)
                     res = (int((res[0] - l.kernel_shape[0]) / l.kernel_stride[0]) + 1,
                            int((res[1] - l.kernel_shape[1]) / l.kernel_stride[1]) + 1)
-                    print('out', res)
                 if l.border_mode == 'full':
                     res = (int((res[0] + l.kernel_shape[0]) / l.kernel_stride[0]) - 1,
                            int((res[1] + l.kernel_shape[1]) / l.kernel_stride[1]) - 1)

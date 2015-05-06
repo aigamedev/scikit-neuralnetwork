@@ -88,7 +88,7 @@ class TestConvolutionSpecs(unittest.TestCase):
 
     def test_SmallSquareKernel(self):
         nn = MLPR(layers=[
-                    C("Rectifier", channels=4, kernel_shape=(2,2)),
+                    C("Rectifier", channels=4, kernel_shape=(3,3)),
                     L("Linear", units=5)])
 
         a_in = numpy.zeros((8,32,32,1))
@@ -123,9 +123,8 @@ class TestConvolutionSpecs(unittest.TestCase):
         assert_equal(nn.unit_counts, [256, 16 * 4, 7])
 
     def test_SquareKernelPool(self):
-        # TODO: After creation the outputs don't seem to correspond; pooling enabled?
         nn = MLPR(layers=[
-                    C("Rectifier", channels=4, kernel_shape=(2,2), pool_shape=(2,2)),
+                    C("Rectifier", channels=4, kernel_shape=(3,3), pool_shape=(2,2)),
                     L("Linear", units=5)])
 
         a_in = numpy.zeros((8,32,32,1))
@@ -153,7 +152,7 @@ class TestConvolutionSpecs(unittest.TestCase):
 
         a_in, a_out = numpy.zeros((8,32,32,1)), numpy.zeros((8,16))
         nn._initialize(a_in, a_out)
-        assert_equal(nn.unit_counts, [1024, 784, 100, 16])
+        assert_equal(nn.unit_counts, [1024, 900, 196, 16])
 
 
 class TestActivationTypes(unittest.TestCase):
