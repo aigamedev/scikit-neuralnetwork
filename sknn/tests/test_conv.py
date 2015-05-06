@@ -83,7 +83,7 @@ class TestConvolution(unittest.TestCase):
                 L("Linear")],
             n_iter=1))
 
-"""
+
 class TestConvolutionSpecs(unittest.TestCase):
 
     def test_SmallSquareKernel(self):
@@ -193,4 +193,3 @@ class TestConvolutionRGB(TestConvolution):
         nn.fit(a_in, a_out)
         a_test = nn.predict(a_in)
         assert_equal(type(a_out), type(a_in))
-"""
