@@ -171,8 +171,9 @@ class Convolution(Layer):
         a quarter of the original.
 
     pool_type: str, optional
-        Type of the pooling to be used; can be either `max` or `mean`.  The default is 
-        to take the maximum value of all inputs that fall into this pool.
+        Type of the pooling to be used; can be either `max` or `mean`.  If a `pool_shape` is
+        specified the default is to take the maximum value of all inputs that fall into this
+        pool. Otherwise, the default is None and no pooling is used for performance.
 
     dropout: float, optional
         The ratio of inputs to drop out for this layer during training.  For example, 0.25
@@ -193,15 +194,17 @@ class Convolution(Layer):
             kernel_shape=None,
             kernel_stride=None,
             border_mode='valid',
-            pool_shape=(1,1),
-            pool_type='max',
+            pool_shape=None,
+            pool_type=None,
             dropout=None):
 
         assert warning is None,\
             "Specify layer parameters as keyword arguments, not positional arguments."
 
         if type not in ['Rectifier', 'Sigmoid', 'Tanh', 'Linear']:
-            raise NotImplementedError("Convolution type `%s` is not implemented." % type)
+            raise NotImplementedError("Convolution type `%s` is not implemented." % (type,))
+        if border_mode not in ['valid', 'full']:
+            raise NotImplementedError("Convolution border_mode `%s` is not implemented." % (border_mode,))
 
         super(Convolution, self).__init__(
                 type,
@@ -210,11 +213,11 @@ class Convolution(Layer):
                 dropout=dropout)
 
         self.channels = channels
+        self.pool_shape = pool_shape or (1,1)
+        self.pool_type = pool_type or ('max' if pool_shape else None)
         self.kernel_shape = kernel_shape
-        self.kernel_stride = kernel_stride
+        self.kernel_stride = kernel_stride or self.pool_shape
         self.border_mode = border_mode
-        self.pool_shape = pool_shape
-        self.pool_type = pool_type
 
 
 class MultiLayerPerceptron(sklearn.base.BaseEstimator):
@@ -434,8 +437,9 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
                             % (a, layer.type))
 
     def _create_convolution_layer(self, name, layer, irange):
-        self._check_layer(layer, ['channels', 'kernel_shape'],
-                                 ['border_mode', 'pool_shape', 'pool_type'])
+        self._check_layer(layer,
+                          required=['channels', 'kernel_shape'],
+                          optional=['kernel_stride', 'border_mode', 'pool_shape', 'pool_type'])
 
         if layer.type == 'Rectifier':
             nl = mlp.RectifierConvNonlinearity(0.0)
@@ -453,7 +457,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             nonlinearity=nl,
             output_channels=layer.channels,
             kernel_shape=layer.kernel_shape,
-            kernel_stride=layer.kernel_stride or layer.pool_shape,
+            kernel_stride=layer.kernel_stride,
             border_mode=layer.border_mode,
             pool_shape=layer.pool_shape,
             pool_type=layer.pool_type,
@@ -519,6 +523,8 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
                 irange=irange)
 
     def _create_mlp(self):
+        mlp.logger.setLevel(logging.WARNING)
+
         # Create the layers one by one, connecting to previous.
         mlp_layers = []
         for i, layer in enumerate(self.layers):
@@ -537,11 +543,33 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             mlp_layer = self._create_layer(layer.name, layer, irange=lim)
             mlp_layers.append(mlp_layer)
 
+        log.info(
+            "Initializing neural network with %i layers, %i inputs and %i outputs.",
+            len(self.layers), self.unit_counts[0], self.layers[-1].units)
+
         self.mlp = mlp.MLP(
             mlp_layers,
             nvis=None if self.is_convolution else self.unit_counts[0],
             seed=self.random_state,
             input_space=self.input_space)
+
+        for l, p, count in zip(self.layers, self.mlp.layers, self.unit_counts[1:]):
+            space = p.get_output_space()
+            if isinstance(l, Convolution):                
+                log.debug("  - Convl: {}{: <10}{} Output: {}{: <10}{} Channels: {}{}{}".format(
+                    ansi.BOLD, l.type, ansi.ENDC,
+                    ansi.BOLD, repr(space.shape), ansi.ENDC,
+                    ansi.BOLD, space.num_channels, ansi.ENDC))
+
+                # NOTE: Numbers don't match up exactly for pooling; one off. The logic is convoluted!
+                # assert count == numpy.product(space.shape) * space.num_channels,\
+                #     "Mismatch in the calculated number of convolution layer outputs."
+            else:
+                log.debug("  - Dense: {}{: <10}{} Units:  {}{: <4}{}".format(
+                    ansi.BOLD, l.type, ansi.ENDC, ansi.BOLD, l.units, ansi.ENDC))
+                assert count == space.get_total_dimension(),\
+                    "Mismatch in the calculated number of dense layer outputs."
+        log.debug("")
 
         if self.weights is not None:
             self._array_to_mlp(self.weights, self.mlp)
@@ -566,36 +594,29 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
                 return SparseDesignMatrix(X=X, y=y), None
 
     def _create_specs(self, X, y=None):
-        # Calculate and store all layer sizes.
+        # Automatically work out the output unit count based on dataset.
         if y is not None and self.layers[-1].units is None:
             self.layers[-1].units = y.shape[1]
         else:
             assert y is None or self.layers[-1].units == y.shape[1],\
                 "Mismatch between dataset size and units in output layer."
 
-        log.info(
-            "Initializing neural network with %i layers, %i inputs and %i outputs.",
-            len(self.layers), X.shape[1], self.layers[-1].units)
-
+        # Then compute the number of units in each layer for initialization.
         self.unit_counts = [numpy.product(X.shape[1:]) if self.is_convolution else X.shape[1]]
-        resolution = X.shape[1:3] if self.is_convolution else None 
-        for layer in self.layers:
-            if isinstance(layer, Convolution):
-                if layer.border_mode == 'valid':
-                    r = (resolution[0] - layer.kernel_shape[0] + 1,
-                         resolution[1] - layer.kernel_shape[1] + 1)
-                else:                 # 'full'
-                    r = resolution
-
-                resolution = (r[0] / layer.pool_shape[0],
-                              r[1] / layer.pool_shape[1])
-                self.unit_counts.append(numpy.prod(resolution) * layer.channels)
+        res = X.shape[1:3] if self.is_convolution else None 
+        for l in self.layers:
+            if isinstance(l, Convolution):
+                if l.border_mode == 'valid':
+                    res = (int((res[0] - l.kernel_shape[0]) / l.kernel_stride[0]) + 1,
+                           int((res[1] - l.kernel_shape[1]) / l.kernel_stride[1]) + 1)
+                if l.border_mode == 'full':
+                    res = (int((res[0] + l.kernel_shape[0]) / l.kernel_stride[0]) - 1,
+                           int((res[1] + l.kernel_shape[1]) / l.kernel_stride[1]) - 1)
+                unit_count = numpy.prod(res) * l.channels
             else:
-                self.unit_counts.append(layer.units)
+                unit_count = l.units
 
-            log.debug("  - Type: {}{: <10}{}  Units: {}{: <4}{}".format(
-                ansi.BOLD, layer.type, ansi.ENDC, ansi.BOLD, layer.units or "N/A", ansi.ENDC))
-        log.debug("")
+            self.unit_counts.append(unit_count)
 
     def _initialize(self, X, y):
         assert not self.is_initialized,\

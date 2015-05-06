@@ -70,15 +70,15 @@ class TestConvolution(unittest.TestCase):
     def test_PoolingMaxType(self):
         self._run(MLPR(
             layers=[
-                C("Rectifier", channels=4, kernel_shape=(3,3),
-                                 pool_shape=(2,2), pool_type='max'),
+                C("Rectifier", channels=4, kernel_shape=(2,2),
+                               pool_shape=(2,2), pool_type='max'),
                 L("Linear")],
             n_iter=1))
 
     def test_PoolingMeanType(self):
         self._run(MLPR(
             layers=[
-                C("Rectifier", channels=4, kernel_shape=(3,3),
+                C("Rectifier", channels=4, kernel_shape=(2,2),
                                pool_shape=(2,2), pool_type='mean'),
                 L("Linear")],
             n_iter=1))
@@ -102,7 +102,7 @@ class TestConvolutionSpecs(unittest.TestCase):
 
         a_in = numpy.zeros((8,32,32,1))
         nn._create_specs(a_in)
-        assert_equal(nn.unit_counts, [1024, 32 * 32 * 4, 5])
+        assert_equal(nn.unit_counts, [1024, 4624, 5])
 
     def test_HorizontalKernel(self):
         nn = MLPR(layers=[
@@ -123,7 +123,6 @@ class TestConvolutionSpecs(unittest.TestCase):
         assert_equal(nn.unit_counts, [256, 16 * 4, 7])
 
     def test_SquareKernelPool(self):
-        # TODO: After creation the outputs don't seem to correspond; pooling enabled?
         nn = MLPR(layers=[
                     C("Rectifier", channels=4, kernel_shape=(3,3), pool_shape=(2,2)),
                     L("Linear", units=5)])
@@ -140,6 +139,20 @@ class TestConvolutionSpecs(unittest.TestCase):
         a_in = numpy.zeros((8,32,32,1))
         nn._create_specs(a_in)
         assert_equal(nn.unit_counts, [1024, 16 * 16 * 4, 5])
+
+    def test_InvalidBorderMode(self):
+        assert_raises(NotImplementedError, C,
+                      "Rectifier", channels=4, kernel_shape=(3,3), border_mode='unknown')
+
+    def test_MultiLayerPooling(self):
+        nn = MLPR(layers=[
+                    C("Rectifier", channels=4, kernel_shape=(3,3), pool_shape=(2,2)),
+                    C("Rectifier", channels=4, kernel_shape=(3,3), pool_shape=(2,2)),
+                    L("Linear")])
+
+        a_in, a_out = numpy.zeros((8,32,32,1)), numpy.zeros((8,16))
+        nn._initialize(a_in, a_out)
+        assert_equal(nn.unit_counts, [1024, 900, 196, 16])
 
 
 class TestActivationTypes(unittest.TestCase):
