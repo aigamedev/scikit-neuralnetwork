@@ -128,3 +128,20 @@ Here's how to setup such a pipeline with a multi-layer perceptron as a classifie
     pipeline.fit(X_train, y_train)
 
 You can thes use the pipeline as you would the neural network, or any other standard API from scikit-learn.
+
+
+GPU Backend
+-----------
+
+To setup the library to use your GPU or CPU explicitly in 32-bit or 64-bit mode, you can use the ``backend`` pseudo-module.  It's a syntactic helper to setup ``THEANO_FLAGS`` in a Pythonic way, for example:
+
+.. code:: python
+
+    # Use the GPU in 32-bit mode, falling back otherwise.
+    from sknn.backend import gpu32
+    
+    # Use the CPU in 64-bit mode.
+    from sknn.backend import cpu64
+    
+
+WARNING: This will only work if your program has not yet imported the ``theano`` module, due to the way the library is designed.  If ``THEANO_FLAGS`` are set on the command-line, they are not overwridden.

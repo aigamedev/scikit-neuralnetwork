@@ -11,17 +11,8 @@ import itertools
 log = logging.getLogger('sknn')
 
 
-# By default, we force Theano to use a GPU and fallback to CPU, using 32-bits.
-# This must be done in the code before Theano is imported for the first time.
-os.environ['THEANO_FLAGS'] = "device=gpu,floatX=float32"
-
-cuda = logging.getLogger('theano.sandbox.cuda')
-cuda.setLevel(logging.CRITICAL)
-import theano
-cuda.setLevel(logging.WARNING)
-
-
 import numpy
+import theano
 import sklearn.base
 import sklearn.pipeline
 import sklearn.preprocessing
