@@ -1,0 +1,5 @@
+#!/bin/sh
+/usr/local/bin/virtualenv -p /usr/local/bin/python2.7 venv --clear --no-site-packages
+venv/bin/python setup.py sdist
+/usr/local/bin/twine upload -r test dist/*.tar.gz
+venv/bin/pip install -i https://testpypi.python.org/pypi scikit-neuralnetwork

@@ -7,9 +7,7 @@ from pylearn2.datasets.dataset import Dataset
 from pylearn2.utils.iteration import (FiniteDatasetIterator, resolve_iterator_class)
 
 import functools
-
 import theano
-floatX = theano.config.floatX
 
 
 class SparseDesignMatrix(Dataset):
@@ -83,7 +81,7 @@ class SparseDesignMatrix(Dataset):
         sub_spaces = space.components
         sub_sources = source
 
-        conv_fn = lambda x: x.todense().astype(floatX)
+        conv_fn = lambda x: x.todense().astype(theano.config.floatX)
         convert = []
         for sp, src in safe_zip(sub_spaces, sub_sources):
             convert.append(conv_fn if src in ('features', 'targets') else None)

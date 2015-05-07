@@ -11,8 +11,8 @@ import time
 import logging
 import argparse
 import itertools
-import numpy as np
 
+import numpy
 from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
 
@@ -24,7 +24,9 @@ from sklearn.datasets import make_moons, make_circles, make_classification
 import logging
 logging.basicConfig(format="%(message)s", level=logging.WARNING, stream=sys.stdout)
 
+from sknn.backend import gpu32
 from sknn import mlp
+
 
 # All possible parameter options that can be plotted, separately or combined.
 PARAMETERS = {
@@ -74,7 +76,7 @@ for (activation, alpha, dropout, iterations, output, rule, units) in itertools.p
 seed = int(time.time())
 X, y = make_classification(n_features=2, n_redundant=0, n_informative=2,
                            random_state=0, n_clusters_per_class=1)
-rng = np.random.RandomState(seed+1)
+rng = numpy.random.RandomState(seed+1)
 X += 2 * rng.uniform(size=X.shape)
 linearly_separable = (X, y)
 
@@ -94,8 +96,8 @@ for X, y in datasets:
     # Prepare coordinates of 2D grid to be visualized.
     x_min, x_max = X[:, 0].min() - .5, X[:, 0].max() + .5
     y_min, y_max = X[:, 1].min() - .5, X[:, 1].max() + .5
-    xx, yy = np.meshgrid(np.arange(x_min, x_max, GRID_RESOLUTION),
-                         np.arange(y_min, y_max, GRID_RESOLUTION))
+    xx, yy = numpy.meshgrid(numpy.arange(x_min, x_max, GRID_RESOLUTION),
+                            numpy.arange(y_min, y_max, GRID_RESOLUTION))
 
     # Plot the dataset on its own first.
     cm = plt.cm.get_cmap("PRGn")
@@ -118,7 +120,7 @@ for X, y in datasets:
         # Plot the decision boundary. For that, we will assign a color to each
         # point in the mesh [x_min, m_max]x[y_min, y_max].
 
-        Z = clf.predict_proba(np.c_[xx.ravel(), yy.ravel()])[:, 1]
+        Z = clf.predict_proba(numpy.c_[xx.ravel(), yy.ravel()])[:, 1]
 
         # Put the result into a color plot
         Z = Z.reshape(xx.shape)
