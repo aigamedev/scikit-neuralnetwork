@@ -14,9 +14,11 @@ class TestBackendPseudoModule(unittest.TestCase):
     def setUp(self):
         if 'THEANO_FLAGS' in os.environ:
             del os.environ['THEANO_FLAGS']
-            
+        
+        import theano
+
         self.removed = {}
-        for name in sys.modules.keys():
+        for name in list(sys.modules.keys()):
             if name.startswith('theano'):
                 self.removed[name] = sys.modules[name]
                 del sys.modules[name]
