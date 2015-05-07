@@ -27,6 +27,18 @@ If a feature you need is missing, consider opening a `GitHub Issue <https://gith
 Installation & Testing
 ----------------------
 
+Download Latest Release
+~~~~~~~~~~~~~~~~~~~~~~~
+
+If you want to use the latest official release, you can get it from PYPI directly::
+
+    > pip install scikit-neuralnetwork
+
+This contains its own packaged version of ``pylearn2`` from the date of the release (and tag) but will use any globally installed version if available.
+
+Pulling From Repository
+~~~~~~~~~~~~~~~~~~~~~~~
+
 You'll need to first install some dependencies manually.  Unfortunately, ``pylearn2`` isn't yet installable via PyPI and recommends an editable (``pip -e``) installation::
 
     > pip install numpy scipy theano
@@ -36,6 +48,11 @@ Once that's done, you can grab this repository and install from ``setup.py`` in 
 
     > git clone https://github.com/aigamedev/scikit-neuralnetwork.git
     > cd scikit-neuralnetwork; python setup.py develop
+    
+This will make the ``sknn`` package globally available within Python as a reference to the current directory.
+
+Running Automated Tests
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Then, you can run the samples and benchmarks available in the ``examples/`` folder, or launch the tests to check everything is working::
 

@@ -7,7 +7,7 @@ pwd = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(pwd)
 
 try:
-    README = open(os.path.join(pwd, 'README.rst')).read()
+    README = open(os.path.join(pwd, 'docs/pypi.rst')).read()
 except IOError:
     README = ''
 
