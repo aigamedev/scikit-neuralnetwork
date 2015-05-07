@@ -712,21 +712,12 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             log.debug("\nEpoch    Validation Error    Time"
                       "\n---------------------------------")
 
-        for i in itertools.count(0):
+        for i in itertools.count(1):
             start = time.time()
             self.trainer.train(dataset=self.ds)
 
             self.mlp.monitor.report_epoch()
             self.mlp.monitor()
-
-            if not self.trainer.continue_learning(self.mlp):
-                log.debug("")
-                log.info("Early termination condition fired at %i iterations.", i)
-                break
-            if self.n_iter is not None and i >= self.n_iter:
-                log.debug("")
-                log.info("Terminating after specified %i total iterations.", i)
-                break
 
             if self.verbose:
                 objective = self.mlp.monitor.channels.get('objective', None)
@@ -744,6 +735,15 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
                           ansi.ENDC if best_valid else "",
                           time.time() - start
                           ))
+
+            if not self.trainer.continue_learning(self.mlp):
+                log.debug("")
+                log.info("Early termination condition fired at %i iterations.", i)
+                break
+            if self.n_iter is not None and i >= self.n_iter:
+                log.debug("")
+                log.info("Terminating after specified %i total iterations.", i)
+                break
 
         return self
 

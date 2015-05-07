@@ -52,7 +52,7 @@ if 'sknn' in sys.argv:
         valid_size=0.0,
         n_stable=10,
         n_iter=10,
-        # verbose=1,
+        verbose=1,
     )
     classifiers.append(('sknn.mlp', clf))
 
@@ -83,7 +83,7 @@ if 'lasagne' in sys.argv:
         batch_iterator_train=BatchIterator(batch_size=25),
 
         max_epochs=10,
-        # verbose=1
+        verbose=1
         )
     classifiers.append(('nolearn.lasagne', clf))
 
