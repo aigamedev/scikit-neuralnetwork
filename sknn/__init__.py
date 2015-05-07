@@ -19,7 +19,8 @@ class TheanoConfigurator(object):
     def configure(self, flags):
         if self.configured is True:
             return
-
+        self.configured = True
+        
         if 'theano' in sys.modules:
             self.log.warning('Theano was already imported and cannot be reconfigured.')
             return
@@ -30,7 +31,6 @@ class TheanoConfigurator(object):
         import theano
         cuda.setLevel(logging.WARNING)
 
-        self.configured = True
         try:
             import theano.sandbox.cuda as cd
             self.log.info('Using device gpu%i: %s', cd.active_device_number(), cd.active_device_name())
