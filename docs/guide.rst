@@ -60,15 +60,17 @@ Verbose Mode
 
 To see the output of the neural network's training, you need to configure two things: first setting up the Python logger (mandatory), and secondly to specify a verbose mode if you want more information during training (optional).
 
+The first step is to configure either the ``sknn`` logger specifically, or do so globally (easier) as follows:
+
 .. code:: python
 
+    import sys
     import logging
 
-    log = logging.getLogger('sknn')
-    log.basicConfig(
-            format="%(message)s",
-            level=logging.DEBUG,
-            stream=sys.stdout)
+    logging.basicConfig(
+                format="%(message)s",
+                level=logging.DEBUG,
+                stream=sys.stdout)
 
 Then you can optionally create your neural networks using an additional ``verbose`` parameter to show the output during training:
 
