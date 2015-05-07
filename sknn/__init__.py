@@ -28,11 +28,11 @@ class TheanoConfigurator(object):
         cuda = logging.getLogger('theano.sandbox.cuda')
         cuda.setLevel(logging.CRITICAL)
         import theano
-        import theano.sandbox.cuda as cd
         cuda.setLevel(logging.WARNING)
 
         self.configured = True
         try:
+            import theano.sandbox.cuda as cd
             self.log.info('Using device gpu%i: %s', cd.active_device_number(), cd.active_device_name())
         except AttributeError:
             self.log.info('Using device cpu0, with %r.', theano.config.floatX)
