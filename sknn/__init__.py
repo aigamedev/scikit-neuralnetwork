@@ -42,7 +42,7 @@ class TheanoConfigurator(object):
         if name.endswith('32'):
             flags = ',floatX=float32'
         if name.endswith('64'):
-            flags = ',floatX=float32'
+            flags = ',floatX=float64'
 
         if name.startswith('cpu'):
             return self.configure('device=cpu'+flags)
