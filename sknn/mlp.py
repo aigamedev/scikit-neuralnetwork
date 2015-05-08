@@ -277,14 +277,20 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         Threshold under which the validation error change is assumed to be stable, to
         be used in combination with `n_stable`.
 
-    dropout: bool or float
+    dropout: bool or float, optional
         Whether to use drop-out training for the inputs (jittering) and the
         hidden layers, for each training example. If a float is specified, that
         ratio of inputs will be randomly excluded during training (e.g. 0.5).
 
-    verbose: bool
+    debug: bool, optional
+        Should the underlying training algorithms perform validation on the data
+        as it's optimizing the model?  This makes things slower, but errors can
+        be caught more effectively.  Default is off.
+
+    verbose: bool, optional
         If True, print the score at each epoch via the logger called 'sknn'.  You can
         control the detail of the output by customising the logger level and formatter.
+        The default is off.
     """
 
     def __init__(
@@ -300,7 +306,8 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             n_stable=50,
             f_stable=0.001,
             valid_set=None,
-            valid_size=0.0,            
+            valid_size=0.0,
+            debug=False,
             verbose=False,
             **params):
 
@@ -337,6 +344,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         self.f_stable = f_stable
         self.valid_set = valid_set
         self.valid_size = valid_size
+        self.debug = debug
         self.verbose = verbose
 
         self.unit_counts = None
@@ -366,6 +374,9 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         else:
             raise NotImplementedError(
                 "Learning rule type `%s` is not supported." % learning_rule)
+
+        if not debug:
+            space.Space._validate = lambda self, is_numeric, batch: None
 
         self._setup()
 
