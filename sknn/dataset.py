@@ -21,6 +21,12 @@ class FastVectorSpace(VectorSpace):
     def _validate(self, is_numeric, batch):
         pass
 
+    def __eq__(self, other):
+        return (type(other) in (FastVectorSpace, VectorSpace)
+            and self.dim == other.dim
+            and self.sparse == other.sparse
+            and self.dtype == other.dtype)
+
 
 class SparseDesignMatrix(Dataset):
     """
