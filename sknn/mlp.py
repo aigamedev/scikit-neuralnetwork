@@ -548,7 +548,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
 
         self.mlp = mlp.MLP(
             mlp_layers,
-            nvis=None if self.is_convolution else self.unit_counts[0],
+            nvis=None if self.input_space else self.unit_counts[0],
             seed=self.random_state,
             input_space=self.input_space)
 
@@ -588,8 +588,8 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             return datasets.DenseDesignMatrix(topo_view=view, y=y), input_space
         else:
             if all([isinstance(a, numpy.ndarray) for a in (X, y)]):
-                SpaceClass = space.VectorSpace if self.debug else FastVectorSpace
-                input_space = SpaceClass(X.shape[-1])
+                InputSpace = space.VectorSpace if self.debug else FastVectorSpace
+                input_space = InputSpace(X.shape[-1])
                 return datasets.DenseDesignMatrix(X=X, y=y), input_space
             else:
                 return SparseDesignMatrix(X=X, y=y), None

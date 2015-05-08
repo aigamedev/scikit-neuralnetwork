@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, unicode_literals, print_function)
 
-from pylearn2.space import CompositeSpace, VectorSpace
+from pylearn2.space import Space, CompositeSpace, VectorSpace
 from pylearn2.utils import safe_zip
 from pylearn2.datasets.dataset import Dataset
 from pylearn2.utils.iteration import (FiniteDatasetIterator, resolve_iterator_class)
@@ -16,7 +16,9 @@ class FastVectorSpace(VectorSpace):
     This is used to speed up training times by default; when your data needs debugging,
     specify the ``debug=True`` flag in your MLP.
     """
-    def _validate(self, *args):
+
+    @functools.wraps(VectorSpace._validate)
+    def _validate(self, is_numeric, batch):
         pass
 
 
