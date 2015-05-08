@@ -10,6 +10,16 @@ import functools
 import theano
 
 
+class FastVectorSpace(VectorSpace):
+    """
+    More efficient version of the VectorSpace input that doesn't do any validation.
+    This is used to speed up training times by default; when your data needs debugging,
+    specify the ``debug=True`` flag in your MLP.
+    """
+    def _validate(self, *args):
+        pass
+
+
 class SparseDesignMatrix(Dataset):
     """
     SparseDesignMatrix is a type of Dataset used in training by PyLearn2 that takes

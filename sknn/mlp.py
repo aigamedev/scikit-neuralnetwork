@@ -21,7 +21,7 @@ import sklearn.cross_validation
 from .pywrap2 import (datasets, space, sgd, mlp, maxout, dropout)
 from .pywrap2 import learning_rule as lr, termination_criteria as tc
 
-from .dataset import SparseDesignMatrix
+from .dataset import SparseDesignMatrix, FastVectorSpace
 
 
 class ansi:
@@ -375,9 +375,6 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             raise NotImplementedError(
                 "Learning rule type `%s` is not supported." % learning_rule)
 
-        if not debug:
-            space.Space._validate = lambda self, is_numeric, batch: None
-
         self._setup()
 
     def _setup(self):
@@ -591,7 +588,9 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             return datasets.DenseDesignMatrix(topo_view=view, y=y), input_space
         else:
             if all([isinstance(a, numpy.ndarray) for a in (X, y)]):
-                return datasets.DenseDesignMatrix(X=X, y=y), None
+                SpaceClass = space.VectorSpace if self.debug else FastVectorSpace
+                input_space = SpaceClass(X.shape[-1])
+                return datasets.DenseDesignMatrix(X=X, y=y), input_space
             else:
                 return SparseDesignMatrix(X=X, y=y), None
 
