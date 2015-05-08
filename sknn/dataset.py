@@ -1,13 +1,43 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, unicode_literals, print_function)
 
-from pylearn2.space import CompositeSpace, VectorSpace
+from pylearn2.space import Space, CompositeSpace, VectorSpace
 from pylearn2.utils import safe_zip
 from pylearn2.datasets.dataset import Dataset
 from pylearn2.utils.iteration import (FiniteDatasetIterator, resolve_iterator_class)
 
 import functools
 import theano
+
+
+class FastVectorSpace(VectorSpace):
+    """
+    More efficient version of the VectorSpace input that doesn't do any validation.
+    This is used to speed up training times by default; when your data needs debugging,
+    specify the ``debug=True`` flag in your MLP.
+    """
+
+    @functools.wraps(VectorSpace._validate)
+    def _validate(self, is_numeric, batch):
+        """
+        Short-circuit the entire validation if the user has specified it's not necessary.
+        """
+        pass
+
+    def __eq__(self, other):
+        """
+        Equality should work between Fast and slow VectorSpace instances.
+        """
+        return (type(other) in (FastVectorSpace, VectorSpace)
+            and self.dim == other.dim
+            and self.sparse == other.sparse
+            and self.dtype == other.dtype)
+
+    def __hash__(self):
+        """
+        Override necessary for Python 3.x.
+        """
+        return hash((type(VectorSpace), self.dim, self.sparse, self.dtype))
 
 
 class SparseDesignMatrix(Dataset):

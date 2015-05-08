@@ -21,7 +21,7 @@ import sklearn.cross_validation
 from .pywrap2 import (datasets, space, sgd, mlp, maxout, dropout)
 from .pywrap2 import learning_rule as lr, termination_criteria as tc
 
-from .dataset import SparseDesignMatrix
+from .dataset import SparseDesignMatrix, FastVectorSpace
 
 
 class ansi:
@@ -277,14 +277,20 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         Threshold under which the validation error change is assumed to be stable, to
         be used in combination with `n_stable`.
 
-    dropout: bool or float
+    dropout: bool or float, optional
         Whether to use drop-out training for the inputs (jittering) and the
         hidden layers, for each training example. If a float is specified, that
         ratio of inputs will be randomly excluded during training (e.g. 0.5).
 
-    verbose: bool
+    debug: bool, optional
+        Should the underlying training algorithms perform validation on the data
+        as it's optimizing the model?  This makes things slower, but errors can
+        be caught more effectively.  Default is off.
+
+    verbose: bool, optional
         If True, print the score at each epoch via the logger called 'sknn'.  You can
         control the detail of the output by customising the logger level and formatter.
+        The default is off.
     """
 
     def __init__(
@@ -300,7 +306,8 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             n_stable=50,
             f_stable=0.001,
             valid_set=None,
-            valid_size=0.0,            
+            valid_size=0.0,
+            debug=False,
             verbose=False,
             **params):
 
@@ -337,6 +344,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         self.f_stable = f_stable
         self.valid_set = valid_set
         self.valid_size = valid_size
+        self.debug = debug
         self.verbose = verbose
 
         self.unit_counts = None
@@ -540,7 +548,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
 
         self.mlp = mlp.MLP(
             mlp_layers,
-            nvis=None if self.is_convolution else self.unit_counts[0],
+            nvis=None if self.input_space else self.unit_counts[0],
             seed=self.random_state,
             input_space=self.input_space)
 
@@ -580,7 +588,9 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             return datasets.DenseDesignMatrix(topo_view=view, y=y), input_space
         else:
             if all([isinstance(a, numpy.ndarray) for a in (X, y)]):
-                return datasets.DenseDesignMatrix(X=X, y=y), None
+                InputSpace = space.VectorSpace if self.debug else FastVectorSpace
+                input_space = InputSpace(X.shape[-1])
+                return datasets.DenseDesignMatrix(X=X, y=y), input_space
             else:
                 return SparseDesignMatrix(X=X, y=y), None
 
@@ -712,21 +722,12 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             log.debug("\nEpoch    Validation Error    Time"
                       "\n---------------------------------")
 
-        for i in itertools.count(0):
+        for i in itertools.count(1):
             start = time.time()
             self.trainer.train(dataset=self.ds)
 
             self.mlp.monitor.report_epoch()
             self.mlp.monitor()
-
-            if not self.trainer.continue_learning(self.mlp):
-                log.debug("")
-                log.info("Early termination condition fired at %i iterations.", i)
-                break
-            if self.n_iter is not None and i >= self.n_iter:
-                log.debug("")
-                log.info("Terminating after specified %i total iterations.", i)
-                break
 
             if self.verbose:
                 objective = self.mlp.monitor.channels.get('objective', None)
@@ -744,6 +745,15 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
                           ansi.ENDC if best_valid else "",
                           time.time() - start
                           ))
+
+            if not self.trainer.continue_learning(self.mlp):
+                log.debug("")
+                log.info("Early termination condition fired at %i iterations.", i)
+                break
+            if self.n_iter is not None and i >= self.n_iter:
+                log.debug("")
+                log.info("Terminating after specified %i total iterations.", i)
+                break
 
         return self
 

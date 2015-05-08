@@ -95,13 +95,13 @@ You can run the following command to reproduce the benchmarks on your machine::
 ==========  ==================  =========================  ==================  =========================
    MNIST      sknn.mlp (CPU)      nolearn.lasagne (CPU)      sknn.mlp (GPU)      nolearn.lasagne (GPU)
 ==========  ==================  =========================  ==================  =========================
- Accuracy    **97.99%±0.046**          97.77% ±0.054       **97.99%±0.068**      97.76% ±0.061
- Training     **20.1s ±1.07**            45.7s ±1.10           36.7s ±0.41        **31.4s ±0.42**
+ Accuracy    **97.99%±0.046**          97.77% ±0.054        **98.00%±0.06**         97.76% ±0.06
+ Training     **20.1s ±1.07**            45.7s ±1.10          33.10s ±0.11         **31.93s ±0.09**
 ==========  ==================  =========================  ==================  =========================
 
 All the neural networks were setup as similarly as possible, given parameters that can be controlled within the implementation and their interfaces.  In particular, this model has a single hidden layer with 300 hidden units of type Rectified Linear (ReLU) and trained with the same data with validation and monitoring disabled.  The remaining third of the MNIST dataset was only used to test the score once training terminated.
 
-**WARNING**: These numbers are certainly not final and fluctuate as the underlying libraries change. The relative speed of PyLearn2 on CPU (better) and on GPU (worse) is `under investigation <https://github.com/aigamedev/scikit-neuralnetwork/issues/26>`_!  If you have any explanations of these scores, or ideas how to make the results similar, then please submit a Pull Request on the benchmark script.
+**WARNING**: These numbers should not be considered definitive and fluctuate as the underlying libraries change.  If you have any ideas how to make the accuracy results similar, then please submit a Pull Request on the benchmark script.
 
 
 Getting Started
