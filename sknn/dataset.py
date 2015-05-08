@@ -19,13 +19,25 @@ class FastVectorSpace(VectorSpace):
 
     @functools.wraps(VectorSpace._validate)
     def _validate(self, is_numeric, batch):
+        """
+        Short-circuit the entire validation if the user has specified it's not necessary.
+        """
         pass
 
     def __eq__(self, other):
+        """
+        Equality should work between Fast and slow VectorSpace instances.
+        """
         return (type(other) in (FastVectorSpace, VectorSpace)
             and self.dim == other.dim
             and self.sparse == other.sparse
             and self.dtype == other.dtype)
+
+    def __hash__(self):
+        """
+        Override necessary for Python 3.x.
+        """
+        return hash((type(VectorSpace), self.dim, self.sparse, self.dtype))
 
 
 class SparseDesignMatrix(Dataset):
