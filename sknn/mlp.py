@@ -363,7 +363,8 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         self.learning_rule = learning_rule
         self.learning_rate = learning_rate
         self.learning_momentum = learning_momentum
-        self.regularize = regularize
+        self.regularize = regularize or ('dropout' if dropout_rate else None)\
+                                     or ('L2' if weight_decay else None)
         self.weight_decay = weight_decay
         self.dropout_rate = dropout_rate
         self.batch_size = batch_size
@@ -421,7 +422,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             dropout_scales[l.name] = 1.0 / incl
         # assert len(dropout_probs) == 0 or self.regularize in ('dropout', None)
 
-        if self.regularize == "dropout" or self.dropout_rate or len(dropout_probs) > 0:
+        if self.regularize == "dropout" or len(dropout_probs) > 0:
             # Use the globally specified dropout rate when there are no layer-specific ones.
             incl = 1.0 - (self.dropout_rate or 0.5)
             default_prob, default_scale = incl, 1.0 / incl
@@ -440,7 +441,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
                 weight_decay[l.name] = l.weight_decay or wd
         # assert len(weight_decay) == 0 or self.regularize in ('L1', 'L2', None)
 
-        if self.regularize in ('L1', 'L2') or self.weight_decay or len(weight_decay) > 0:
+        if self.regularize in ('L1', 'L2') or len(weight_decay) > 0:
             if self.regularize == 'L1':
                 self.cost = costs.L1WeightDecay(weight_decay)
             else: # Default is 'L2'.

@@ -76,7 +76,6 @@ class TestRegularization(LoggingTestCase):
                   regularize='dropout',
                   n_iter=1)
         assert_equal(nn.regularize, 'dropout')
-        assert_equal(nn.dropout_rate, 0.5)
         self._run(nn)
         assert_true(nn.cost is not None)
 
@@ -94,7 +93,6 @@ class TestRegularization(LoggingTestCase):
                   regularize='dropout',
                   n_iter=1)
         assert_equal(nn.regularize, 'dropout')
-        assert_equal(nn.dropout_rate, 0.5)
         self._run(nn)
         assert_true(nn.cost is not None)
 

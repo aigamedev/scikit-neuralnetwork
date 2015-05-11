@@ -89,8 +89,6 @@ class TestClassifierInterface(unittest.TestCase):
         assert_equal(params['learning_rate'], 0.01)
         assert_equal(params['n_iter'], None)
         assert_equal(params['n_stable'], 50)
-        assert_equal(params['dropout_rate'], 0.5)
-        assert_equal(params['weight_decay'], 0.0001)
         assert_equal(params['regularize'], None)
         assert_equal(params['valid_size'], 0.0)
 
