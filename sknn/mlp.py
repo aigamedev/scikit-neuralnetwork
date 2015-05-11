@@ -471,7 +471,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
                 raise ValueError("Layer type `%s` requires parameter `%s`."\
                                  % (layer.type, r))
 
-        optional.extend(['dropout'])
+        optional.extend(['dropout', 'weight_decay'])
         for a in layer.__dict__:
             if a in required+optional:
                 continue
