@@ -420,7 +420,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             incl = 1.0 - l.dropout
             dropout_probs[l.name] = incl
             dropout_scales[l.name] = 1.0 / incl
-        # assert len(dropout_probs) == 0 or self.regularize in ('dropout', None)
+        assert len(dropout_probs) == 0 or self.regularize in ('dropout', None)
 
         if self.regularize == "dropout" or len(dropout_probs) > 0:
             # Use the globally specified dropout rate when there are no layer-specific ones.
@@ -434,18 +434,18 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
                 input_include_probs=dropout_probs, input_scales=dropout_scales)
 
         # Aggregate all regularization parameters into common dictionaries.
-        weight_decay = {}
-        if any(l.weight_decay is not None for l in self.layers):
+        layer_decay = {}
+        if self.regularize in ('L1', 'L2') or any(l.weight_decay for l in self.layers):
             wd = self.weight_decay or 0.0001
             for l in self.layers:
-                weight_decay[l.name] = l.weight_decay or wd
-        # assert len(weight_decay) == 0 or self.regularize in ('L1', 'L2', None)
+                layer_decay[l.name] = l.weight_decay or wd
+        assert len(layer_decay) == 0 or self.regularize in ('L1', 'L2', None)
 
-        if self.regularize in ('L1', 'L2') or len(weight_decay) > 0:
+        if len(layer_decay) > 0:
             if self.regularize == 'L1':
-                self.cost = costs.L1WeightDecay(weight_decay)
+                self.cost = costs.L1WeightDecay(layer_decay)
             else: # Default is 'L2'.
-                self.cost = costs.WeightDecay(weight_decay)
+                self.cost = costs.WeightDecay(layer_decay)
 
         logging.getLogger('pylearn2.monitor').setLevel(logging.WARNING)
         if dataset is not None:
