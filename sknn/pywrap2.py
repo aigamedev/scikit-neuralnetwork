@@ -22,3 +22,4 @@ from pylearn2.models import (mlp, maxout)
 from pylearn2.training_algorithms import (sgd, learning_rule)
 from pylearn2.costs import mlp as costs
 from pylearn2.costs.mlp import dropout
+from pylearn2.costs.cost import SumOfCosts as SumOfCosts
