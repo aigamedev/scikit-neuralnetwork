@@ -32,7 +32,7 @@ from sknn import mlp
 PARAMETERS = {
     'activation': ['Rectifier', 'Tanh', 'Sigmoid', 'Maxout'],
     'alpha': [0.001, 0.005, 0.01, 0.05, 0.1, 0.2],
-    'dropout': [False, True],
+    'dropout': [None, 0.25, 0.5, 0.75],
     'iterations': [100, 200, 500, 1000],
     'output': ['Softmax', 'Linear', 'Gaussian'],
     'rules': ['sgd', 'momentum', 'nesterov', 'adadelta', 'rmsprop'],
@@ -64,7 +64,7 @@ for (activation, alpha, dropout, iterations, output, rule, units) in itertools.p
     classifiers.append(mlp.Classifier(
         layers=[mlp.Layer(activation, units=units, **params), mlp.Layer(output)], random_state=1,
         n_iter=iterations, n_stable=iterations,
-        dropout=dropout, learning_rule=rule, learning_rate=alpha),)
+        dropout_rate=dropout, learning_rule=rule, learning_rate=alpha),)
 
     t = []
     for k, v in zip(sorted(PARAMETERS), [activation, alpha, dropout, iterations, output, rule, units]):
