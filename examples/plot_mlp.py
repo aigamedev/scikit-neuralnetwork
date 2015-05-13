@@ -32,9 +32,10 @@ from sknn import mlp
 PARAMETERS = {
     'activation': ['Rectifier', 'Tanh', 'Sigmoid', 'Maxout'],
     'alpha': [0.001, 0.005, 0.01, 0.05, 0.1, 0.2],
-    'dropout': [False, True],
+    'dropout': [None, 0.25, 0.5, 0.75],
     'iterations': [100, 200, 500, 1000],
     'output': ['Softmax', 'Linear', 'Gaussian'],
+    'regularize': [None, 'L1', 'L2', 'dropout'],
     'rules': ['sgd', 'momentum', 'nesterov', 'adadelta', 'rmsprop'],
     'units': [16, 64, 128, 256],
 }
@@ -59,15 +60,15 @@ for p in sorted(PARAMETERS):
 # Build the classifiers for all possible combinations of parameters.
 names = []
 classifiers = []
-for (activation, alpha, dropout, iterations, output, rule, units) in itertools.product(*params):
+for (activation, alpha, dropout, iterations, output, regularize, rule, units) in itertools.product(*params):
     params = {'pieces': 2} if activation == "Maxout" else {}
     classifiers.append(mlp.Classifier(
         layers=[mlp.Layer(activation, units=units, **params), mlp.Layer(output)], random_state=1,
-        n_iter=iterations, n_stable=iterations,
-        dropout=dropout, learning_rule=rule, learning_rate=alpha),)
+        n_iter=iterations, n_stable=iterations, regularize=regularize,
+        dropout_rate=dropout, learning_rule=rule, learning_rate=alpha),)
 
     t = []
-    for k, v in zip(sorted(PARAMETERS), [activation, alpha, dropout, iterations, output, rule, units]):
+    for k, v in zip(sorted(PARAMETERS), [activation, alpha, dropout, iterations, output, regularize, rule, units]):
         if k in args.params:
             t.append(str(v))
     names.append(','.join(t))

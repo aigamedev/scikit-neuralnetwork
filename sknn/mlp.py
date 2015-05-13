@@ -18,7 +18,7 @@ import sklearn.pipeline
 import sklearn.preprocessing
 import sklearn.cross_validation
 
-from .pywrap2 import (datasets, space, sgd, mlp, maxout, dropout)
+from .pywrap2 import (datasets, space, sgd, mlp, maxout, costs, dropout,SumOfCosts)
 from .pywrap2 import learning_rule as lr, termination_criteria as tc
 
 from .dataset import SparseDesignMatrix, FastVectorSpace
@@ -59,6 +59,10 @@ class Layer(object):
         The number of piecewise linear segments in the Maxout activation.  This is
         optional and only applies when `Maxout` is selected as the layer type.
 
+    weight_decay: float, optional
+        The coefficient for L1 or L2 regularization of the weights.  For example, a value of
+        0.0001 is multiplied by the L1 or L2 weight decay equation.
+
     dropout: float, optional
         The ratio of inputs to drop out for this layer during training.  For example, 0.25
         means that 25% of the inputs will be excluded for each training sample, with the
@@ -76,6 +80,7 @@ class Layer(object):
             name=None,
             units=None,
             pieces=None,
+            weight_decay=None,
             dropout=None):
 
         assert warning is None,\
@@ -89,6 +94,7 @@ class Layer(object):
         self.type = type
         self.units = units
         self.pieces = pieces
+        self.weight_decay = weight_decay
         self.dropout = dropout
 
     def set_params(self, **params):
@@ -166,6 +172,10 @@ class Convolution(Layer):
         specified the default is to take the maximum value of all inputs that fall into this
         pool. Otherwise, the default is None and no pooling is used for performance.
 
+    weight_decay: float, optional
+        The coefficient for L1 or L2 regularization of the weights.  For example, a value of
+        0.0001 is multiplied by the L1 or L2 weight decay equation.
+
     dropout: float, optional
         The ratio of inputs to drop out for this layer during training.  For example, 0.25
         means that 25% of the inputs will be excluded for each training sample, with the
@@ -187,6 +197,7 @@ class Convolution(Layer):
             border_mode='valid',
             pool_shape=None,
             pool_type=None,
+            weight_decay=None,
             dropout=None):
 
         assert warning is None,\
@@ -201,6 +212,7 @@ class Convolution(Layer):
                 type,
                 name=name,
                 pieces=pieces,
+                weight_decay=weight_decay,
                 dropout=dropout)
 
         self.channels = channels
@@ -277,10 +289,22 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         Threshold under which the validation error change is assumed to be stable, to
         be used in combination with `n_stable`.
 
-    dropout: bool or float, optional
-        Whether to use drop-out training for the inputs (jittering) and the
-        hidden layers, for each training example. If a float is specified, that
-        ratio of inputs will be randomly excluded during training (e.g. 0.5).
+    regularize: string, optional
+        Which regularization technique to use on the weights, for example ``L2`` (most
+        common) or ``L1`` (quite rare), as well as ``dropout``.  By default, there's no
+        regularization, unless another parameter implies it should be enabled, e.g. if
+        ``weight_decay`` or ``dropout_rate`` are specified.
+
+    weight_decay: float, optional
+        The coefficient used to multiply either ``L1`` or ``L2`` equations when computing
+        the weight decay for regularization.  If ``regularize`` is specified, this defaults
+        to 0.0001.
+        
+    dropout_rate: float, optional
+        What rate to use for drop-out training in the inputs (jittering) and the
+        hidden layers, for each training example. Specify this as a ratio of inputs
+        to be randomly excluded during training, e.g. 0.75 means only 25% of inputs
+        will be included in the training.
 
     debug: bool, optional
         Should the underlying training algorithms perform validation on the data
@@ -300,7 +324,9 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             learning_rule='sgd',
             learning_rate=0.01,
             learning_momentum=0.9,
-            dropout=False,
+            regularize=None,
+            weight_decay=None,
+            dropout_rate=None,
             batch_size=1,
             n_iter=None,
             n_stable=50,
@@ -331,13 +357,16 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         # These are specified only so `get_params()` can return named layers, for double-
         # underscore syntax to work.
         assert len(params) == 0,\
-            "The specified additional parameters are unknown."
+            "The specified additional parameters are unknown: %s." % ','.join(params.keys())
 
         self.random_state = random_state
         self.learning_rule = learning_rule
         self.learning_rate = learning_rate
         self.learning_momentum = learning_momentum
-        self.dropout = dropout if type(dropout) is float else (0.5 if dropout else 0.0)
+        self.regularize = regularize or ('dropout' if dropout_rate else None)\
+                                     or ('L2' if weight_decay else None)
+        self.weight_decay = weight_decay
+        self.dropout_rate = dropout_rate
         self.batch_size = batch_size
         self.n_iter = n_iter
         self.n_stable = n_stable
@@ -351,14 +380,14 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         self.input_space = None
         self.mlp = None
         self.weights = None
-        self.vs = None
         self.ds = None
-        self.trainer = None
+        self.vs = None
         self.f = None
+        self.trainer = None
+        self.cost = None
         self.train_set = None
         self.best_valid_error = float("inf")
 
-        self.cost = "Dropout" if dropout else None
         if learning_rule == 'sgd':
             self._learning_rule = None
         # elif learning_rule == 'adagrad':
@@ -386,22 +415,40 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         sgd.log.setLevel(logging.WARNING)
 
         # Aggregate all the dropout parameters into shared dictionaries.
-        probs, scales = {}, {}
+        dropout_probs, dropout_scales = {}, {}
         for l in [l for l in self.layers if l.dropout is not None]:
             incl = 1.0 - l.dropout
-            probs[l.name] = incl
-            scales[l.name] = 1.0 / incl
+            dropout_probs[l.name] = incl
+            dropout_scales[l.name] = 1.0 / incl
+        assert len(dropout_probs) == 0 or self.regularize in ('dropout', None)
 
-        if self.cost == "Dropout" or len(probs) > 0:
+        if self.regularize == "dropout" or len(dropout_probs) > 0:
             # Use the globally specified dropout rate when there are no layer-specific ones.
-            incl = 1.0 - self.dropout
+            incl = 1.0 - (self.dropout_rate or 0.5)
             default_prob, default_scale = incl, 1.0 / incl
 
             # Pass all the parameters to pylearn2 as a custom cost function.
             self.cost = dropout.Dropout(
                 default_input_include_prob=default_prob,
                 default_input_scale=default_scale,
-                input_include_probs=probs, input_scales=scales)
+                input_include_probs=dropout_probs, input_scales=dropout_scales)
+
+        # Aggregate all regularization parameters into common dictionaries.
+        layer_decay = {}
+        if self.regularize in ('L1', 'L2') or any(l.weight_decay for l in self.layers):
+            wd = self.weight_decay or 0.0001
+            for l in self.layers:
+                layer_decay[l.name] = l.weight_decay or wd
+        assert len(layer_decay) == 0 or self.regularize in ('L1', 'L2', None)
+
+        if len(layer_decay) > 0:
+            mlp_default_cost = self.mlp.get_default_cost()
+            if self.regularize == 'L1':
+                l1 = costs.L1WeightDecay(layer_decay)
+                self.cost = SumOfCosts([mlp_default_cost,l1])
+            else: # Default is 'L2'.
+                l2 =  costs.WeightDecay(layer_decay)
+                self.cost = SumOfCosts([mlp_default_cost,l2])
 
         logging.getLogger('pylearn2.monitor').setLevel(logging.WARNING)
         if dataset is not None:
@@ -427,7 +474,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
                 raise ValueError("Layer type `%s` requires parameter `%s`."\
                                  % (layer.type, r))
 
-        optional.extend(['dropout'])
+        optional.extend(['dropout', 'weight_decay'])
         for a in layer.__dict__:
             if a in required+optional:
                 continue
