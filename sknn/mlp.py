@@ -306,6 +306,13 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         to be randomly excluded during training, e.g. 0.75 means only 25% of inputs
         will be included in the training.
 
+    loss_type: string, optional
+        The cost function to use when training the network.  There are two valid options:
+            * ``mse`` — Use mean squared error, for learning to predict the mean of the data.
+            * ``mae`` — Use mean average error, for learning to predict the median of the data.
+        The default option is ``mse``, and ``mae`` can only be applied to layers of type
+        ``Linear`` or ``Gaussian`` and they must be used as the output layer.
+
     debug: bool, optional
         Should the underlying training algorithms perform validation on the data
         as it's optimizing the model?  This makes things slower, but errors can
@@ -333,6 +340,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             f_stable=0.001,
             valid_set=None,
             valid_size=0.0,
+            loss_type='mse',
             debug=False,
             verbose=False,
             **params):
@@ -373,8 +381,14 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         self.f_stable = f_stable
         self.valid_set = valid_set
         self.valid_size = valid_size
+        self.loss_type = loss_type
         self.debug = debug
         self.verbose = verbose
+        
+        assert self.regularize in (None, 'L1', 'L2', 'dropout'),\
+            "Unknown type of regularization specified: %s." % self.regularize
+        assert self.loss_type in ('mse', 'mae'),\
+            "Unknown loss function type specified: %s." % self.loss_type
 
         self.unit_counts = None
         self.input_space = None
@@ -548,7 +562,8 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             return mlp.Linear(
                 layer_name=layer.name,
                 dim=layer.units,
-                irange=irange)
+                irange=irange,
+                use_abs_loss=bool(self.loss_type == 'mae'))
 
         if layer.type == 'Gaussian':
             self._check_layer(layer, ['units'])
@@ -559,7 +574,8 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
                 max_beta=1000,
                 beta_lr_scale=None,
                 dim=layer.units,
-                irange=irange)
+                irange=irange,
+                use_abs_loss=bool(self.loss_type == 'mae'))
 
         if layer.type == 'Softmax':
             self._check_layer(layer, ['units'])
