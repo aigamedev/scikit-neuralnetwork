@@ -391,7 +391,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         if learning_rule == 'sgd':
             self._learning_rule = None
         elif learning_rule == 'adagrad':
-            self._learning_rule = AdaGrad()
+            self._learning_rule = lr.AdaGrad()
         elif learning_rule == 'adadelta':
             self._learning_rule = lr.AdaDelta()
         elif learning_rule == 'momentum':
