@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, unicode_literals, print_function)
 
-__author__ = 'ssamot, alexjc'
-__version__ = '0.1'
+__author__ = 'alexjc, ssamot'
+__version__ = '0.2'
 
 
 import os
