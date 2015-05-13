@@ -251,8 +251,8 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
 
     learning_rule: str
         Name of the learning rule used during stochastic gradient descent,
-        one of ``sgd``, ``momentum``, ``nesterov``, ``adadelta`` or ``rmsprop``
-        at the moment.
+        one of ``sgd``, ``momentum``, ``nesterov``, ``adadelta``, ``adagrad`` or
+        ``rmsprop`` at the moment.  The default is vanilla ``sgd``.
 
     learning_rate: float
         Real number indicating the default/starting rate of adjustment for
@@ -390,8 +390,8 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
 
         if learning_rule == 'sgd':
             self._learning_rule = None
-        # elif learning_rule == 'adagrad':
-        #     self._learning_rule = AdaGrad()
+        elif learning_rule == 'adagrad':
+            self._learning_rule = lr.AdaGrad()
         elif learning_rule == 'adadelta':
             self._learning_rule = lr.AdaDelta()
         elif learning_rule == 'momentum':

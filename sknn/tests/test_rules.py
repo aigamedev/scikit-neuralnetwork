@@ -46,13 +46,10 @@ class TestLearningRules(LoggingTestCase):
                        learning_rule='nesterov',
                        n_iter=1))
 
-    # NOTE: This is currentry broken in PyLearn2.
-    # def test_adagrad(self):
-    #      self._run(MLPR(layers=[("Linear",)],
-    #                     learning_rule='adagrad',
-    #                     learning_rate=0.000001,
-    #                     batch_size=100,
-    #                     n_iter=1))
+    def test_adagrad(self):
+         self._run(MLPR(layers=[L("Linear",)],
+                        learning_rule='adagrad',
+                        n_iter=1))
 
     def test_AdaDelta(self):
         self._run(MLPR(layers=[L("Linear")],

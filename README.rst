@@ -18,7 +18,7 @@ Thanks to the underlying ``pylearn2`` implementation, this library supports the 
     * Nonlinear: ``Sigmoid``, ``Tanh``, ``Rectifier``, ``Maxout``.
     * Linear: ``Linear``, ``Gaussian``, ``Softmax``.
 * **Layer Types —** ``Convolution`` (greyscale and color, 2D), ``Dense`` (standard, 1D).
-* **Learning Rules —** ``sgd``, ``momentum``, ``nesterov``, ``adadelta``, ``rmsprop``.
+* **Learning Rules —** ``sgd``, ``momentum``, ``nesterov``, ``adadelta``, ``adagrad``, ``rmsprop``.
 * **Regularization —** ``L1``, ``L2`` and ``dropout``.
 * **Dataset Types —** ``numpy.ndarray``, ``scipy.sparse``, coming soon: iterators.
 
