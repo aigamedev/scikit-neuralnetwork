@@ -8,7 +8,8 @@ import numpy
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler
 
-from sknn.mlp import MultiLayerPerceptronRegressor as MLPR
+from sknn.mlp import Regressor as MLPR
+from sknn.mlp import Layer as L
 
 
 class TestPipeline(unittest.TestCase):
@@ -20,19 +21,18 @@ class TestPipeline(unittest.TestCase):
 
     def test_NeuralNetworkOnly(self):
         pipeline = Pipeline([
-            ('neural network', MLPR(layers=[("Linear",)], n_iter=1))
+            ('neural network', MLPR(layers=[L("Linear")], n_iter=1))
         ])
         self._run(pipeline)
 
     def test_ScalerThenNeuralNetwork(self):
         pipeline = Pipeline([
             ('min/max scaler', MinMaxScaler()),
-            ('neural network', MLPR(layers=[("Linear",)], n_iter=1))
+            ('neural network', MLPR(layers=[L("Linear")], n_iter=1))
         ])
         self._run(pipeline)
 
 
-"""
 class TestSerializedPipeline(TestPipeline):
 
     def _run(self, pipeline):
@@ -47,4 +47,3 @@ class TestSerializedPipeline(TestPipeline):
         p = pickle.load(buf)
         
         assert_true((a_test == p.predict(a_in)).all())
-"""

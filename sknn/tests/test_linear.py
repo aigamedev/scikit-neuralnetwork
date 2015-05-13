@@ -6,23 +6,29 @@ import io
 import pickle
 import numpy
 
-from sknn.mlp import MultiLayerPerceptronRegressor as MLPR
+from sknn.mlp import Regressor as MLPR
+from sknn.mlp import Layer as L
 
 
 class TestLinearNetwork(unittest.TestCase):
 
     def setUp(self):
-        self.nn = MLPR(layers=[("Linear",)], n_iter=1)
+        self.nn = MLPR(layers=[L("Linear")], n_iter=1)
 
     def test_LifeCycle(self):
         del self.nn
 
-    def test_PredictUninitialized(self):
+    def test_PredictNoOutputUnitsAssertion(self):
         a_in = numpy.zeros((8,16))
-        assert_raises(ValueError, self.nn.predict, a_in)
+        assert_raises(AssertionError, self.nn.predict, a_in)
+
+    def test_AutoInitializeWithOutputUnits(self):
+        self.nn.layers[-1].units = 4
+        a_in = numpy.zeros((8,16))
+        self.nn.predict(a_in)
 
     def test_FitAutoInitialize(self):
-        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,1))
+        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
         self.nn.fit(a_in, a_out)
         assert_true(self.nn.is_initialized)
 
@@ -34,7 +40,7 @@ class TestLinearNetwork(unittest.TestCase):
 class TestInputOutputs(unittest.TestCase):
 
     def setUp(self):
-        self.nn = MLPR(layers=[("Linear",)], n_iter=1)
+        self.nn = MLPR(layers=[L("Linear")], n_iter=1)
 
     def test_FitOneDimensional(self):
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,))
@@ -44,7 +50,7 @@ class TestInputOutputs(unittest.TestCase):
 class TestSerialization(unittest.TestCase):
 
     def setUp(self):
-        self.nn = MLPR(layers=[("Linear",)], n_iter=1)
+        self.nn = MLPR(layers=[L("Linear")], n_iter=1)
 
     def test_SerializeFail(self):
         buf = io.BytesIO()
@@ -64,25 +70,33 @@ class TestSerialization(unittest.TestCase):
         assert_equal(nn.layers, self.nn.layers)
 
 
-"""
 class TestSerializedNetwork(TestLinearNetwork):
 
     def setUp(self):
-        self.original = MLPR(layers=[("Linear",)])
+        self.original = MLPR(layers=[L("Linear")])
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
-        self.original.initialize(a_in, a_out)
+        self.original._initialize(a_in, a_out)
 
         buf = io.BytesIO()
         pickle.dump(self.original, buf)
         buf.seek(0)
         self.nn = pickle.load(buf)
 
-    def test_PredictUninitialized(self):
+    def test_TypeOfWeightsArray(self):
+        for w, b in self.nn._mlp_to_array():
+            assert_equal(type(w), numpy.ndarray)
+            assert_equal(type(b), numpy.ndarray)
+
+    def test_FitAutoInitialize(self):
+        # Override base class test, you currently can't re-train a network that
+        # was serialized and deserialized.
+        pass
+
+    def test_PredictNoOutputUnitsAssertion(self):
         # Override base class test, this is not initialized but it
         # should be able to predict without throwing assert.
-        assert_false(self.nn.is_initialized)
+        assert_true(self.nn.is_initialized)
 
     def test_PredictAlreadyInitialized(self):
         a_in = numpy.zeros((8,16))
         self.nn.predict(a_in)
-"""

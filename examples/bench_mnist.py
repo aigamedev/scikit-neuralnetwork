@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from __future__ import (absolute_import, unicode_literals, print_function)
+
 import sys
 import time
 import logging
@@ -12,8 +15,11 @@ np.set_printoptions(suppress=True)
 logging.basicConfig(format="%(message)s", level=logging.DEBUG, stream=sys.stdout)
 
 
+from sklearn.base import clone
 from sklearn.cross_validation import train_test_split
 from sklearn.datasets import fetch_mldata
+from sklearn.metrics import classification_report
+
 
 mnist = fetch_mldata('mnist-original')
 X_train, X_test, y_train, y_test = train_test_split(
@@ -21,8 +27,8 @@ X_train, X_test, y_train, y_test = train_test_split(
         mnist.target.astype(np.int32),
         test_size=0.33, random_state=1234)
 
-classifiers = []
 
+classifiers = []
 
 if 'dbn' in sys.argv:
     from nolearn.dbn import DBN
@@ -35,12 +41,13 @@ if 'dbn' in sys.argv:
     classifiers.append(('nolearn.dbn', clf))
 
 if 'sknn' in sys.argv:
-    from sknn.mlp import MultiLayerPerceptronClassifier
+    from sknn.mlp import Classifier, Layer
 
-    clf = MultiLayerPerceptronClassifier(
-        layers=[("Rectifier", 300), ("Softmax",)],
+    clf = Classifier(
+        layers=[Layer("Rectifier", units=300), Layer("Softmax")],
         learning_rate=0.02,
         learning_rule='momentum',
+        learning_momentum=0.9,
         batch_size=25,
         valid_size=0.0,
         n_stable=10,
@@ -50,7 +57,7 @@ if 'sknn' in sys.argv:
     classifiers.append(('sknn.mlp', clf))
 
 if 'lasagne' in sys.argv:
-    from nolearn.lasagne import NeuralNet
+    from nolearn.lasagne import NeuralNet, BatchIterator
     from lasagne.layers import InputLayer, DenseLayer
     from lasagne.nonlinearities import softmax
     from lasagne.updates import nesterov_momentum
@@ -73,6 +80,7 @@ if 'lasagne' in sys.argv:
         update=nesterov_momentum,
         update_learning_rate=0.02,
         update_momentum=0.9,
+        batch_iterator_train=BatchIterator(batch_size=25),
 
         max_epochs=10,
         verbose=1
@@ -80,15 +88,27 @@ if 'lasagne' in sys.argv:
     classifiers.append(('nolearn.lasagne', clf))
 
 
-for name, clf in classifiers:
-    start = time.time()
-    clf.fit(X_train, y_train)
+RUNS = 1
 
-    from sklearn.metrics import classification_report
+for name, orig in classifiers:
+    times = []
+    accuracies = []
+    for i in range(RUNS):
+        start = time.time()
 
-    y_pred = clf.predict(X_test)
-    print name
-    print "\tAccuracy:", clf.score(X_test, y_test)
-    print "\tTime:", time.time() - start
-    print "\tReport:"
-    print classification_report(y_test, y_pred)
+        clf = clone(orig)
+        clf.random_state = int(time.time())
+        clf.fit(X_train, y_train)
+
+        y_pred = clf.predict(X_test)
+        accuracies.append(clf.score(X_test, y_test))
+        times.append(time.time() - start)
+
+    a_t = np.array(times)
+    a_s = np.array(accuracies)
+
+    print("\n"+name)
+    print("\tAccuracy: %5.2f%% ±%4.2f" % (100.0 * a_s.mean(), 100.0 * a_s.std()))
+    print("\tTimes:    %5.2fs ±%4.2f" % (a_t.mean(), a_t.std()))
+    print("\tReport:")
+    print(classification_report(y_test, y_pred))

@@ -7,7 +7,7 @@ pwd = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(pwd)
 
 try:
-    README = open(os.path.join(pwd, 'README.rst')).read()
+    README = open(os.path.join(pwd, 'docs/pypi.rst')).read()
 except IOError:
     README = ''
 
@@ -19,8 +19,10 @@ except ImportError:
 
 
 install_requires = [
-    'pylearn2',
     'scikit-learn',
+    'theano',
+    'pyyaml',
+    # 'pylearn2',
 ]
 
 tests_require = [
@@ -31,7 +33,7 @@ docs_require = [
     'Sphinx',
 ]
 
-setup(name='sknn',
+setup(name='scikit-neuralnetwork',
       version=VERSION,
       description="Neural Network wrapper for pylearn2 compatible with scikit-learn.",
       long_description=README,
@@ -41,7 +43,6 @@ setup(name='sknn',
           "Programming Language :: Python :: 3.4",
           ],
       keywords='deep learning, neural networks',
-      author='',
       url='https://github.com/aigamedev/scikit-neuralnetwork',
       license='BSD 3-clause license',
       packages=find_packages(),

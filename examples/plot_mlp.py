@@ -8,10 +8,11 @@ __author__ = 'Alex J. Champandard'
 
 import sys
 import time
+import logging
 import argparse
 import itertools
-import numpy as np
 
+import numpy
 from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
 
@@ -19,15 +20,22 @@ from sklearn.cross_validation import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.datasets import make_moons, make_circles, make_classification
 
-from sknn.mlp import MultiLayerPerceptronClassifier
+# The neural network uses the `sknn` logger to output its information.
+import logging
+logging.basicConfig(format="%(message)s", level=logging.WARNING, stream=sys.stdout)
+
+from sknn.backend import gpu32
+from sknn import mlp
+
 
 # All possible parameter options that can be plotted, separately or combined.
 PARAMETERS = {
     'activation': ['Rectifier', 'Tanh', 'Sigmoid', 'Maxout'],
     'alpha': [0.001, 0.005, 0.01, 0.05, 0.1, 0.2],
-    'dropout': [False, True],
+    'dropout': [None, 0.25, 0.5, 0.75],
     'iterations': [100, 200, 500, 1000],
-    'output': ['Linear', 'Softmax', 'LinearGaussian'],
+    'output': ['Softmax', 'Linear', 'Gaussian'],
+    'regularize': [None, 'L1', 'L2', 'dropout'],
     'rules': ['sgd', 'momentum', 'nesterov', 'adadelta', 'rmsprop'],
     'units': [16, 64, 128, 256],
 }
@@ -52,14 +60,15 @@ for p in sorted(PARAMETERS):
 # Build the classifiers for all possible combinations of parameters.
 names = []
 classifiers = []
-for (activation, alpha, dropout, iterations, output, rule, units) in itertools.product(*params):
-    classifiers.append(MultiLayerPerceptronClassifier(
-        layers=[(activation, units, 2), (output,)], random_state=1,
-        n_iter=iterations, n_stable=iterations,
-        dropout=dropout, learning_rule=rule, learning_rate=alpha),)
+for (activation, alpha, dropout, iterations, output, regularize, rule, units) in itertools.product(*params):
+    params = {'pieces': 2} if activation == "Maxout" else {}
+    classifiers.append(mlp.Classifier(
+        layers=[mlp.Layer(activation, units=units, **params), mlp.Layer(output)], random_state=1,
+        n_iter=iterations, n_stable=iterations, regularize=regularize,
+        dropout_rate=dropout, learning_rule=rule, learning_rate=alpha),)
 
     t = []
-    for k, v in zip(sorted(PARAMETERS), [activation, alpha, dropout, iterations, output, rule, units]):
+    for k, v in zip(sorted(PARAMETERS), [activation, alpha, dropout, iterations, output, regularize, rule, units]):
         if k in args.params:
             t.append(str(v))
     names.append(','.join(t))
@@ -68,7 +77,7 @@ for (activation, alpha, dropout, iterations, output, rule, units) in itertools.p
 seed = int(time.time())
 X, y = make_classification(n_features=2, n_redundant=0, n_informative=2,
                            random_state=0, n_clusters_per_class=1)
-rng = np.random.RandomState(seed+1)
+rng = numpy.random.RandomState(seed+1)
 X += 2 * rng.uniform(size=X.shape)
 linearly_separable = (X, y)
 
@@ -88,8 +97,8 @@ for X, y in datasets:
     # Prepare coordinates of 2D grid to be visualized.
     x_min, x_max = X[:, 0].min() - .5, X[:, 0].max() + .5
     y_min, y_max = X[:, 1].min() - .5, X[:, 1].max() + .5
-    xx, yy = np.meshgrid(np.arange(x_min, x_max, GRID_RESOLUTION),
-                         np.arange(y_min, y_max, GRID_RESOLUTION))
+    xx, yy = numpy.meshgrid(numpy.arange(x_min, x_max, GRID_RESOLUTION),
+                            numpy.arange(y_min, y_max, GRID_RESOLUTION))
 
     # Plot the dataset on its own first.
     cm = plt.cm.get_cmap("PRGn")
@@ -112,7 +121,7 @@ for X, y in datasets:
         # Plot the decision boundary. For that, we will assign a color to each
         # point in the mesh [x_min, m_max]x[y_min, y_max].
 
-        Z = clf.predict_proba(np.c_[xx.ravel(), yy.ravel()])[:, 1]
+        Z = clf.predict_proba(numpy.c_[xx.ravel(), yy.ravel()])[:, 1]
 
         # Put the result into a color plot
         Z = Z.reshape(xx.shape)
