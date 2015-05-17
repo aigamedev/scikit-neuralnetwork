@@ -48,6 +48,7 @@ build
 .coverage.*
 .cache
 .settings
+.hypothesis
 nosetests.xml
 coverage.xml
 *,cover
