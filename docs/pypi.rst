@@ -14,13 +14,13 @@ Features
 
 Thanks to the underlying ``pylearn2`` implementation, this library supports the following neural network features, which are exposed in an intuitive and `well documented <http://scikit-neuralnetwork.readthedocs.org/>`_ API:
 
-* **Activation Types —**
+* **Activation Functions —**
     * Nonlinear: ``Sigmoid``, ``Tanh``, ``Rectifier``, ``Maxout``.
     * Linear: ``Linear``, ``Gaussian``, ``Softmax``.
 * **Layer Types —** ``Convolution`` (greyscale and color, 2D), ``Dense`` (standard, 1D).
 * **Learning Rules —** ``sgd``, ``momentum``, ``nesterov``, ``adadelta``, ``adagrad``, ``rmsprop``.
 * **Regularization —** ``L1``, ``L2`` and ``dropout``.
-* **Dataset Types —** ``numpy.ndarray``, ``scipy.sparse``, coming soon: iterators.
+* **Dataset Formats —** ``numpy.ndarray``, ``scipy.sparse``, coming soon: iterators.
 
 If a feature you need is missing, consider opening a `GitHub Issue <https://github.com/aigamedev/scikit-neuralnetwork/issues>`_ with a detailed explanation about the use case and we'll see what we can do.
 
@@ -28,7 +28,7 @@ If a feature you need is missing, consider opening a `GitHub Issue <https://gith
 Installation & Testing
 ----------------------
 
-To download and setup the latest official release, you do so from PYPI directly::
+To download and setup the latest official release, you can do so from PYPI directly::
 
     > pip install scikit-neuralnetwork
 
