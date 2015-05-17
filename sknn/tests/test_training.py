@@ -1,5 +1,5 @@
 import unittest
-from nose.tools import (assert_in)
+from nose.tools import (assert_in, assert_raises)
 
 import io
 import logging
@@ -57,3 +57,9 @@ class TestTrainingOutput(unittest.TestCase):
         nn.fit(a_in, a_out)
         assert_in("Epoch    Validation Error    Time", self.buf.getvalue())
         assert_in("    1           N/A          ", self.buf.getvalue())
+
+    def test_CaughtRuntimeError(self):
+        nn = MLPC(layers=[L("Linear")], learning_rate=float("nan"), n_iter=1)
+        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,1), dtype=numpy.int32)
+        assert_raises(RuntimeError, nn.fit, a_in, a_out)
+        assert_in("A runtime exception was caught during training.", self.buf.getvalue())
