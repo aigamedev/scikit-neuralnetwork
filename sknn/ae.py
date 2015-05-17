@@ -25,7 +25,7 @@ class Layer(nn.Layer):
                  units=None,
                  cost='msre',
                  tied_weights=False,
-                 corruption_level=None):
+                 corruption_level=0.5):
 
         assert warning is None, \
             "Specify layer parameters as keyword arguments, not positional arguments."

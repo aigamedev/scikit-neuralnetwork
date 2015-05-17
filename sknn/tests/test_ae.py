@@ -21,12 +21,16 @@ class TestAutoEncoder(unittest.TestCase):
 class TestParameters(unittest.TestCase):
     
     def test_CostFunctions(self):
+        X = numpy.zeros((8,4))
         for t in ['msre', 'mbce']:
-            AE(layers=[L("Sigmoid", units=8, cost=t)])
+            ae = AE(layers=[L("Sigmoid", units=8, cost=t)], n_iter=1)
+            ae.fit(X)
 
     def test_LayerTypes(self):
+        X = numpy.zeros((8,4))
         for l in ['autoencoder', 'denoising']:
-            AE(layers=[L("Sigmoid", type=l, units=8)])
+            ae = AE(layers=[L("Sigmoid", type=l, units=8)])
+            ae.fit(X)
 
     def test_UnknownCostFunction(self):
         assert_raises(NotImplementedError, L, "Sigmoid", cost="unknown")
