@@ -425,7 +425,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         #                           "use the Classifier or Regressor instead.")
         pass
 
-    def _create_trainer(self, dataset):
+    def _create_mlp_trainer(self, dataset):
         sgd.log.setLevel(logging.WARNING)
 
         # Aggregate all the dropout parameters into shared dictionaries.
@@ -464,6 +464,9 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
                 l2 =  costs.WeightDecay(layer_decay)
                 self.cost = SumOfCosts([mlp_default_cost,l2])
 
+        return self._create_trainer(dataset, self.cost)
+
+    def _create_trainer(self, dataset, cost):
         logging.getLogger('pylearn2.monitor').setLevel(logging.WARNING)
         if dataset is not None:
             termination_criterion = tc.MonitorBased(
@@ -474,7 +477,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             termination_criterion = None
 
         return sgd.SGD(
-            cost=self.cost,
+            cost=cost,
             batch_size=self.batch_size,
             learning_rule=self._learning_rule,
             learning_rate=self.learning_rate,
@@ -706,7 +709,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
 
         self._create_mlp()
 
-        self.trainer = self._create_trainer(self.vs)
+        self.trainer = self._create_mlp_trainer(self.vs)
         self.trainer.setup(self.mlp, self.ds)
         
 
@@ -769,9 +772,6 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             X = self.ds.view_converter.topo_view_to_design_mat(X)
         self.ds.X, self.ds.y = X, y
 
-        # Bug in PyLearn2 that has some unicode channels, can't sort.
-        self.mlp.monitor.channels = {str(k): v for k, v in self.mlp.monitor.channels.items()}
-
         log.info("Training on dataset of {:,} samples with {:,} total size.".format(num_samples, data_size))
         if self.valid_set:
             X_v, _ = self.valid_set
@@ -785,19 +785,27 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             log.debug("\nEpoch    Validation Error    Time"
                       "\n---------------------------------")
 
+        self._train(self.trainer, self.mlp, self.ds)
+        return self
+
+    def _train(self, trainer, layer, dataset):
+        # Bug in PyLearn2 that has some unicode channels, can't sort.
+        layer.monitor.channels = {str(k): v for k, v in layer.monitor.channels.items()}
+
         for i in itertools.count(1):
             start = time.time()
-            self.trainer.train(dataset=self.ds)
+            trainer.train(dataset=dataset)
 
-            self.mlp.monitor.report_epoch()
-            self.mlp.monitor()
+            layer.monitor.report_epoch()
+            layer.monitor()
 
             if self.verbose:
-                objective = self.mlp.monitor.channels.get('objective', None)
+                objective = layer.monitor.channels.get('objective', None)
                 if objective:
                     avg_valid_error = objective.val_shared.get_value()
                     self.best_valid_error = min(self.best_valid_error, avg_valid_error)
                 else:
+                    # 'objective' channel is only defined with validation set.
                     avg_valid_error = None
 
                 best_valid = bool(self.best_valid_error == avg_valid_error)
@@ -809,7 +817,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
                           time.time() - start
                           ))
 
-            if not self.trainer.continue_learning(self.mlp):
+            if not trainer.continue_learning(self.mlp):
                 log.debug("")
                 log.info("Early termination condition fired at %i iterations.", i)
                 break
@@ -817,8 +825,6 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
                 log.debug("")
                 log.info("Terminating after specified %i total iterations.", i)
                 break
-
-        return self
 
     def _predict(self, X):
         if not self.is_initialized:

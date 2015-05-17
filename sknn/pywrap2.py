@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+# This is a self-contained wrapper for PyLearn2, which contains only the relevant
+# modules for scikit-neuralnetwork's implementation.  This allows us to package
+# ``pylearn2`` along with ``sknn`` in PIP packages, but fallback to the global
+# installation if it's available.
 from __future__ import (absolute_import, unicode_literals, print_function)
 
 import os
@@ -8,7 +12,7 @@ import sys
 # Setup self-contained distributions for PIP packaged PyLearn2.
 try:
     import pylearn2
-except ImportError:    
+except ImportError:
     pwd = os.path.dirname(__file__)
     if os.path.exists(os.path.join(pwd, 'pylearn2')):
         sys.path.insert(0, pwd)
