@@ -643,7 +643,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         inputs = self.mlp.get_input_space().make_theano_batch()
         self.f = theano.function([inputs], self.mlp.fprop(inputs))
 
-    def _create_matrix_input(self, X, y):
+    def _create_matrix_input(self, X, y=None):
         if self.is_convolution:
             # Using `b01c` arrangement of data, see this for details:
             #   http://benanne.github.io/2014/04/03/faster-convolutions-in-theano.html
@@ -653,10 +653,9 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             view = input_space.get_origin_batch(X.shape[0])
             return datasets.DenseDesignMatrix(topo_view=view, y=y), input_space
         else:
-            if all([isinstance(a, numpy.ndarray) for a in (X, y)]):
+            if all([isinstance(a, numpy.ndarray) for a in (X, y) if a is not None]):
                 InputSpace = space.VectorSpace if self.debug else FastVectorSpace
-                input_space = InputSpace(X.shape[-1])
-                return datasets.DenseDesignMatrix(X=X, y=y), input_space
+                return datasets.DenseDesignMatrix(X=X, y=y), InputSpace(X.shape[-1])
             else:
                 return SparseDesignMatrix(X=X, y=y), None
 
