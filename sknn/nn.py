@@ -410,20 +410,21 @@ class NeuralNetwork(object):
         self._setup()
 
     def _setup(self):
-        raise NotImplementedError("MultiLayerPerceptron is an abstract class; "
-                                  "use the Classifier or Regressor instead.")
+        raise NotImplementedError("NeuralNetwork is an abstract class; "
+                                  "use the mlp.Classifier or mlp.Regressor instead.")
 
     @property
     def is_initialized(self):
         """Check if the neural network was setup already.
         """
-        return None # not (self.mlp is None or self.f is None)
+        raise NotImplementedError("NeuralNetwork is an abstract class; "
+                                  "use the mlp.Classifier or mlp.Regressor instead.")
 
     @property
     def is_convolution(self):
         """Check whether this neural network includes convolution layers.
         """
-        return False
+        return isinstance(self.layers[0], Convolution)
 
     def _create_matrix_input(self, X, y=None):
         if self.is_convolution:

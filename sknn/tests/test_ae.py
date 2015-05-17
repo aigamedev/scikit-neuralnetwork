@@ -1,6 +1,5 @@
 import unittest
-from nose.tools import (assert_false, assert_raises, assert_true,
-                        assert_equal, assert_in)
+from nose.tools import (assert_raises)
 
 import numpy
 
@@ -17,3 +16,20 @@ class TestAutoEncoder(unittest.TestCase):
         X = numpy.zeros((8,4))
         ae = AE(layers=[L("Sigmoid", units=8)], n_iter=1)
         ae.fit(X)
+
+
+class TestParameters(unittest.TestCase):
+    
+    def test_CostFunctions(self):
+        for t in ['msre', 'mbce']:
+            AE(layers=[L("Sigmoid", units=8, cost=t)])
+
+    def test_LayerTypes(self):
+        for l in ['autoencoder', 'denoising']:
+            AE(layers=[L("Sigmoid", type=l, units=8)])
+
+    def test_UnknownCostFunction(self):
+        assert_raises(NotImplementedError, L, "Sigmoid", cost="unknown")
+
+    def test_UnknownType(self):
+        assert_raises(NotImplementedError, L, "Sigmoid", type="unknown")

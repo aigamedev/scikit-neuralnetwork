@@ -33,7 +33,7 @@ class Layer(nn.Layer):
         if type not in ['denoising', 'autoencoder']:
             raise NotImplementedError("AutoEncoder layer type `%s` is not implemented." % type)
         if cost not in ['msre', 'mbce']:
-            raise NotImplementedError("Error type '%s' is not implemented." % self.cost)
+            raise NotImplementedError("Error type '%s' is not implemented." % cost)
 
         self.name = name
         self.type = type

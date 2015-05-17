@@ -302,12 +302,6 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         """
         return not (self.mlp is None or self.f is None)
 
-    @property
-    def is_convolution(self):
-        """Check whether this neural network includes convolution layers.
-        """
-        return isinstance(self.layers[0], Convolution)
-
     def __getstate__(self):
         assert self.mlp is not None,\
             "The neural network has not been initialized."
