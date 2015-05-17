@@ -28,6 +28,7 @@ class ansi:
     BOLD = '\033[1;97m'
     WHITE = '\033[0;97m'
     BLUE = '\033[0;94m'
+    RED = '\033[0;31m'
     GREEN = '\033[0;32m'
     ENDC = '\033[0m'
 
@@ -751,7 +752,20 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
             assert layer.get_biases().shape == biases.shape
             layer.set_biases(biases)
 
-    def _fit(self, X, y, test=None):
+    def _fit(self, *data, **extra):
+        try:
+            return self._train(*data, **extra)
+        except RuntimeError as e:
+            log.error("\n{}{}{}\n\n{}\n".format(
+                ansi.RED,
+                "A runtime exception was caught during training. This likely occurred due to\n"
+                "a divergence of the SGD algorithm, and NaN floats were found by PyLearn2.",
+                ansi.ENDC,
+                "Try setting the `learning_rate` 10x lower to resolve this, for example:\n"
+                "    learning_rate=%f" % (self.learning_rate * 0.1)))
+            raise e
+
+    def _train(self, X, y, test=None):
         assert X.shape[0] == y.shape[0],\
             "Expecting same number of input and output samples."
         num_samples, data_size = X.shape[0], X.size+y.size
@@ -931,7 +945,6 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
             model, in the same order as the classes.
         """
         proba = super(Classifier, self)._predict(X)
-
         return proba / proba.sum(1, keepdims=True)
 
     def predict(self, X):
