@@ -18,7 +18,8 @@ Thanks to the underlying ``pylearn2`` implementation, this library supports the 
     * Nonlinear: ``Sigmoid``, ``Tanh``, ``Rectifier``, ``Maxout``.
     * Linear: ``Linear``, ``Gaussian``, ``Softmax``.
 * **Layer Types —** ``Convolution`` (greyscale and color, 2D), ``Dense`` (standard, 1D).
-* **Learning Rules —** ``sgd``, ``momentum``, ``nesterov``, ``adadelta``, ``rmsprop``.
+* **Learning Rules —** ``sgd``, ``momentum``, ``nesterov``, ``adadelta``, ``adagrad``, ``rmsprop``.
+* **Regularization —** ``L1``, ``L2`` and ``dropout``.
 * **Dataset Types —** ``numpy.ndarray``, ``scipy.sparse``, coming soon: iterators.
 
 If a feature you need is missing, consider opening a `GitHub Issue <https://github.com/aigamedev/scikit-neuralnetwork/issues>`_ with a detailed explanation about the use case and we'll see what we can do.
@@ -27,7 +28,7 @@ If a feature you need is missing, consider opening a `GitHub Issue <https://gith
 Installation & Testing
 ----------------------
 
-If you want to use the latest official release, you can get it from PYPI directly::
+To download and setup the latest official release, you do so from PYPI directly::
 
     > pip install scikit-neuralnetwork
 
@@ -63,8 +64,8 @@ The `generated documentation <http://scikit-neuralnetwork.readthedocs.org/>`_ as
 
 |Documentation Status| |Code Coverage| |License Type| |Project Stars|
 
-.. |Documentation Status| image:: https://readthedocs.org/projects/scikit-neuralnetwork/badge/?version=latest
-    :target: http://scikit-neuralnetwork.readthedocs.org/
+.. |Documentation Status| image:: https://readthedocs.org/projects/scikit-neuralnetwork/badge/?version=stable
+    :target: http://scikit-neuralnetwork.readthedocs.org/en/stable/
 
 .. |Code Coverage| image:: https://coveralls.io/repos/aigamedev/scikit-neuralnetwork/badge.svg?branch=master
     :target: https://coveralls.io/r/aigamedev/scikit-neuralnetwork?branch=master

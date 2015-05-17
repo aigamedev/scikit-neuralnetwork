@@ -18,7 +18,7 @@ import sklearn.pipeline
 import sklearn.preprocessing
 import sklearn.cross_validation
 
-from .pywrap2 import (datasets, space, sgd, mlp, maxout, costs, dropout,SumOfCosts)
+from .pywrap2 import (datasets, space, sgd, mlp, maxout, cost, mlp_cost, dropout)
 from .pywrap2 import learning_rule as lr, termination_criteria as tc
 
 from .dataset import SparseDesignMatrix, FastVectorSpace
@@ -459,11 +459,11 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
         if len(layer_decay) > 0:
             mlp_default_cost = self.mlp.get_default_cost()
             if self.regularize == 'L1':
-                l1 = costs.L1WeightDecay(layer_decay)
-                self.cost = SumOfCosts([mlp_default_cost,l1])
+                l1 = mlp_cost.L1WeightDecay(layer_decay)
+                self.cost = cost.SumOfCosts([mlp_default_cost,l1])
             else: # Default is 'L2'.
-                l2 =  costs.WeightDecay(layer_decay)
-                self.cost = SumOfCosts([mlp_default_cost,l2])
+                l2 =  mlp_cost.WeightDecay(layer_decay)
+                self.cost = cost.SumOfCosts([mlp_default_cost,l2])
 
         logging.getLogger('pylearn2.monitor').setLevel(logging.WARNING)
         if dataset is not None:
