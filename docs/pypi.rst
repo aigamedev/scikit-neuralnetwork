@@ -25,8 +25,8 @@ Thanks to the underlying ``pylearn2`` implementation, this library supports the 
 If a feature you need is missing, consider opening a `GitHub Issue <https://github.com/aigamedev/scikit-neuralnetwork/issues>`_ with a detailed explanation about the use case and we'll see what we can do.
 
 
-Installation & Testing
-----------------------
+Installation
+------------
 
 To download and setup the latest official release, you can do so from PYPI directly::
 
@@ -34,7 +34,7 @@ To download and setup the latest official release, you can do so from PYPI direc
 
 This contains its own packaged version of ``pylearn2`` from the date of the release (and tag) but will use any globally installed version if available.
 
-Then, you can run the samples and benchmarks available in the ``examples/`` folder.
+Then, you can run the tests using ``nosetests -v sknn``, and other samples or benchmarks are available in the ``examples/`` folder.
 
 
 Getting Started
