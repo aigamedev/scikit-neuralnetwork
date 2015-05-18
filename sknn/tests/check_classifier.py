@@ -4,11 +4,16 @@ from nose.tools import (assert_equals, assert_true)
 from hypothesis import given
 import hypothesis.strategies as S
 
-from sknn.mlp import Classifier
+from sknn.mlp import Classifier, Layer
+
+LayerStrategy = S.builds(
+    Layer,
+    S.one_of(["Rectifier", "Sigmoid", "Tanh"])
+)
 
 ClassifierStrategy = S.builds(
     Classifier,
-    S.lists(None, max_size=0))
+    S.lists(LayerStrategy, min_size=1, max_size=5))
 
 
 class TestEncoding(unittest.TestCase):
