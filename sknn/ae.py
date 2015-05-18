@@ -4,11 +4,7 @@ import itertools
 
 import sklearn
 
-from pylearn2.models import autoencoder
-from pylearn2.datasets.transformer_dataset import TransformerDataset
-from pylearn2.blocks import StackedBlocks
-from pylearn2.costs import autoencoder as ae_costs
-from pylearn2.corruption import GaussianCorruptor
+from pywrap2 import (autoencoder, transformer_dataset, blocks, ae_costs, corruption)
 
 from . import nn
 
@@ -157,7 +153,8 @@ class AutoEncoder(nn.NeuralNetwork, sklearn.base.TransformerMixin):
                                            layer.tied_weights,
                                            rng=self.random_state)
         if layer.type == 'denoising':
-            corruptor = GaussianCorruptor(layer.corruption_level, self.random_state)
+            corruptor = corruption.GaussianCorruptor(layer.corruption_level,
+                                                     self.random_state)
             return autoencoder.DenoisingAutoencoder(corruptor,
                                                     size,
                                                     layer.units,
@@ -172,7 +169,7 @@ class AutoEncoder(nn.NeuralNetwork, sklearn.base.TransformerMixin):
         """
         trainsets = [ds]
         for i, l in enumerate(layers):
-            stack = layers[0] if i == 0 else StackedBlocks(layers[0:i+1])
-            trds = TransformerDataset(raw=ds, transformer=stack)
+            stack = layers[0] if i == 0 else blocks.StackedBlocks(layers[0:i+1])
+            trds = transformer_dataset.TransformerDataset(raw=ds, transformer=stack)
             trainsets.append(trds)
         return trainsets
