@@ -44,16 +44,15 @@ Here's how to setup such a pipeline with a multi-layer perceptron as a classifie
 You can then use the pipeline as you would the neural network, or any other standard API from scikit-learn.
 
 
-
 Grid Search
 -----------
 
-In scikit-learn, you can use a ``GridSearchCV`` to optimize your neural network's parameters automatically, both the top-level parameters and the parameters within the layers.  For example, assuming you have your MLP constructed as in the :ref:`Regression` example in the local variable called ``nn``, the layers are named automatically so you can refer to them as follows:
+In scikit-learn, you can use a ``GridSearchCV`` to optimize your neural network's hyper-parameters automatically, both the top-level parameters and the parameters within the layers.  For example, assuming you have your MLP constructed as in the :ref:`Regression` example in the local variable called ``nn``, the layers are named automatically so you can refer to them as follows:
 
     * ``hidden0``
     * ``hidden1``
     * ...
-    * ``output2``
+    * ``output``
      
 Keep in mind you can manually specify the ``name`` of any ``Layer`` in the constructor if you don't want the automatically assigned name.  Then, you can use sklearn's hierarchical parameters to perform a grid search over those nested parameters too: 
 
@@ -68,3 +67,22 @@ Keep in mind you can manually specify the ``name`` of any ``Layer`` in the const
     gs.fit(a_in, a_out)
     
 This will search through the listed ``learning_rate`` values, the number of hidden units and the activation type for that layer too, and find the best combination of parameters.
+
+
+Randomized Search
+-----------------
+
+In the cases when you have large numbers of hyper-parameters that you want to try automatically to find a good combination, you can use a randomized search as follows:
+
+.. code:: python
+
+    from scipy import stats
+    from sklearn.grid_search import RandomizedSearchCV
+
+    rs = RandomizedSearchCV(nn, param_grid={
+        learning_rate: stats.uniform(0.001, 0.05),
+        'hidden0__units': stats.randint(4, 12),
+        'hidden0__type': ["Rectifier", "Sigmoid", "Tanh"]})
+    rs.fit(a_in, a_out)
+
+This works for both :class:`sknn.mlp.Classifier` and :class:`sknn.mlp.Regressor`.

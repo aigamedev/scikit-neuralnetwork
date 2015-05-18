@@ -48,9 +48,12 @@ class Layer(object):
 
     name: str, optional
         You optionally can specify a name for this layer, and its parameters
-        will then be accessible to `scikit-learn` via a nested sub-object.  For example,
-        if name is set to `hidden1`, then the parameter `hidden1__units` from the network
-        is bound to this layer's `units` variable.
+        will then be accessible to scikit-learn via a nested sub-object.  For example,
+        if name is set to ``layer1``, then the parameter ``layer1__units`` from the network
+        is bound to this layer's ``units`` variable.
+
+        The name defaults to ``hiddenN`` where N is the integer index of that layer, and the
+        final layer is always ``output`` without an index.
 
     units: int
         The number of units (also known as neurons) in this layer.  This applies to all
@@ -353,8 +356,7 @@ class MultiLayerPerceptron(sklearn.base.BaseEstimator):
 
             # Layer names are optional, if not specified then generate one.
             if layer.name is None:
-                label = "hidden" if i < len(layers)-1 else "output"
-                layer.name = "%s%i" % (label, i)
+                layer.name = ("hidden%i" % i) if i < len(layers)-1 else "output"
 
             # sklearn may pass layers in as additional named parameters, remove them.
             if layer.name in params:
