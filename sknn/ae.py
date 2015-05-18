@@ -66,7 +66,7 @@ class AutoEncoder(nn.NeuralNetwork, sklearn.base.TransformerMixin):
         trainers = [self._create_trainer(d, l.get_cost()) for d, l in zip(datasets, self.layers)]
         for l, t, d in zip(ae_layers, trainers, datasets):
             t.setup(l, d)
-            self._train(t, l, d)
+            self._train_layer(t, l, d)
 
     def _create_ae_layer(self, size, layer):
         if layer.type == 'autoencoder':

@@ -10,7 +10,7 @@ class TestNestedParameters(unittest.TestCase):
     def test_GetParamsIncludesLayers(self):
         nn = MLPR(layers=[L("Linear", units=123)])
         p = nn.get_params()
-        assert_in('output0', p)
+        assert_in('output', p)
 
     def test_GetParamsMissingLayer(self):
         nn = MLPR(layers=[L("Linear", units=123)])
@@ -19,9 +19,9 @@ class TestNestedParameters(unittest.TestCase):
 
     def test_SetParamsDoubleUnderscore(self):
         nn = MLPR(layers=[L("Linear", units=123)])
-        nn.set_params(output0__units=456)
+        nn.set_params(output__units=456)
         assert_equal(nn.layers[0].units, 456)
 
     def test_SetParamsValueError(self):
         nn = MLPR(layers=[L("Linear")])
-        assert_raises(ValueError, nn.set_params, output0__range=1.0)
+        assert_raises(ValueError, nn.set_params, output__range=1.0)

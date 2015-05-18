@@ -18,7 +18,7 @@ import sklearn.pipeline
 import sklearn.preprocessing
 import sklearn.cross_validation
 
-from .pywrap2 import (datasets, space, sgd, mlp, maxout, costs, dropout,SumOfCosts)
+from .pywrap2 import (datasets, space, sgd, mlp, maxout, cost, mlp_cost, dropout)
 from .pywrap2 import learning_rule as lr, termination_criteria as tc
 
 from .nn import NeuralNetwork, Layer, Convolution, ansi
@@ -77,11 +77,11 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         if len(layer_decay) > 0:
             mlp_default_cost = self.mlp.get_default_cost()
             if self.regularize == 'L1':
-                l1 = costs.L1WeightDecay(layer_decay)
-                self.cost = SumOfCosts([mlp_default_cost,l1])
+                l1 = mlp_cost.L1WeightDecay(layer_decay)
+                self.cost = cost.SumOfCosts([mlp_default_cost,l1])
             else: # Default is 'L2'.
-                l2 =  costs.WeightDecay(layer_decay)
-                self.cost = SumOfCosts([mlp_default_cost,l2])
+                l2 =  mlp_cost.WeightDecay(layer_decay)
+                self.cost = cost.SumOfCosts([mlp_default_cost,l2])
 
         return self._create_trainer(dataset, self.cost)
 
@@ -331,7 +331,20 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
             assert layer.get_biases().shape == biases.shape
             layer.set_biases(biases)
 
-    def _fit(self, X, y, test=None):
+    def _fit(self, *data, **extra):
+        try:
+            return self._train(*data, **extra)
+        except RuntimeError as e:
+            log.error("\n{}{}{}\n\n{}\n".format(
+                ansi.RED,
+                "A runtime exception was caught during training. This likely occurred due to\n"
+                "a divergence of the SGD algorithm, and NaN floats were found by PyLearn2.",
+                ansi.ENDC,
+                "Try setting the `learning_rate` 10x lower to resolve this, for example:\n"
+                "    learning_rate=%f" % (self.learning_rate * 0.1)))
+            raise e
+
+    def _train(self, X, y, test=None):
         assert X.shape[0] == y.shape[0],\
             "Expecting same number of input and output samples."
         num_samples, data_size = X.shape[0], X.size+y.size
@@ -362,7 +375,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
             log.debug("\nEpoch    Validation Error    Time"
                       "\n---------------------------------")
 
-        self._train(self.trainer, self.mlp, self.ds)
+        self._train_layer(self.trainer, self.mlp, self.ds)
         return self
 
     def _predict(self, X):
@@ -478,7 +491,6 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
             model, in the same order as the classes.
         """
         proba = super(Classifier, self)._predict(X)
-
         return proba / proba.sum(1, keepdims=True)
 
     def predict(self, X):
