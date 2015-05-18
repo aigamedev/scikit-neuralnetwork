@@ -27,8 +27,9 @@ from .dataset import SparseDesignMatrix, FastVectorSpace
 class ansi:
     BOLD = '\033[1;97m'
     WHITE = '\033[0;97m'
-    BLUE = '\033[0;94m'
+    RED = '\033[0;31m'
     GREEN = '\033[0;32m'
+    BLUE = '\033[0;94m'
     ENDC = '\033[0m'
 
 
