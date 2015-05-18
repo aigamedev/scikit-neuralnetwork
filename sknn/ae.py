@@ -53,7 +53,7 @@ class Layer(nn.Layer):
 class AutoEncoder(nn.NeuralNetwork, sklearn.base.TransformerMixin):
 
     def _setup(self):
-        pass
+        self.dca = None
 
     def fit(self, X):
         input_size = [X.shape[1]] + [l.units for l in self.layers[:-1]]
@@ -67,6 +67,13 @@ class AutoEncoder(nn.NeuralNetwork, sklearn.base.TransformerMixin):
         for l, t, d in zip(ae_layers, trainers, datasets):
             t.setup(l, d)
             self._train_layer(t, l, d)
+
+        self.dca = autoencoder.DeepComposedAutoencoder(ae_layers)
+        return self
+
+    def transform(self, X):
+        assert self.dca is not None
+        return self.dca.perform(X)
 
     def _create_ae_layer(self, size, layer):
         if layer.type == 'autoencoder':
