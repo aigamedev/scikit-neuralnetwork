@@ -111,10 +111,10 @@ class TestClassifierInterface(unittest.TestCase):
         nn = MLPC(layers=[L("Gaussian")])
         r = repr(nn)
         assert_equal(str, type(r))
-        assert_in("sknn.mlp.Layer `Gaussian`", r)
+        assert_in("sknn.nn.Layer `Gaussian`", r)
 
     def test_RepresentationConvolution(self):
         nn = MLPC(layers=[C("Rectifier")])
         r = repr(nn)
         assert_equal(str, type(r))
-        assert_in("sknn.mlp.Convolution `Rectifier`", r)
+        assert_in("sknn.nn.Convolution `Rectifier`", r)
