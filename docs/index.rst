@@ -16,7 +16,8 @@ Module Reference
 .. toctree::
     :maxdepth: 2
 
-    mlp
+    module_mlp
+    madule_ae
 
 
 User Guide
