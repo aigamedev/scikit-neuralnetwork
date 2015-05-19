@@ -21,11 +21,9 @@ class Mock(MagicMock):
             return object
         return Mock()
 
-MOCK_MODULES = ['numpy', 'theano', 'sklearn.cross_validation',
-                'sklearn', 'sklearn.base', 'sklearn.pipeline', 'sklearn.preprocessing',
-                'pylearn2.termination_criteria', 'pylearn2.datasets', 'pylearn2.models',
-                'pylearn2.training_algorithms', 'pylearn2.costs.mlp.dropout',
-                'pylearn2.space', 'pylearn2.training_algorithms.learning_rule']
+MOCK_MODULES = ['numpy', 'theano', 'pywrap2',
+                'sklearn', 'sklearn.base', 'sklearn.pipeline',
+                'sklearn.cross_validation', 'sklearn.preprocessing']
 
 for fullname in MOCK_MODULES:
     segments = []
