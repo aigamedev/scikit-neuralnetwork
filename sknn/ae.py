@@ -1,14 +1,19 @@
+# -*- coding: utf-8 -*-
+from __future__ import (absolute_import, unicode_literals, print_function)
+
+__all__ = ['AutoEncoder', 'Layer']
+
 import time
 import logging
 import itertools
 
+log = logging.getLogger('sknn')
+
+
 import sklearn
 
-from pywrap2 import (autoencoder, transformer_dataset, blocks, ae_costs, corruption)
-
+from .pywrap2 import (autoencoder, transformer_dataset, blocks, ae_costs, corruption)
 from . import nn
-
-log = logging.getLogger('sknn')
 
 
 class Layer(nn.Layer):
