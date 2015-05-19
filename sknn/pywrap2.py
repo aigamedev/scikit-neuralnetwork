@@ -19,10 +19,10 @@ except ImportError:
 
 
 # This wrapper module can only contain 'leaf' modules.
-from pylearn2 import (space, datasets, blocks, corruption)
-from pylearn2.datasets import transformer_dataset
-from pylearn2 import termination_criteria
+from pylearn2 import (space, datasets, blocks, corruption, utils, termination_criteria)
+from pylearn2.datasets import (transformer_dataset, dataset)
+from pylearn2.utils import (iteration)
 from pylearn2.models import (mlp, maxout, autoencoder)
 from pylearn2.training_algorithms import (sgd, learning_rule)
 from pylearn2.costs import (mlp as mlp_cost, autoencoder as ae_costs, cost)
-from pylearn2.costs.mlp import dropout
+from pylearn2.costs.mlp import (dropout)

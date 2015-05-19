@@ -21,6 +21,7 @@ To setup the library to use your GPU or CPU explicitly in 32-bit or 64-bit mode,
 WARNING: This will only work if your program has not yet imported the ``theano`` module, due to the way the library is designed.  If ``THEANO_FLAGS`` are set on the command-line, they are not overwridden.
 
 
+.. _example-pipeline:
 
 Pipeline
 --------
@@ -47,7 +48,7 @@ You can then use the pipeline as you would the neural network, or any other stan
 Grid Search
 -----------
 
-In scikit-learn, you can use a ``GridSearchCV`` to optimize your neural network's hyper-parameters automatically, both the top-level parameters and the parameters within the layers.  For example, assuming you have your MLP constructed as in the :ref:`Regression` example in the local variable called ``nn``, the layers are named automatically so you can refer to them as follows:
+In scikit-learn, you can use a ``GridSearchCV`` to optimize your neural network's hyper-parameters automatically, both the top-level parameters and the parameters within the layers.  For example, assuming you have your MLP constructed as in the :ref:`example-regression` example in the local variable called ``nn``, the layers are named automatically so you can refer to them as follows:
 
     * ``hidden0``
     * ``hidden1``

@@ -1,10 +1,12 @@
 Simple Examples
 ===============
 
+.. _example-regression:
+
 Regression
 ----------
 
-Assuming your data is in the form of ``numpy.ndarray`` stored in the variables ``X_train`` and ``y_train`` you can train a :class:`sknn.mlp.Regressor` neural network.  The input and output arrays are continuous values in this case, but it's best if you normalize or standardize your inputs to the ``[0..1]`` or ``[-1..1]`` range. (See the :ref:`Pipeline` example below.)
+Assuming your data is in the form of ``numpy.ndarray`` stored in the variables ``X_train`` and ``y_train`` you can train a :class:`sknn.mlp.Regressor` neural network.  The input and output arrays are continuous values in this case, but it's best if you normalize or standardize your inputs to the ``[0..1]`` or ``[-1..1]`` range. (See the :ref:`example-pipeline` example below.)
 
 .. code:: python
 
@@ -29,6 +31,8 @@ Then you can use the trained NN as follows:
 This will return a new ``numpy.ndarray`` with the results of the feed-forward simulation of the network and the estimates given the input features.
 
 
+.. _example-classification:
+
 Classification
 --------------
 
@@ -46,7 +50,7 @@ If your data in ``numpy.ndarray`` contains integer labels as outputs and you wan
         n_iter=25)
     nn.fit(X_train, y_train)
 
-It's also a good idea to normalize or standardize your data in this case too, for example using a :ref:`Pipeline` below.  The code here will train for 25 iterations.  Note that a ``Softmax`` output layer activation type is used here, and it's recommended as a default for classification problems.
+It's also a good idea to normalize or standardize your data in this case too, for example using a :ref:`example-pipeline` below.  The code here will train for 25 iterations.  Note that a ``Softmax`` output layer activation type is used here, and it's recommended as a default for classification problems.
 
 .. code:: python
 
