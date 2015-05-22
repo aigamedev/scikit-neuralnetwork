@@ -42,7 +42,6 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         self.trainer = None
         self.cost = None
         self.train_set = None
-        self.best_valid_error = float("inf")
 
     def _create_mlp_trainer(self, dataset):
         sgd.log.setLevel(logging.WARNING)

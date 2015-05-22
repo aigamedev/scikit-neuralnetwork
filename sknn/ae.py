@@ -12,7 +12,7 @@ log = logging.getLogger('sknn')
 
 import sklearn
 
-from .pywrap2 import (autoencoder, transformer_dataset, blocks, ae_costs, corruption)
+from .pywrap2 import (autoencoder, sgd, transformer_dataset, blocks, ae_costs, corruption)
 from . import nn
 
 
@@ -115,6 +115,19 @@ class AutoEncoder(nn.NeuralNetwork, sklearn.base.TransformerMixin):
         self : object
             Returns this instance.
         """
+        sgd.log.setLevel(logging.WARNING)
+        num_samples, data_size = X.shape[0], X.size
+
+        log.info("Training on dataset of {:,} samples with {:,} total size.".format(num_samples, data_size))
+        if self.n_iter:
+            log.debug("  - Terminating loop after {} total iterations.".format(self.n_iter))
+        if self.n_stable:
+            log.debug("  - Early termination after {} stable iterations.".format(self.n_stable))
+
+        if self.verbose:
+            log.debug("\nEpoch    Validation Error    Time"
+                      "\n---------------------------------")
+
         input_size = [X.shape[1]] + [l.units for l in self.layers[:-1]]
         ae_layers = []
         for v, l in zip(input_size, self.layers):
@@ -146,6 +159,11 @@ class AutoEncoder(nn.NeuralNetwork, sklearn.base.TransformerMixin):
         """
         assert self.dca is not None, "The auto-encoder has not been trained yet."
         return self.dca.perform(X)
+
+    def transfer(self, nn):
+        nn.weights = []
+        for a in self.dca.autoencoders:
+            nn.weights.append((a.weights.get_value(), a.hidbias.get_value()))
 
     def _create_ae_layer(self, size, layer):
         """Construct an internal pylearn2 layer based on the requested layer type.
