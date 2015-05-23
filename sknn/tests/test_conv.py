@@ -9,11 +9,21 @@ from sknn.mlp import Layer as L, Convolution as C
 
 class TestConvolution(unittest.TestCase):
 
-    def _run(self, nn):
-        a_in, a_out = numpy.zeros((8,32,16,1)), numpy.zeros((8,4))
+    def _run(self, nn, a_in=None):
+        if a_in is None:
+            a_in = numpy.zeros((8,32,16,1))
+        a_out = numpy.zeros((8,4))
         nn.fit(a_in, a_out)
         a_test = nn.predict(a_in)
         assert_equal(type(a_out), type(a_in))
+
+    def test_MissingLastDim(self):
+        self._run(MLPR(
+            layers=[
+                C("Tanh", channels=4, kernel_shape=(3,3)),
+                L("Linear")],
+            n_iter=1),
+            a_in=numpy.zeros((8,32,16)))
 
     def test_SquareKernel(self):
         self._run(MLPR(
@@ -39,7 +49,7 @@ class TestConvolution(unittest.TestCase):
     def test_VerticalVerbose(self):
         self._run(MLPR(
             layers=[
-                C("Rectifier", channels=4, kernel_shape=(16,1)),
+                C("Sigmoid", channels=4, kernel_shape=(16,1)),
                 L("Linear")],
             n_iter=1, verbose=1, valid_size=0.1))
 
@@ -53,7 +63,7 @@ class TestConvolution(unittest.TestCase):
     def test_ValidationSet(self):
         self._run(MLPR(
             layers=[
-                C("Rectifier", channels=4, kernel_shape=(3,3)),
+                C("Tanh", channels=4, kernel_shape=(3,3)),
                 L("Linear")],
             n_iter=1,
             valid_size=0.5))
@@ -62,8 +72,8 @@ class TestConvolution(unittest.TestCase):
         self._run(MLPR(
             layers=[
                 C("Rectifier", channels=6, kernel_shape=(3,3)),
-                C("Rectifier", channels=4, kernel_shape=(5,5)),
-                C("Rectifier", channels=8, kernel_shape=(3,3)),
+                C("Sigmoid", channels=4, kernel_shape=(5,5)),
+                C("Tanh", channels=8, kernel_shape=(3,3)),
                 L("Linear")],
             n_iter=1))
 

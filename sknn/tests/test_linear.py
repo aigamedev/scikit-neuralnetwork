@@ -32,6 +32,16 @@ class TestLinearNetwork(unittest.TestCase):
         self.nn.fit(a_in, a_out)
         assert_true(self.nn.is_initialized)
 
+    def test_ResizeInputFrom4D(self):
+        a_in, a_out = numpy.zeros((8,4,4,1)), numpy.zeros((8,4))
+        self.nn.fit(a_in, a_out)
+        assert_true(self.nn.is_initialized)
+
+    def test_ResizeInputFrom3D(self):
+        a_in, a_out = numpy.zeros((8,4,4)), numpy.zeros((8,4))
+        self.nn.fit(a_in, a_out)
+        assert_true(self.nn.is_initialized)
+
     def test_FitWrongSize(self):
         a_in, a_out = numpy.zeros((7,16)), numpy.zeros((9,4))
         assert_raises(AssertionError, self.nn.fit, a_in, a_out)
