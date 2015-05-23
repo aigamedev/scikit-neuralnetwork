@@ -3,7 +3,6 @@ from __future__ import (absolute_import, unicode_literals, print_function)
 
 import sys
 import time
-import logging
 import numpy as np
 
 if len(sys.argv) == 1:
@@ -12,8 +11,6 @@ if len(sys.argv) == 1:
 
 np.set_printoptions(precision=4)
 np.set_printoptions(suppress=True)
-logging.basicConfig(format="%(message)s", level=logging.DEBUG, stream=sys.stdout)
-
 
 from sklearn.base import clone
 from sklearn.cross_validation import train_test_split
@@ -52,8 +49,7 @@ if 'sknn' in sys.argv:
         valid_size=0.0,
         n_stable=10,
         n_iter=10,
-        verbose=1,
-    )
+        verbose=True)
     classifiers.append(('sknn.mlp', clf))
 
 if 'lasagne' in sys.argv:
@@ -83,8 +79,7 @@ if 'lasagne' in sys.argv:
         batch_iterator_train=BatchIterator(batch_size=25),
 
         max_epochs=10,
-        verbose=1
-        )
+        verbose=1)
     classifiers.append(('nolearn.lasagne', clf))
 
 

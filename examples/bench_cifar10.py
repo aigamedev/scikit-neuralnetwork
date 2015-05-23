@@ -1,18 +1,28 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, unicode_literals, print_function)
 
+import sys
 import pickle
+
 import numpy as np
 
+
 def load(name):
+    # Pickle module isn't backwards compatible. Hack so it works:
+    compat = {'encoding': 'latin1'} if sys.version[0] == 3 else {}
+
     print("\t"+name)
     try:
         with open(name, 'rb') as f:
-            return pickle.load(f, encoding='latin1')
+            return pickle.load(f, **compat)
     except IOError:
         import gzip
         with gzip.open(name+'.gz', 'rb') as f:
-            return pickle.load(f, encoding='latin1')
+            return pickle.load(f, **compat)
+
+
+# Download and extract Python data for CIFAR10 manually from here:
+#     http://www.cs.toronto.edu/~kriz/cifar.html
 
 print("Loading...")
 dataset1 = load('data_batch_1')
@@ -31,9 +41,6 @@ labels_test = np.array(dataset3['labels'])
 n_feat = data_train.shape[1]
 n_targets = labels_train.max() + 1
 
-import sys
-import logging
-logging.basicConfig(format="%(message)s", level=logging.DEBUG, stream=sys.stdout)
 
 from sknn import mlp
 net = mlp.Classifier(
@@ -45,7 +52,7 @@ net = mlp.Classifier(
     n_stable=10,
     learning_rate=0.001,
     valid_size=0.1,
-    verbose=1)
+    verbose=True)
 net.fit(data_train, labels_train)
 
 from sklearn.metrics import classification_report
