@@ -32,6 +32,16 @@ class TestLinearNetwork(unittest.TestCase):
         self.nn.fit(a_in, a_out)
         assert_true(self.nn.is_initialized)
 
+    def test_ResizeInputFrom4D(self):
+        a_in, a_out = numpy.zeros((8,4,4,1)), numpy.zeros((8,4))
+        self.nn.fit(a_in, a_out)
+        assert_true(self.nn.is_initialized)
+
+    def test_ResizeInputFrom3D(self):
+        a_in, a_out = numpy.zeros((8,4,4)), numpy.zeros((8,4))
+        self.nn.fit(a_in, a_out)
+        assert_true(self.nn.is_initialized)
+
     def test_FitWrongSize(self):
         a_in, a_out = numpy.zeros((7,16)), numpy.zeros((9,4))
         assert_raises(AssertionError, self.nn.fit, a_in, a_out)
@@ -87,10 +97,11 @@ class TestSerializedNetwork(TestLinearNetwork):
             assert_equal(type(w), numpy.ndarray)
             assert_equal(type(b), numpy.ndarray)
 
-    def test_FitAutoInitialize(self):
-        # Override base class test, you currently can't re-train a network that
-        # was serialized and deserialized.
-        pass
+    # Override base class test, you currently can't re-train a network that
+    # was serialized and deserialized.
+    def test_FitAutoInitialize(self): pass
+    def test_ResizeInputFrom4D(self): pass
+    def test_ResizeInputFrom3D(self): pass
 
     def test_PredictNoOutputUnitsAssertion(self):
         # Override base class test, this is not initialized but it
