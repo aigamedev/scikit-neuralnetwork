@@ -4,6 +4,7 @@ from __future__ import (absolute_import, unicode_literals, print_function)
 __all__ = ['Regressor', 'Classifier', 'Layer', 'Convolution']
 
 import os
+import sys
 import time
 import logging
 import itertools
@@ -316,8 +317,10 @@ class NeuralNetwork(object):
 
     loss_type: string, optional
         The cost function to use when training the network.  There are two valid options:
+
             * ``mse`` — Use mean squared error, for learning to predict the mean of the data.
             * ``mae`` — Use mean average error, for learning to predict the median of the data.
+
         The default option is ``mse``, and ``mae`` can only be applied to layers of type
         ``Linear`` or ``Gaussian`` and they must be used as the output layer.
 
@@ -327,9 +330,16 @@ class NeuralNetwork(object):
         be caught more effectively.  Default is off.
 
     verbose: bool, optional
-        If True, print the score at each epoch via the logger called 'sknn'.  You can
-        control the detail of the output by customising the logger level and formatter.
-        The default is off.
+        How to initialize the logging to display the results during training. If there is
+        already a logger initialized, either ``sknn`` or the root logger, then this function
+        does nothing.  Otherwise:
+
+            * ``False`` — Setup new logger that shows only warnings and errors.
+            * ``True`` — Setup a new logger that displays all debug messages.
+            * ``None`` — Don't setup a new logger under any condition (default). 
+
+        Using the built-in python ``logging`` module, you can control the detail and style of
+        output by customising the verbosity level and formatter for ``sknn`` logger.
     """
 
     def __init__(
@@ -350,7 +360,7 @@ class NeuralNetwork(object):
             valid_size=0.0,
             loss_type='mse',
             debug=False,
-            verbose=False,
+            verbose=None,
             **params):
 
         self.layers = []
@@ -391,7 +401,9 @@ class NeuralNetwork(object):
         self.loss_type = loss_type
         self.debug = debug
         self.verbose = verbose
-        
+
+        self._create_logger()
+
         assert self.regularize in (None, 'L1', 'L2', 'dropout'),\
             "Unknown type of regularization specified: %s." % self.regularize
         assert self.loss_type in ('mse', 'mae'),\
@@ -431,6 +443,20 @@ class NeuralNetwork(object):
         """Check whether this neural network includes convolution layers.
         """
         return isinstance(self.layers[0], Convolution)
+
+    def _create_logger(self):
+        # If users have configured logging already, assume they know best.
+        if len(log.handlers) > 0 or len(log.parent.handlers) > 0 or self.verbose is None:
+            return
+
+        # Otherwise setup a default handler and formatter based on verbosity.
+        lvl = logging.DEBUG if self.verbose else logging.WARNING
+        fmt = logging.Formatter("%(message)s")
+        hnd = logging.StreamHandler(stream=sys.stdout)
+
+        hnd.setFormatter(fmt)
+        hnd.setLevel(lvl)
+        log.addHandler(hnd)
 
     def _create_matrix_input(self, X, y=None):
         if self.is_convolution:
@@ -478,23 +504,22 @@ class NeuralNetwork(object):
             layer.monitor.report_epoch()
             layer.monitor()
 
-            if self.verbose:
-                objective = layer.monitor.channels.get('objective', None)
-                if objective:
-                    avg_valid_error = objective.val_shared.get_value()
-                    best_valid_error = min(best_valid_error, avg_valid_error)
-                else:
-                    # 'objective' channel is only defined with validation set.
-                    avg_valid_error = None
+            objective = layer.monitor.channels.get('objective', None)
+            if objective:
+                avg_valid_error = objective.val_shared.get_value()
+                best_valid_error = min(best_valid_error, avg_valid_error)
+            else:
+                # 'objective' channel is only defined with validation set.
+                avg_valid_error = None
 
-                best_valid = bool(best_valid_error == avg_valid_error)
-                log.debug("{:>5}      {}{}{}        {:>3.1f}s".format(
-                          i,
-                          ansi.GREEN if best_valid else "",
-                          "{:>10.6f}".format(float(avg_valid_error)) if avg_valid_error else "     N/A  ",
-                          ansi.ENDC if best_valid else "",
-                          time.time() - start
-                          ))
+            best_valid = bool(best_valid_error == avg_valid_error)
+            log.debug("{:>5}      {}{}{}        {:>3.1f}s".format(
+                      i,
+                      ansi.GREEN if best_valid else "",
+                      "{:>10.6f}".format(float(avg_valid_error)) if avg_valid_error else "     N/A  ",
+                      ansi.ENDC if best_valid else "",
+                      time.time() - start
+                      ))
 
             if not trainer.continue_learning(layer):
                 log.debug("")

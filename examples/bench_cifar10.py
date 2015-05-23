@@ -3,23 +3,28 @@ from __future__ import (absolute_import, unicode_literals, print_function)
 
 import sys
 import pickle
-import logging
-import numpy as np
 
-logging.basicConfig(format="%(message)s", level=logging.DEBUG, stream=sys.stdout)
+import numpy as np
 
 PRETRAIN = False
 
 
 def load(name):
+    # Pickle module isn't backwards compatible. Hack so it works:
+    compat = {'encoding': 'latin1'} if sys.version_info[0] == 3 else {}
+
     print("\t"+name)
     try:
         with open(name, 'rb') as f:
-            return pickle.load(f) # , encoding='latin1')
+            return pickle.load(f, **compat)
     except IOError:
         import gzip
         with gzip.open(name+'.gz', 'rb') as f:
-            return pickle.load(f) # , encoding='latin1')
+            return pickle.load(f, **compat)
+
+
+# Download and extract Python data for CIFAR10 manually from here:
+#     http://www.cs.toronto.edu/~kriz/cifar.html
 
 print("Loading...")
 dataset1 = load('data_batch_1')
@@ -38,18 +43,16 @@ labels_test = np.array(dataset3['labels'])
 n_feat = data_train.shape[1]
 n_targets = labels_train.max() + 1
 
-import sys
-import logging
-logging.basicConfig(format="%(message)s", level=logging.DEBUG, stream=sys.stdout)
 
 from sknn import mlp
+
 nn = mlp.Classifier(
         layers=[
-            mlp.Layer("Sigmoid", units=128),
-            mlp.Layer("Sigmoid", units=128),
+            mlp.Layer("Tanh", units=n_feat*2/3),
+            mlp.Layer("Sigmoid", units=n_feat*1/3),
             mlp.Layer("Softmax", units=n_targets)],
-        n_iter=4,
-        n_stable=4,
+        n_iter=50,
+        n_stable=10,
         learning_rate=0.001,
         valid_size=0.5,
         verbose=1)
@@ -58,8 +61,8 @@ if PRETRAIN:
     from sknn import ae
     ae = ae.AutoEncoder(
             layers=[
-                ae.Layer("Sigmoid", units=128),
-                ae.Layer("Sigmoid", units=128)],
+                ae.Layer("Tanh", units=n_feat*2/3),
+                ae.Layer("Sigmoid", units=n_feat*2/3)],
             learning_rate=0.002,
             n_iter=10,
             verbose=1)
@@ -67,6 +70,7 @@ if PRETRAIN:
     ae.transfer(nn)
 
 nn.fit(data_train, labels_train)
+
 
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix

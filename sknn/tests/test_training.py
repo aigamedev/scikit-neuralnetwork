@@ -1,5 +1,5 @@
 import unittest
-from nose.tools import (assert_in, assert_raises)
+from nose.tools import (assert_in, assert_raises, assert_equals)
 
 import io
 import logging
@@ -32,6 +32,31 @@ class TestTrainingProcedure(unittest.TestCase):
                     valid_size=0.25)
 
         self.nn._fit(a_in, a_out)
+
+
+class TestCustomLogging(unittest.TestCase):
+
+    def setUp(self):
+        self.log = logging.getLogger('sknn')
+        self.log.handlers = []
+        self.backup, self.log.parent.handlers = self.log.parent.handlers, []
+
+    def tearDown(self):
+        self.log.parent.handlers = self.backup
+
+    def test_DefaultLogVerbose(self):
+        nn = MLPR(layers=[L("Linear")], verbose=True)
+        assert_equals(1, len(self.log.handlers))
+        assert_equals(logging.DEBUG, self.log.handlers[0].level)
+
+    def test_DefaultLogQuiet(self):
+        nn = MLPR(layers=[L("Linear")], verbose=False)
+        assert_equals(1, len(self.log.handlers))
+        assert_equals(logging.WARNING, self.log.handlers[0].level)
+
+    def test_VerboseNoneNoLog(self):
+        nn = MLPR(layers=[L("Linear")], verbose=None)
+        assert_equals(0, len(self.log.handlers))
 
 
 class TestTrainingOutput(unittest.TestCase):

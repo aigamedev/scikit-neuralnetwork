@@ -4,9 +4,7 @@ Misc. Additions
 Verbose Mode
 ------------
 
-To see the output of the neural network's training, you need to configure two things: first setting up the Python logger (mandatory), and secondly to specify a verbose mode if you want more information during training (optional).
-
-The first step is to configure either the ``sknn`` logger specifically, or do so globally (easier) as follows:
+To see the output of the neural network's training, configure the Python logger called ``sknn`` or the default root logger.  This is possible using the standard ``logging`` module which you can setup as follows:
 
 .. code:: python
 
@@ -18,20 +16,9 @@ The first step is to configure either the ``sknn`` logger specifically, or do so
                 level=logging.DEBUG,
                 stream=sys.stdout)
 
-Then you can optionally create your neural networks using an additional ``verbose`` parameter to show the output during training:
+Change the log level to ``logging.INFO`` for less information about each epoch, or ``logging.WARNING`` only to receive messages about problems or failures.
 
-.. code:: python
-    
-    from sknn.mlp import Regressor, Layer
-
-    nn = Regressor(
-        layers=[Layer("Linear")],
-        n_iter=20,
-        verbose=True,
-        valid_size=0.25)
-    nn.fit(X, y)
-
-This code will output a table containing validation scores at each of the twenty epochs.  The ``valid_size`` parameter is a ratio of the data to be used internally for validation; in short, the ``fit()`` function is automatically splitting the data into ``X_train`` and ``y_train`` as well as ``X_valid`` and ``y_valid``.
+Using the flag ``verbose=True`` on either :class:`sknn.mlp.Classifier` and :class:`sknn.mlp.Regressor` will setup a default logger at ``DEBUG`` level if it does not exist, and ``verbose=False`` will setup a default logger at level ``WARNING`` if no logging has been configured.
 
 
 Saving & Loading
