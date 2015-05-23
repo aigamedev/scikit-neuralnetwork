@@ -59,38 +59,7 @@ It's also a good idea to normalize or standardize your data in this case too, fo
 This code will run the classification with the neural network, and return a list of labels predicted for each of the example inputs.
 
 
-Verbose Mode
-------------
-
-To see the output of the neural network's training, you need to configure two things: first setting up the Python logger (mandatory), and secondly to specify a verbose mode if you want more information during training (optional).
-
-The first step is to configure either the ``sknn`` logger specifically, or do so globally (easier) as follows:
-
-.. code:: python
-
-    import sys
-    import logging
-
-    logging.basicConfig(
-                format="%(message)s",
-                level=logging.DEBUG,
-                stream=sys.stdout)
-
-Then you can optionally create your neural networks using an additional ``verbose`` parameter to show the output during training:
-
-.. code:: python
-    
-    from sknn.mlp import Regressor, Layer
-
-    nn = Regressor(
-        layers=[Layer("Linear")],
-        n_iter=20,
-        verbose=1,
-        valid_size=0.25)
-    nn.fit(X, y)
-
-This code will output a table containing validation scores at each of the twenty epochs.  The ``valid_size`` parameter is a ratio of the data to be used internally for validation; in short, the ``fit()`` function is automatically splitting the data into ``X_train`` and ``y_train`` as well as ``X_valid`` and ``y_valid``.
-
+.. _example-convolution:
 
 Convolution
 -----------

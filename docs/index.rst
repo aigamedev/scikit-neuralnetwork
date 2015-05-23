@@ -26,8 +26,9 @@ User Guide
 .. toctree::
     :maxdepth: 2
 
-    guide_start
+    guide_installation
     guide_beginners
+    guide_intermediate
     guide_advanced
 
 

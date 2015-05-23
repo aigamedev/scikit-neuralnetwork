@@ -1,24 +1,7 @@
 Advanced Usage
 ==============
 
-The examples in this section help you get more out of ``scikit-neuralnetwork`` via integration or configuration of the other libraries it works with, such as Theano or scikit-learn.
-
-
-GPU Backend
------------
-
-To setup the library to use your GPU or CPU explicitly in 32-bit or 64-bit mode, you can use the ``backend`` pseudo-module.  It's a syntactic helper to setup ``THEANO_FLAGS`` in a Pythonic way, for example:
-
-.. code:: python
-
-    # Use the GPU in 32-bit mode, falling back otherwise.
-    from sknn.backend import gpu32
-    
-    # Use the CPU in 64-bit mode.
-    from sknn.backend import cpu64
-    
-
-WARNING: This will only work if your program has not yet imported the ``theano`` module, due to the way the library is designed.  If ``THEANO_FLAGS`` are set on the command-line, they are not overwridden.
+The examples in this section help you get more out of ``scikit-neuralnetwork``, in particular via its integration with ``scikit-learn``.
 
 
 .. _example-pipeline:
@@ -43,6 +26,41 @@ Here's how to setup such a pipeline with a multi-layer perceptron as a classifie
     pipeline.fit(X_train, y_train)
 
 You can then use the pipeline as you would the neural network, or any other standard API from scikit-learn.
+
+
+Unsupervised Pre-Training
+-------------------------
+
+If you have large quantities of unlabeled data, you may benefit from pre-training using an auto-encoder style architecture in an unsupervised learning fashion.
+
+.. code:: python
+
+    from sknn import ae, mlp
+
+    # Initialize auto-encoder for unsupervised learning.
+    myae = ae.AutoEncoder(
+                layers=[
+                    ae.Layer("Tanh", units=128),
+                    ae.Layer("Sigmoid", units=64)],
+                learning_rate=0.002,
+                n_iter=10)
+    
+    # Layerwise pre-training using only the input data.
+    myae.fit(X)
+    
+    # Initialize the multi-layer perceptron with same base layers.
+    mymlp = mlp.Regressor(
+                layers=[
+                    mlp.Layer("Tanh", units=128),
+                    mlp.Layer("Sigmoid", units=64),
+                    mlp.Layer("Linear")])
+    
+    # Transfer the weights from the auto-encoder.
+    myae.transfer(mymlp)
+    # Now perform supervised-learning as usual.
+    mymlp.fit(X, y)
+
+The downside of this approach is that auto-encoders only support activation fuctions ``Tanh`` and ``Sigmoid`` (currently), which excludes the benefits of more modern activation functions like ``Rectifier``.
 
 
 Grid Search
