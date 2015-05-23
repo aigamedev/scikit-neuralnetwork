@@ -448,7 +448,6 @@ class NeuralNetwork(object):
     def _create_logger(self):
         # If users have configured logging already, assume they know best.
         if len(log.handlers) > 0 or len(log.parent.handlers) > 0 or self.verbose is None:
-            print('refusing to create log...')
             return
 
         # Otherwise setup a default handler and formatter based on verbosity.

@@ -197,8 +197,11 @@ class TestActivationTypes(unittest.TestCase):
 
 class TestConvolutionRGB(TestConvolution):
 
-    def _run(self, nn):
-        a_in, a_out = numpy.zeros((8,32,16,3)), numpy.zeros((8,4))
+    def _run(self, nn, a_in=None):
+        if a_in is None:
+            a_in = numpy.zeros((8,32,16,1))
+        a_out = numpy.zeros((8,4))
+
         nn.fit(a_in, a_out)
         a_test = nn.predict(a_in)
         assert_equal(type(a_out), type(a_in))

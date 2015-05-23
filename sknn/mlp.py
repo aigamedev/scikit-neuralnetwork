@@ -363,6 +363,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
             X, y = self.train_set
         else:
             self.train_set = X, y
+        assert self.ds is not None, "Training after serialization is not (yet) supported."
 
         log.info("Training on dataset of {:,} samples with {:,} total size.".format(data_shape[0], data_size))
         if data_shape[1:] != X.shape[1:]:

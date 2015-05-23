@@ -97,10 +97,11 @@ class TestSerializedNetwork(TestLinearNetwork):
             assert_equal(type(w), numpy.ndarray)
             assert_equal(type(b), numpy.ndarray)
 
-    def test_FitAutoInitialize(self):
-        # Override base class test, you currently can't re-train a network that
-        # was serialized and deserialized.
-        pass
+    # Override base class test, you currently can't re-train a network that
+    # was serialized and deserialized.
+    def test_FitAutoInitialize(self): pass
+    def test_ResizeInputFrom4D(self): pass
+    def test_ResizeInputFrom3D(self): pass
 
     def test_PredictNoOutputUnitsAssertion(self):
         # Override base class test, this is not initialized but it
