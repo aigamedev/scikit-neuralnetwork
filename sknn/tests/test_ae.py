@@ -4,7 +4,7 @@ from nose.tools import (assert_raises, assert_equals)
 import numpy
 
 from sknn.ae import AutoEncoder as AE, Layer as L
-
+from sknn import mlp
 
 class TestAutoEncoder(unittest.TestCase):
     
@@ -16,6 +16,29 @@ class TestAutoEncoder(unittest.TestCase):
         X = numpy.zeros((8,4))
         ae = AE(layers=[L("Sigmoid", units=8)], n_iter=1)
         ae.fit(X)
+
+    def test_FitVerbose(self):
+        X = numpy.zeros((8,4))
+        ae = AE(layers=[L("Sigmoid", units=8)], n_iter=1, verbose=1)
+        ae.fit(X)
+
+    def test_TransferSuccess(self):
+        X = numpy.zeros((8,4))
+        ae = AE(layers=[L("Tanh", units=4)], n_iter=1)
+        ae.fit(X)
+
+        nn = mlp.MultiLayerPerceptron(
+                layers=[mlp.Layer("Tanh", units=4)])
+        ae.transfer(nn)
+
+    def test_TransferFailure(self):
+        X = numpy.zeros((8,4))
+        ae = AE(layers=[L("Tanh", units=8)], n_iter=1)
+        ae.fit(X)
+
+        nn = mlp.MultiLayerPerceptron(
+                layers=[mlp.Layer("Tanh", units=4)])
+        assert_raises(AssertionError, ae.transfer, nn)
 
 
 class TestParameters(unittest.TestCase):
@@ -43,3 +66,6 @@ class TestParameters(unittest.TestCase):
 
     def test_UnknownType(self):
         assert_raises(NotImplementedError, L, "Sigmoid", type="unknown")
+
+    def test_UnknownActivation(self):
+        assert_raises(NotImplementedError, L, "Unknown")

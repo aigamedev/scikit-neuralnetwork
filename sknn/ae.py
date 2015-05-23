@@ -80,8 +80,10 @@ class Layer(nn.Layer):
             raise NotImplementedError("AutoEncoder layer type `%s` is not implemented." % type)
         if cost not in ['msre', 'mbce']:
             raise NotImplementedError("Error type '%s' is not implemented." % cost)
+        if activation not in ['Sigmoid', 'Tanh']:
+            raise NotImplementedError("Activation type '%s' is not implemented." % activation)
 
-        self.activation = activation.lower()
+        self.activation = activation
         self.type = type
         self.name = name
         self.units = units
@@ -161,6 +163,14 @@ class AutoEncoder(nn.NeuralNetwork, sklearn.base.TransformerMixin):
         return self.dca.perform(X)
 
     def transfer(self, nn):
+        for a, l in zip(self.layers, nn.layers):
+            assert a.activation == l.type,\
+                "Mismatch in activation types in target MLP; expected `%s` but found `%s`."\
+                % (a.activation, l.type)
+            assert a.units == l.units,\
+                "Different number of units in target MLP; expected `%i` but found `%i`."\
+                % (a.units, l.units)
+
         nn.weights = []
         for a in self.dca.autoencoders:
             nn.weights.append((a.weights.get_value(), a.hidbias.get_value()))
@@ -168,11 +178,12 @@ class AutoEncoder(nn.NeuralNetwork, sklearn.base.TransformerMixin):
     def _create_ae_layer(self, size, layer):
         """Construct an internal pylearn2 layer based on the requested layer type.
         """
+        activation = layer.activation.lower()
         if layer.type == 'autoencoder':
             return autoencoder.Autoencoder(size,
                                            layer.units,
-                                           layer.activation,
-                                           layer.activation,
+                                           activation,
+                                           activation,
                                            layer.tied_weights,
                                            rng=self.random_state)
         if layer.type == 'denoising':
@@ -181,8 +192,8 @@ class AutoEncoder(nn.NeuralNetwork, sklearn.base.TransformerMixin):
             return autoencoder.DenoisingAutoencoder(corruptor,
                                                     size,
                                                     layer.units,
-                                                    layer.activation,
-                                                    layer.activation,
+                                                    activation,
+                                                    activation,
                                                     tied_weights=layer.tied_weights,
                                                     rng=self.random_state)
 
