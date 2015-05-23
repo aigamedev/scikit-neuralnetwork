@@ -28,6 +28,7 @@ from .dataset import SparseDesignMatrix, FastVectorSpace
 class ansi:
     BOLD = '\033[1;97m'
     WHITE = '\033[0;97m'
+    YELLOW = '\033[0;33m'
     RED = '\033[0;31m'
     GREEN = '\033[0;32m'
     BLUE = '\033[0;94m'
@@ -447,6 +448,7 @@ class NeuralNetwork(object):
     def _create_logger(self):
         # If users have configured logging already, assume they know best.
         if len(log.handlers) > 0 or len(log.parent.handlers) > 0 or self.verbose is None:
+            print('refusing to create log...')
             return
 
         # Otherwise setup a default handler and formatter based on verbosity.
@@ -457,6 +459,7 @@ class NeuralNetwork(object):
         hnd.setFormatter(fmt)
         hnd.setLevel(lvl)
         log.addHandler(hnd)
+        log.setLevel(lvl)
 
     def _create_matrix_input(self, X, y=None):
         if self.is_convolution:
@@ -479,7 +482,7 @@ class NeuralNetwork(object):
         if dataset is not None:
             termination_criterion = tc.MonitorBased(
                 channel_name='objective',
-                N=self.n_stable,
+                N=self.n_stable-1,
                 prop_decrease=self.f_stable)
         else:
             termination_criterion = None

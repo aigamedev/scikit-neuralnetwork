@@ -330,6 +330,15 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
             assert layer.get_biases().shape == biases.shape
             layer.set_biases(biases)
 
+    def _reshape(self, X, y=None):
+        if y is not None and y.ndim == 1:
+            y = y.reshape((y.shape[0], 1))
+        if self.is_convolution and X.ndim == 3:
+            X = X.reshape((X.shape[0], X.shape[1], X.shape[2], 1))
+        if not self.is_convolution and X.ndim > 2:
+            X = X.reshape((X.shape[0], numpy.product(X.shape[1:])))
+        return X, y
+
     def _fit(self, *data, **extra):
         try:
             return self._train(*data, **extra)
@@ -346,10 +355,8 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
     def _train(self, X, y, test=None):
         assert X.shape[0] == y.shape[0],\
             "Expecting same number of input and output samples."
-        num_samples, data_size = X.shape[0], X.size+y.size
-
-        if y.ndim == 1:
-            y = y.reshape((y.shape[0], 1))
+        data_shape, data_size = X.shape, X.size+y.size
+        X, y = self._reshape(X, y)
 
         if not self.is_initialized:
             self._initialize(X, y)
@@ -357,11 +364,9 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         else:
             self.train_set = X, y
 
-        if self.is_convolution:
-            X = self.ds.view_converter.topo_view_to_design_mat(X)
-        self.ds.X, self.ds.y = X, y
-
-        log.info("Training on dataset of {:,} samples with {:,} total size.".format(num_samples, data_size))
+        log.info("Training on dataset of {:,} samples with {:,} total size.".format(data_shape[0], data_size))
+        if data_shape[1:] != X.shape[1:]:
+            log.warning("  - Reshaping input array from {} to {}.".format(data_shape, X.shape))
         if self.valid_set:
             X_v, _ = self.valid_set
             log.debug("  - Train: {: <9,}  Valid: {: <4,}".format(X.shape[0], X_v.shape[0]))
@@ -369,6 +374,10 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
             log.debug("  - Terminating loop after {} total iterations.".format(self.n_iter))
         if self.n_stable:
             log.debug("  - Early termination after {} stable iterations.".format(self.n_stable))
+
+        if self.is_convolution:
+            X = self.ds.view_converter.topo_view_to_design_mat(X)
+        self.ds.X, self.ds.y = X, y
 
         if self.verbose:
             log.debug("\nEpoch    Validation Error    Time"
@@ -382,15 +391,14 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
             assert self.layers[-1].units is not None,\
                 "You must specify the number of units to predict without fitting."
             log.warning("Computing estimates with an untrained network.")
-
             self._create_specs(X)
             self._create_mlp()
 
+        X, _ = self._reshape(X)
         if X.dtype != numpy.float32:
             X = X.astype(numpy.float32)
         if not isinstance(X, numpy.ndarray):
             X = X.toarray()
-
         return self.f(X)
 
     def get_params(self, deep=True):
