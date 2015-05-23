@@ -494,6 +494,7 @@ class NeuralNetwork(object):
     def _train_layer(self, trainer, layer, dataset):
         # Bug in PyLearn2 that has some unicode channels, can't sort.
         layer.monitor.channels = {str(k): v for k, v in layer.monitor.channels.items()}
+        best_valid_error = float("inf")
 
         for i in itertools.count(1):
             start = time.time()
@@ -505,12 +506,12 @@ class NeuralNetwork(object):
             objective = layer.monitor.channels.get('objective', None)
             if objective:
                 avg_valid_error = objective.val_shared.get_value()
-                self.best_valid_error = min(self.best_valid_error, avg_valid_error)
+                best_valid_error = min(best_valid_error, avg_valid_error)
             else:
                 # 'objective' channel is only defined with validation set.
                 avg_valid_error = None
 
-            best_valid = bool(self.best_valid_error == avg_valid_error)
+            best_valid = bool(best_valid_error == avg_valid_error)
             log.debug("{:>5}      {}{}{}        {:>3.1f}s".format(
                       i,
                       ansi.GREEN if best_valid else "",

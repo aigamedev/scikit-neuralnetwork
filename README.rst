@@ -37,8 +37,8 @@ If you want to use the latest official release, you can do so from PYPI directly
 
 This contains its own packaged version of ``pylearn2`` from the date of the release (and tag) but will use any globally installed version if available.
 
-Pulling From Repository
-~~~~~~~~~~~~~~~~~~~~~~~
+Pulling Repositories
+~~~~~~~~~~~~~~~~~~~~
 
 You'll need to first install some dependencies manually.  Unfortunately, ``pylearn2`` isn't yet installable via PyPI and recommends an editable (``pip -e``) installation::
 
