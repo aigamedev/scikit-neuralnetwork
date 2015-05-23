@@ -336,9 +336,10 @@ class NeuralNetwork(object):
 
             * ``False`` — Setup new logger that shows only warnings and errors.
             * ``True`` — Setup a new logger that displays all debug messages.
+            * ``None`` — Don't setup a new logger under any condition (default). 
 
         Using the built-in python ``logging`` module, you can control the detail and style of
-        output by customising the logger level and formatter for ``sknn`` logger.
+        output by customising the verbosity level and formatter for ``sknn`` logger.
     """
 
     def __init__(
@@ -359,7 +360,7 @@ class NeuralNetwork(object):
             valid_size=0.0,
             loss_type='mse',
             debug=False,
-            verbose=False,
+            verbose=None,
             **params):
 
         self.layers = []
@@ -445,7 +446,7 @@ class NeuralNetwork(object):
 
     def _create_logger(self):
         # If users have configured logging already, assume they know best.
-        if len(log.handlers) > 0 or len(log.parent.handlers) > 0:
+        if len(log.handlers) > 0 or len(log.parent.handlers) > 0 or self.verbose is None:
             return
 
         # Otherwise setup a default handler and formatter based on verbosity.
@@ -454,8 +455,8 @@ class NeuralNetwork(object):
         hnd = logging.StreamHandler(stream=sys.stdout)
 
         hnd.setFormatter(fmt)
+        hnd.setLevel(lvl)
         log.addHandler(hnd)
-        log.setLevel(lvl)
 
     def _create_matrix_input(self, X, y=None):
         if self.is_convolution:
