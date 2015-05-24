@@ -1,7 +1,7 @@
 scikit-neuralnetwork
 ====================
 
-Deep neural network implementation without the learning cliff!  This library implements multi-layer perceptrons as a wrapper for the powerful ``pylearn2`` library that's compatible with ``scikit-learn`` for a more user-friendly and Pythonic interface.
+Deep neural network implementation without the learning cliff!  This library implements multi-layer perceptrons, auto-encoders and (soon) recurrent neural networks with a stable Future Proof™ interface that's compatible with ``scikit-learn`` for a more user-friendly and Pythonic interface. It's a wrapper for powerful existing libraries such as ``pylearn2`` now, and soon ``keras`` or ``blocks``.
 
 **NOTE**: This project is possible thanks to the `nucl.ai Conference <http://nucl.ai/>`_ on **July 20-22**. Join us in **Vienna**!
 
