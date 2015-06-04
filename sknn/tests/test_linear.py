@@ -62,9 +62,11 @@ class TestSerialization(unittest.TestCase):
     def setUp(self):
         self.nn = MLPR(layers=[L("Linear")], n_iter=1)
 
-    def test_SerializeFail(self):
+    def test_SerializeEmpty(self):
         buf = io.BytesIO()
-        assert_raises(AssertionError, pickle.dump, self.nn, buf)
+        pickle.dump(self.nn, buf)
+        buf.seek(0)
+        nn = pickle.load(buf)
 
     def test_SerializeCorrect(self):
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
