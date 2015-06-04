@@ -1,6 +1,8 @@
 import unittest
-from nose.tools import (assert_is_not_none, assert_raises, assert_equal)
+from nose.tools import (assert_is_not_none, assert_true, assert_raises, assert_equal)
 
+import io
+import pickle
 import numpy
 
 from sknn.mlp import Regressor as MLPR
@@ -9,13 +11,15 @@ from sknn.mlp import Layer as L, Convolution as C
 
 class TestConvolution(unittest.TestCase):
 
-    def _run(self, nn, a_in=None):
+    def _run(self, nn, a_in=None, fit=True):
         if a_in is None:
             a_in = numpy.zeros((8,32,16,1))
         a_out = numpy.zeros((8,4))
-        nn.fit(a_in, a_out)
+        if fit is True:
+            nn.fit(a_in, a_out)
         a_test = nn.predict(a_in)
         assert_equal(type(a_out), type(a_in))
+        return a_test
 
     def test_MissingLastDim(self):
         self._run(MLPR(
@@ -205,3 +209,46 @@ class TestConvolutionRGB(TestConvolution):
         nn.fit(a_in, a_out)
         a_test = nn.predict(a_in)
         assert_equal(type(a_out), type(a_in))
+
+
+class TestSerialization(unittest.TestCase):
+
+    def setUp(self):
+        self.nn = MLPR(
+            layers=[
+                C("Rectifier", channels=6, kernel_shape=(3,3)),
+                C("Sigmoid", channels=4, kernel_shape=(5,5)),
+                C("Tanh", channels=8, kernel_shape=(3,3)),
+                L("Linear")],
+            n_iter=1)
+
+    def test_SerializeFail(self):
+        buf = io.BytesIO()
+        assert_raises(AssertionError, pickle.dump, self.nn, buf)
+
+    def test_SerializeCorrect(self):
+        a_in, a_out = numpy.zeros((8,32,16,1)), numpy.zeros((8,4))
+        self.nn.fit(a_in, a_out)
+
+        buf = io.BytesIO()
+        pickle.dump(self.nn, buf)
+
+        buf.seek(0)
+        nn = pickle.load(buf)
+
+        assert_is_not_none(nn.mlp)
+        assert_equal(nn.layers, self.nn.layers)
+
+
+class TestSerializedNetwork(TestConvolution):
+
+    def _run(self, original, a_in=None):
+        a_test = super(TestSerializedNetwork, self)._run(original, a_in)
+
+        buf = io.BytesIO()
+        pickle.dump(original, buf)
+        buf.seek(0)
+        nn = pickle.load(buf)
+
+        a_copy = super(TestSerializedNetwork, self)._run(nn, a_in, fit=False)
+        assert_true((a_test == a_copy).all())
