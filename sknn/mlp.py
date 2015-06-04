@@ -313,8 +313,14 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
                 del d[k]
         return d
 
+    def _mlp_get_weights(self, l):
+        if isinstance(l, mlp.ConvElemwise) or l.requires_reformat:
+            W, = l.transformer.get_params()
+            return W.get_value()
+        return l.get_weights()
+
     def _mlp_to_array(self):
-        return [(l.get_weights(), l.get_biases()) for l in self.mlp.layers]
+        return [(self._mlp_get_weights(l), l.get_biases()) for l in self.mlp.layers]
 
     def __setstate__(self, d):
         self.__dict__.update(d)
@@ -324,7 +330,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
 
     def _array_to_mlp(self, array, nn):
         for layer, (weights, biases) in zip(nn.layers, array):
-            assert layer.get_weights().shape == weights.shape
+            assert self._mlp_get_weights(layer).shape == weights.shape
             layer.set_weights(weights)
 
             assert layer.get_biases().shape == biases.shape
