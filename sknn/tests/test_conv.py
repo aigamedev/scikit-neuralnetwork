@@ -234,7 +234,6 @@ class TestSerialization(unittest.TestCase):
         buf.seek(0)
         nn = pickle.load(buf)
 
-        assert_is_not_none(nn.mlp)
         assert_equal(nn.layers, self.nn.layers)
 
 
