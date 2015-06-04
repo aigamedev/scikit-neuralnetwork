@@ -302,11 +302,14 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         return not (self.mlp is None or self.f is None)
 
     def __getstate__(self):
-        assert self.mlp is not None,\
-            "The neural network has not been initialized."
-
         d = self.__dict__.copy()
-        d['weights'] = self._mlp_to_array()
+
+        # If the MLP does not exist, then the client code is trying to serialize
+        # this object to communicate between multiple processes.
+        if self.mlp is not None:
+            d['weights'] = self._mlp_to_array()
+        else:
+            log.warning("Serializing a neural network that was not initialized.")
 
         for k in ['ds', 'vs', 'f', 'trainer', 'mlp']:
             if k in d:
@@ -326,7 +329,11 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         self.__dict__.update(d)
         for k in ['ds', 'vs', 'f', 'trainer', 'mlp']:
             setattr(self, k, None)
-        self._create_mlp()
+
+        # Only create the MLP if the weights were serialized. Otherwise, it
+        # may have been serialized for multiprocessing reasons pre-training.
+        if self.weights is not None:
+            self._create_mlp()
 
     def _array_to_mlp(self, array, nn):
         for layer, (weights, biases) in zip(nn.layers, array):

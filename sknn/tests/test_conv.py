@@ -222,13 +222,11 @@ class TestSerialization(unittest.TestCase):
                 L("Linear")],
             n_iter=1)
 
-    def test_SerializeFail(self):
+    def test_SerializeEmpty(self):
         buf = io.BytesIO()
-        assert_raises(AssertionError, pickle.dump, self.nn, buf)
-
-    def test_SerializeCorrect(self):
-        a_in, a_out = numpy.zeros((8,32,16,1)), numpy.zeros((8,4))
-        self.nn.fit(a_in, a_out)
+        pickle.dump(self.nn, buf)
+        buf.seek(0)
+        nn = pickle.load(buf)
 
         buf = io.BytesIO()
         pickle.dump(self.nn, buf)
@@ -236,7 +234,6 @@ class TestSerialization(unittest.TestCase):
         buf.seek(0)
         nn = pickle.load(buf)
 
-        assert_is_not_none(nn.mlp)
         assert_equal(nn.layers, self.nn.layers)
 
 
