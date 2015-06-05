@@ -135,7 +135,8 @@ class AutoEncoder(nn.NeuralNetwork, sklearn.base.TransformerMixin):
         for v, l in zip(input_size, self.layers):
             ae_layers.append(self._create_ae_layer(v, l))
 
-        ds, _ = self._create_matrix_input(X=X, y=None)
+        input_space = self._create_input_space(X)
+        ds = self._create_dataset(input_space, X=X)
         datasets = self._create_ae_datasets(ds, ae_layers)
         trainers = [self._create_trainer(d, l._get_cost()) for d, l in zip(datasets, self.layers)]
         for l, t, d in zip(ae_layers, trainers, datasets):
@@ -163,6 +164,9 @@ class AutoEncoder(nn.NeuralNetwork, sklearn.base.TransformerMixin):
         return self.dca.perform(X)
 
     def transfer(self, nn):
+        assert not nn.is_initialized,\
+            "Target multi-layer perceptron has already been initialized."
+
         for a, l in zip(self.layers, nn.layers):
             assert a.activation == l.type,\
                 "Mismatch in activation types in target MLP; expected `%s` but found `%s`."\

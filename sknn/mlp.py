@@ -237,6 +237,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         log.debug("")
 
         if self.weights is not None:
+            log.info("Reloading weights for %i layers." % len(self.weights))
             self._array_to_mlp(self.weights, self.mlp)
             self.weights = None
 
@@ -253,7 +254,8 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
 
         # Then compute the number of units in each layer for initialization.
         self.unit_counts = [numpy.product(X.shape[1:]) if self.is_convolution else X.shape[1]]
-        res = X.shape[1:3] if self.is_convolution else None 
+        res = X.shape[1:3] if self.is_convolution else None
+
         for l in self.layers:
             if isinstance(l, Convolution):
                 if l.border_mode == 'valid':
@@ -283,10 +285,12 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         self.train_set = X, y
 
         # Convolution networks need a custom input space.
-        self.ds, self.input_space = self._create_matrix_input(X, y)
+        self.input_space = self._create_input_space(X)
+        self.ds = self._create_dataset(self.input_space, X, y)
         if self.valid_set:
             X_v, y_v = self.valid_set
-            self.vs, _ = self._create_matrix_input(X_v, y_v)
+            input_space = self._create_input_space(X_v)
+            self.vs = self._create_dataset(input_space, X_v, y_v)
         else:
             self.vs = None
 
@@ -317,7 +321,8 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         return d
 
     def _mlp_get_weights(self, l):
-        if isinstance(l, mlp.ConvElemwise) or l.requires_reformat:
+        print(type(l), l)
+        if isinstance(l, mlp.ConvElemwise) or getattr(l, 'requires_reformat', False):
             W, = l.transformer.get_params()
             return W.get_value()
         return l.get_weights()
@@ -401,14 +406,17 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         return self
 
     def _predict(self, X):
+        X, _ = self._reshape(X)
+
         if not self.is_initialized:
             assert self.layers[-1].units is not None,\
                 "You must specify the number of units to predict without fitting."
-            log.warning("Computing estimates with an untrained network.")
+            if self.weights is None:
+                log.warning("WARNING: Computing estimates with an untrained network.")
             self._create_specs(X)
+            self.input_space = self._create_input_space(X)
             self._create_mlp()
 
-        X, _ = self._reshape(X)
         if X.dtype != numpy.float32:
             X = X.astype(numpy.float32)
         if not isinstance(X, numpy.ndarray):
