@@ -55,6 +55,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         assert len(dropout_probs) == 0 or self.regularize in ('dropout', None)
 
         if self.regularize == "dropout" or len(dropout_probs) > 0:
+            log.debug("Using `dropout` for regularization.")
             # Use the globally specified dropout rate when there are no layer-specific ones.
             incl = 1.0 - (self.dropout_rate or 0.5)
             default_prob, default_scale = incl, 1.0 / incl
@@ -68,6 +69,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         # Aggregate all regularization parameters into common dictionaries.
         layer_decay = {}
         if self.regularize in ('L1', 'L2') or any(l.weight_decay for l in self.layers):
+            log.debug("Using `%s` for regularization with weight_decay=%f." % (self.regularize, wd))
             wd = self.weight_decay or 0.0001
             for l in self.layers:
                 layer_decay[l.name] = l.weight_decay or wd
@@ -237,7 +239,8 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         log.debug("")
 
         if self.weights is not None:
-            log.info("Reloading weights for %i layers." % len(self.weights))
+            l  = min(len(self.weights), len(self.mlp.layers))
+            log.info("Reloading parameters for %i layer weights and biases." % (l,))
             self._array_to_mlp(self.weights, self.mlp)
             self.weights = None
 
@@ -287,7 +290,8 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         # Convolution networks need a custom input space.
         self.input_space = self._create_input_space(X)
         self.ds = self._create_dataset(self.input_space, X, y)
-        if self.valid_set:
+
+        if self.valid_set is not None:
             X_v, y_v = self.valid_set
             input_space = self._create_input_space(X_v)
             self.vs = self._create_dataset(input_space, X_v, y_v)
@@ -321,7 +325,6 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         return d
 
     def _mlp_get_weights(self, l):
-        print(type(l), l)
         if isinstance(l, mlp.ConvElemwise) or getattr(l, 'requires_reformat', False):
             W, = l.transformer.get_params()
             return W.get_value()
@@ -370,7 +373,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
                 "    learning_rate=%f" % (self.learning_rate * 0.1)))
             raise e
 
-    def _train(self, X, y, test=None):
+    def _train(self, X, y):
         assert X.shape[0] == y.shape[0],\
             "Expecting same number of input and output samples."
         data_shape, data_size = X.shape, X.size+y.size
@@ -386,7 +389,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         log.info("Training on dataset of {:,} samples with {:,} total size.".format(data_shape[0], data_size))
         if data_shape[1:] != X.shape[1:]:
             log.warning("  - Reshaping input array from {} to {}.".format(data_shape, X.shape))
-        if self.valid_set:
+        if self.valid_set is not None:
             X_v, _ = self.valid_set
             log.debug("  - Train: {: <9,}  Valid: {: <4,}".format(X.shape[0], X_v.shape[0]))
         if self.n_iter:
@@ -494,11 +497,18 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
         assert X.shape[0] == y.shape[0],\
             "Expecting same number of input and output samples."
 
-        # Scan training samples to find all different classes.
+        # Scan training samples to find all different classes, then transform data.
         self.label_binarizer.fit(y)
         yp = self.label_binarizer.transform(y)
+
+        # Also transform the validation set if it was explicitly specified.
+        if self.valid_set is not None and self.valid_set[1].ndim == 1:
+            X_v, y_v = self.valid_set
+            y_vp = self.label_binarizer.transform(y_v)
+            self.valid_set = (X_v, y_vp)
+
         # Now train based on a problem transformed into regression.
-        return super(Classifier, self)._fit(X, yp, test=y)
+        return super(Classifier, self)._fit(X, yp)
 
     def partial_fit(self, X, y, classes=None):
         if classes is not None:

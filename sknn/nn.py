@@ -275,7 +275,8 @@ class NeuralNetwork(object):
 
     batch_size: int
         Number of training samples to group together when performing stochastic
-        gradient descent.  By default each sample is treated on its own.
+        gradient descent (technically, a "minibatch").  By default each sample is
+        treated on its own, with ``batch_size=1``.  Larger batches are usually faster.
 
     n_iter: int
         The number of iterations of gradient descent to perform on the
