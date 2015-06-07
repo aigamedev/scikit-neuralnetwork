@@ -2,6 +2,8 @@ import unittest
 from nose.tools import (assert_is_not_none, assert_raises, assert_equal, assert_true)
 
 import random
+
+import theano
 import numpy
 import scipy.sparse
 
@@ -33,32 +35,54 @@ class TestScipySparseMatrix(unittest.TestCase):
             self.nn._fit(X, y)
 
     def test_Predict64(self):
+        theano.config.floatX = 'float64'
         for t in SPARSE_TYPES:
             sparse_matrix = getattr(scipy.sparse, t)
             X = sparse_matrix((8, 4), dtype=numpy.float64)
-            self.nn._predict(X)
+            yp = self.nn._predict(X)
+            assert_equal(yp.dtype, numpy.float64)
 
     def test_Predict32(self):
+        theano.config.floatX = 'float32'
         for t in SPARSE_TYPES:
             sparse_matrix = getattr(scipy.sparse, t)
             X = sparse_matrix((8, 4), dtype=numpy.float32)
-            self.nn._predict(X)
+            yp = self.nn._predict(X)
+            assert_equal(yp.dtype, numpy.float32)
 
 
-class TestConvolutionError(unittest.TestCase):
+class TestConvolution(unittest.TestCase):
 
     def setUp(self):
-        self.nn = MLP(layers=[C("Rectifier", channels=4), L("Linear")], n_iter=1)
+        self.nn = MLP(
+            layers=[
+                C("Rectifier", kernel_shape=(3,3), channels=4),
+                L("Linear")],
+            n_iter=1)
 
     def test_FitError(self):
         # The sparse matrices can't store anything but 2D, but convolution needs 3D or more.
         for t in SPARSE_TYPES:
             sparse_matrix = getattr(scipy.sparse, t)
             X, y = sparse_matrix((8, 16)), sparse_matrix((8, 16))
-            assert_raises(TypeError, self.nn._fit, X, y)
+            assert_raises((TypeError, NotImplementedError), self.nn._fit, X, y)
+
+    def test_FitResizeSquare(self):
+        # The sparse matrices can't store anything but 2D, but convolution needs 3D or more.
+        for t in SPARSE_TYPES:
+            sparse_matrix = getattr(scipy.sparse, t)
+            X, y = numpy.zeros((8, 36)), numpy.zeros((8, 4))
+            self.nn._fit(X, y)
+
+    def test_FitResizeFails(self):
+        # The sparse matrices can't store anything but 2D, but convolution needs 3D or more.
+        for t in SPARSE_TYPES:
+            sparse_matrix = getattr(scipy.sparse, t)
+            X, y = numpy.zeros((8, 35)), numpy.zeros((8, 4))
+            assert_raises(AssertionError, self.nn._fit, X, y)
 
 
-class TestConvolutionDeterminism(unittest.TestCase):
+class TestFormatDeterminism(unittest.TestCase):
 
     def test_TrainRandomOneEpoch(self):
         for t in ['dok_matrix', 'lil_matrix']:

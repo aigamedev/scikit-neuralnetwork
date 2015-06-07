@@ -4,6 +4,7 @@ from __future__ import (absolute_import, unicode_literals, print_function)
 __all__ = ['Regressor', 'Classifier', 'Layer', 'Convolution']
 
 import os
+import math
 import time
 import logging
 import itertools
@@ -54,12 +55,12 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
             dropout_scales[l.name] = 1.0 / incl
         assert len(dropout_probs) == 0 or self.regularize in ('dropout', None)
 
-        if self.regularize == "dropout" or len(dropout_probs) > 0:
-            log.debug("Using `dropout` for regularization.")
+        if self.regularize == 'dropout' or len(dropout_probs) > 0:
             # Use the globally specified dropout rate when there are no layer-specific ones.
             incl = 1.0 - (self.dropout_rate or 0.5)
             default_prob, default_scale = incl, 1.0 / incl
-
+            self.regularize = 'dropout'
+            
             # Pass all the parameters to pylearn2 as a custom cost function.
             self.cost = dropout.Dropout(
                 default_input_include_prob=default_prob,
@@ -69,7 +70,6 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         # Aggregate all regularization parameters into common dictionaries.
         layer_decay = {}
         if self.regularize in ('L1', 'L2') or any(l.weight_decay for l in self.layers):
-            log.debug("Using `%s` for regularization with weight_decay=%f." % (self.regularize, wd))
             wd = self.weight_decay or 0.0001
             for l in self.layers:
                 layer_decay[l.name] = l.weight_decay or wd
@@ -81,6 +81,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
                 l1 = mlp_cost.L1WeightDecay(layer_decay)
                 self.cost = cost.SumOfCosts([mlp_default_cost,l1])
             else: # Default is 'L2'.
+                self.regularize = 'L2'
                 l2 =  mlp_cost.WeightDecay(layer_decay)
                 self.cost = cost.SumOfCosts([mlp_default_cost,l2])
 
@@ -261,6 +262,8 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
 
         for l in self.layers:
             if isinstance(l, Convolution):
+                assert l.kernel_shape is not None,\
+                    "Layer `%s` requires parameter `kernel_shape` to be set." % (l.name,)
                 if l.border_mode == 'valid':
                     res = (int((res[0] - l.kernel_shape[0]) / l.kernel_stride[0]) + 1,
                            int((res[1] - l.kernel_shape[1]) / l.kernel_stride[1]) + 1)
@@ -356,6 +359,11 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
             y = y.reshape((y.shape[0], 1))
         if self.is_convolution and X.ndim == 3:
             X = X.reshape((X.shape[0], X.shape[1], X.shape[2], 1))
+        if self.is_convolution and X.ndim == 2:
+            size = math.sqrt(X.shape[1])
+            assert size.is_integer(),\
+                "Input array is not in image shape, and could not assume a square."
+            X = X.reshape((X.shape[0], int(size), int(size), 1))
         if not self.is_convolution and X.ndim > 2:
             X = X.reshape((X.shape[0], numpy.product(X.shape[1:])))
         return X, y
@@ -392,9 +400,12 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         if self.valid_set is not None:
             X_v, _ = self.valid_set
             log.debug("  - Train: {: <9,}  Valid: {: <4,}".format(X.shape[0], X_v.shape[0]))
+        if self.cost or self.regularize:
+            comment = ", auto-enabled from layers" if self.regularize is None else ""
+            log.debug("Using `%s` for regularization%s." % (self.regularize, comment))
         if self.n_iter:
             log.debug("  - Terminating loop after {} total iterations.".format(self.n_iter))
-        if self.n_stable:
+        if self.n_stable and self.n_stable < self.n_iter:
             log.debug("  - Early termination after {} stable iterations.".format(self.n_stable))
 
         if self.is_convolution:
