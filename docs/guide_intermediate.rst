@@ -41,6 +41,28 @@ In this case, you can use the reloaded multi-layer perceptron as if it had just 
 NOTE: You can serialize complex pipelines (for example from this section :ref:`example-pipeline`) using this exact same approach.
 
 
+Keyboard Interrupt
+------------------
+
+If you want to manually interrupt the main training loop by pressing ``CTRL+C`` but still finish the rest of your training script, you can wrap the call to fit with an exception handler:
+
+.. code:: python
+
+    # Setup experiment model and data.
+    nn = mlp.Regressor(...)
+
+    # Perform the gradient descent training.
+    try:
+        nn.fit(X, y)
+    except KeyboardInterrupt:
+        pass
+    
+    # Finalize the experiment here.
+    print('score =', nn.score(X, y))
+
+This was designed to work with both multi-layer perceptrons in :mod:`sknn.mlp` and auto-encoders in :mod:`sknn.ae`.  
+
+
 GPU Backend
 -----------
 

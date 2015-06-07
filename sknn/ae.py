@@ -134,6 +134,7 @@ class AutoEncoder(nn.NeuralNetwork, sklearn.base.TransformerMixin):
         ae_layers = []
         for v, l in zip(input_size, self.layers):
             ae_layers.append(self._create_ae_layer(v, l))
+        self.dca = autoencoder.DeepComposedAutoencoder(ae_layers)
 
         input_space = self._create_input_space(X)
         ds = self._create_dataset(input_space, X=X)
@@ -142,8 +143,6 @@ class AutoEncoder(nn.NeuralNetwork, sklearn.base.TransformerMixin):
         for l, t, d in zip(ae_layers, trainers, datasets):
             t.setup(l, d)
             self._train_layer(t, l, d)
-
-        self.dca = autoencoder.DeepComposedAutoencoder(ae_layers)
         return self
 
     def transform(self, X):
