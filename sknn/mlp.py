@@ -4,6 +4,8 @@ from __future__ import (absolute_import, unicode_literals, print_function)
 __all__ = ['Regressor', 'Classifier', 'Layer', 'Convolution']
 
 import os
+import sys
+import math
 import time
 import logging
 import itertools
@@ -54,11 +56,12 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
             dropout_scales[l.name] = 1.0 / incl
         assert len(dropout_probs) == 0 or self.regularize in ('dropout', None)
 
-        if self.regularize == "dropout" or len(dropout_probs) > 0:
+        if self.regularize == 'dropout' or len(dropout_probs) > 0:
             # Use the globally specified dropout rate when there are no layer-specific ones.
             incl = 1.0 - (self.dropout_rate or 0.5)
             default_prob, default_scale = incl, 1.0 / incl
-
+            self.regularize = 'dropout'
+            
             # Pass all the parameters to pylearn2 as a custom cost function.
             self.cost = dropout.Dropout(
                 default_input_include_prob=default_prob,
@@ -79,6 +82,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
                 l1 = mlp_cost.L1WeightDecay(layer_decay)
                 self.cost = cost.SumOfCosts([mlp_default_cost,l1])
             else: # Default is 'L2'.
+                self.regularize = 'L2'
                 l2 =  mlp_cost.WeightDecay(layer_decay)
                 self.cost = cost.SumOfCosts([mlp_default_cost,l2])
 
@@ -237,6 +241,8 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         log.debug("")
 
         if self.weights is not None:
+            l  = min(len(self.weights), len(self.mlp.layers))
+            log.info("Reloading parameters for %i layer weights and biases." % (l,))
             self._array_to_mlp(self.weights, self.mlp)
             self.weights = None
 
@@ -253,9 +259,12 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
 
         # Then compute the number of units in each layer for initialization.
         self.unit_counts = [numpy.product(X.shape[1:]) if self.is_convolution else X.shape[1]]
-        res = X.shape[1:3] if self.is_convolution else None 
+        res = X.shape[1:3] if self.is_convolution else None
+
         for l in self.layers:
             if isinstance(l, Convolution):
+                assert l.kernel_shape is not None,\
+                    "Layer `%s` requires parameter `kernel_shape` to be set." % (l.name,)
                 if l.border_mode == 'valid':
                     res = (int((res[0] - l.kernel_shape[0]) / l.kernel_stride[0]) + 1,
                            int((res[1] - l.kernel_shape[1]) / l.kernel_stride[1]) + 1)
@@ -283,10 +292,13 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         self.train_set = X, y
 
         # Convolution networks need a custom input space.
-        self.ds, self.input_space = self._create_matrix_input(X, y)
-        if self.valid_set:
+        self.input_space = self._create_input_space(X)
+        self.ds = self._create_dataset(self.input_space, X, y)
+
+        if self.valid_set is not None:
             X_v, y_v = self.valid_set
-            self.vs, _ = self._create_matrix_input(X_v, y_v)
+            input_space = self._create_input_space(X_v)
+            self.vs = self._create_dataset(input_space, X_v, y_v)
         else:
             self.vs = None
 
@@ -317,7 +329,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         return d
 
     def _mlp_get_weights(self, l):
-        if isinstance(l, mlp.ConvElemwise) or l.requires_reformat:
+        if isinstance(l, mlp.ConvElemwise) or getattr(l, 'requires_reformat', False):
             W, = l.transformer.get_params()
             return W.get_value()
         return l.get_weights()
@@ -348,6 +360,11 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
             y = y.reshape((y.shape[0], 1))
         if self.is_convolution and X.ndim == 3:
             X = X.reshape((X.shape[0], X.shape[1], X.shape[2], 1))
+        if self.is_convolution and X.ndim == 2:
+            size = math.sqrt(X.shape[1])
+            assert size.is_integer(),\
+                "Input array is not in image shape, and could not assume a square."
+            X = X.reshape((X.shape[0], int(size), int(size), 1))
         if not self.is_convolution and X.ndim > 2:
             X = X.reshape((X.shape[0], numpy.product(X.shape[1:])))
         return X, y
@@ -365,7 +382,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
                 "    learning_rate=%f" % (self.learning_rate * 0.1)))
             raise e
 
-    def _train(self, X, y, test=None):
+    def _train(self, X, y):
         assert X.shape[0] == y.shape[0],\
             "Expecting same number of input and output samples."
         data_shape, data_size = X.shape, X.size+y.size
@@ -381,12 +398,15 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         log.info("Training on dataset of {:,} samples with {:,} total size.".format(data_shape[0], data_size))
         if data_shape[1:] != X.shape[1:]:
             log.warning("  - Reshaping input array from {} to {}.".format(data_shape, X.shape))
-        if self.valid_set:
+        if self.valid_set is not None:
             X_v, _ = self.valid_set
             log.debug("  - Train: {: <9,}  Valid: {: <4,}".format(X.shape[0], X_v.shape[0]))
-        if self.n_iter:
+        if self.cost or self.regularize:
+            comment = ", auto-enabled from layers" if self.regularize is None else ""
+            log.debug("Using `%s` for regularization%s." % (self.regularize, comment))
+        if self.n_iter is not None:
             log.debug("  - Terminating loop after {} total iterations.".format(self.n_iter))
-        if self.n_stable:
+        if self.n_stable is not None and self.n_stable < (self.n_iter or sys.maxsize):
             log.debug("  - Early termination after {} stable iterations.".format(self.n_stable))
 
         if self.is_convolution:
@@ -401,14 +421,17 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         return self
 
     def _predict(self, X):
+        X, _ = self._reshape(X)
+
         if not self.is_initialized:
             assert self.layers[-1].units is not None,\
                 "You must specify the number of units to predict without fitting."
-            log.warning("Computing estimates with an untrained network.")
+            if self.weights is None:
+                log.warning("WARNING: Computing estimates with an untrained network.")
             self._create_specs(X)
+            self.input_space = self._create_input_space(X)
             self._create_mlp()
 
-        X, _ = self._reshape(X)
         if X.dtype != numpy.float32:
             X = X.astype(numpy.float32)
         if not isinstance(X, numpy.ndarray):
@@ -486,11 +509,18 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
         assert X.shape[0] == y.shape[0],\
             "Expecting same number of input and output samples."
 
-        # Scan training samples to find all different classes.
+        # Scan training samples to find all different classes, then transform data.
         self.label_binarizer.fit(y)
         yp = self.label_binarizer.transform(y)
+
+        # Also transform the validation set if it was explicitly specified.
+        if self.valid_set is not None and self.valid_set[1].ndim == 1:
+            X_v, y_v = self.valid_set
+            y_vp = self.label_binarizer.transform(y_v)
+            self.valid_set = (X_v, y_vp)
+
         # Now train based on a problem transformed into regression.
-        return super(Classifier, self)._fit(X, yp, test=y)
+        return super(Classifier, self)._fit(X, yp)
 
     def partial_fit(self, X, y, classes=None):
         if classes is not None:

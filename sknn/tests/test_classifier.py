@@ -19,6 +19,12 @@ class TestClassifierFunctionality(unittest.TestCase):
         self.nn.fit(a_in, a_out)
         assert_true(self.nn.is_initialized)
 
+    def test_ExplicitValidSet(self):
+        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,), dtype=numpy.int32)
+        self.nn.valid_set = (a_in, a_out)
+        self.nn.fit(a_in, a_out)
+        assert_true(self.nn.is_initialized)
+
     def test_PartialFit(self):
         a_in, a_out = numpy.zeros((8,4)), numpy.zeros((8,), dtype=numpy.int32)
         self.nn.partial_fit(a_in, a_out, classes=[0,1,2,3])

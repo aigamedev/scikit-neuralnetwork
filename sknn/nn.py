@@ -275,7 +275,8 @@ class NeuralNetwork(object):
 
     batch_size: int
         Number of training samples to group together when performing stochastic
-        gradient descent.  By default each sample is treated on its own.
+        gradient descent (technically, a "minibatch").  By default each sample is
+        treated on its own, with ``batch_size=1``.  Larger batches are usually faster.
 
     n_iter: int
         The number of iterations of gradient descent to perform on the
@@ -459,22 +460,27 @@ class NeuralNetwork(object):
         hnd.setLevel(lvl)
         log.addHandler(hnd)
         log.setLevel(lvl)
-
-    def _create_matrix_input(self, X, y=None):
+        
+    def _create_input_space(self, X):
         if self.is_convolution:
             # Using `b01c` arrangement of data, see this for details:
             #   http://benanne.github.io/2014/04/03/faster-convolutions-in-theano.html
             # input: (batch size, channels, rows, columns)
             # filters: (number of filters, channels, rows, columns)
-            input_space = space.Conv2DSpace(shape=X.shape[1:3], num_channels=X.shape[-1])
+            return space.Conv2DSpace(shape=X.shape[1:3], num_channels=X.shape[-1])
+        else:
+            InputSpace = space.VectorSpace if self.debug else FastVectorSpace
+            return InputSpace(X.shape[-1])
+
+    def _create_dataset(self, input_space, X, y=None):
+        if self.is_convolution:
             view = input_space.get_origin_batch(X.shape[0])
-            return datasets.DenseDesignMatrix(topo_view=view, y=y), input_space
+            return datasets.DenseDesignMatrix(topo_view=view, y=y)
         else:
             if all([isinstance(a, numpy.ndarray) for a in (X, y) if a is not None]):
-                InputSpace = space.VectorSpace if self.debug else FastVectorSpace
-                return datasets.DenseDesignMatrix(X=X, y=y), InputSpace(X.shape[-1])
+                return datasets.DenseDesignMatrix(X=X, y=y)
             else:
-                return SparseDesignMatrix(X=X, y=y), None
+                return SparseDesignMatrix(X=X, y=y)
 
     def _create_trainer(self, dataset, cost):
         logging.getLogger('pylearn2.monitor').setLevel(logging.WARNING)
