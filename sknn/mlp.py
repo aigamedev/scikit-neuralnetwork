@@ -4,6 +4,7 @@ from __future__ import (absolute_import, unicode_literals, print_function)
 __all__ = ['Regressor', 'Classifier', 'Layer', 'Convolution']
 
 import os
+import sys
 import math
 import time
 import logging
@@ -403,9 +404,9 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         if self.cost or self.regularize:
             comment = ", auto-enabled from layers" if self.regularize is None else ""
             log.debug("Using `%s` for regularization%s." % (self.regularize, comment))
-        if self.n_iter:
+        if self.n_iter is not None:
             log.debug("  - Terminating loop after {} total iterations.".format(self.n_iter))
-        if self.n_stable and self.n_stable < self.n_iter:
+        if self.n_stable is not None and self.n_stable < (self.n_iter or sys.maxsize):
             log.debug("  - Early termination after {} stable iterations.".format(self.n_stable))
 
         if self.is_convolution:
