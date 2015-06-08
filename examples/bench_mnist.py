@@ -22,7 +22,7 @@ mnist = fetch_mldata('mnist-original')
 X_train, X_test, y_train, y_test = train_test_split(
         (mnist.data / 255.0).astype(np.float32),
         mnist.target.astype(np.int32),
-        test_size=0.33, random_state=1234)
+        test_size=1.0/7.0, random_state=1234)
 
 
 classifiers = []
@@ -38,15 +38,19 @@ if 'dbn' in sys.argv:
     classifiers.append(('nolearn.dbn', clf))
 
 if 'sknn' in sys.argv:
-    from sknn.mlp import Classifier, Layer
+    from sknn.mlp import Classifier, Layer, Convolution
 
     clf = Classifier(
-        layers=[Layer("Rectifier", units=300), Layer("Softmax")],
+        layers=[
+            # Convolution("Rectifier", channels=10, pool_shape=(2,2), kernel_shape=(3, 3)),
+            Layer('Rectifier', units=200),
+            Layer('Softmax')],
         learning_rate=0.02,
         learning_rule='momentum',
         learning_momentum=0.9,
         batch_size=25,
-        valid_size=0.0,
+        valid_set=0.1,
+        # valid_set=(X_test, y_test),
         n_stable=10,
         n_iter=10,
         verbose=True)

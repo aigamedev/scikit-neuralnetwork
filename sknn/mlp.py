@@ -403,7 +403,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
             log.debug("  - Train: {: <9,}  Valid: {: <4,}".format(X.shape[0], X_v.shape[0]))
         if self.cost or self.regularize:
             comment = ", auto-enabled from layers" if self.regularize is None else ""
-            log.debug("Using `%s` for regularization%s." % (self.regularize, comment))
+            log.debug("  - Using `%s` for regularization%s." % (self.regularize, comment))
         if self.n_iter is not None:
             log.debug("  - Terminating loop after {} total iterations.".format(self.n_iter))
         if self.n_stable is not None and self.n_stable < (self.n_iter or sys.maxsize):
@@ -517,7 +517,7 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
         if self.valid_set is not None and self.valid_set[1].ndim == 1:
             X_v, y_v = self.valid_set
             y_vp = self.label_binarizer.transform(y_v)
-            self.valid_set = (X_v, y_vp)
+            self.valid_set = self._reshape(X_v, y_vp)
 
         # Now train based on a problem transformed into regression.
         return super(Classifier, self)._fit(X, yp)
