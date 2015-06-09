@@ -511,7 +511,7 @@ class NeuralNetwork(object):
 
             layer.monitor.report_epoch()
             layer.monitor()
-
+            
             objective = layer.monitor.channels.get('objective', None)
             if objective:
                 avg_valid_error = objective.val_shared.get_value()

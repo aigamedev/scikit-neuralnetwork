@@ -205,9 +205,9 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
                 lim *= 1.1 * lim
             elif layer.type in ('Rectifier', 'Maxout'):
                 # He, Rang, Zhen and Sun, converted to uniform.
-                lim *= numpy.sqrt(2)
+                lim *= numpy.sqrt(2.0)
             elif layer.type == 'Sigmoid':
-                lim *= 4
+                lim *= 4.0
 
             mlp_layer = self._create_layer(layer.name, layer, irange=lim)
             mlp_layers.append(mlp_layer)
@@ -238,13 +238,13 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
                     ansi.BOLD, l.type, ansi.ENDC, ansi.BOLD, l.units, ansi.ENDC))
                 assert count == space.get_total_dimension(),\
                     "Mismatch in the calculated number of dense layer outputs."
-        log.debug("")
 
         if self.weights is not None:
             l  = min(len(self.weights), len(self.mlp.layers))
             log.info("Reloading parameters for %i layer weights and biases." % (l,))
             self._array_to_mlp(self.weights, self.mlp)
             self.weights = None
+        log.debug("")
 
         inputs = self.mlp.get_input_space().make_theano_batch()
         self.f = theano.function([inputs], self.mlp.fprop(inputs))
@@ -302,7 +302,8 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         else:
             self.vs = None
 
-        self._create_mlp()
+        if self.mlp is None:
+            self._create_mlp()
 
         self.trainer = self._create_mlp_trainer(self.vs)
         self.trainer.setup(self.mlp, self.ds)
@@ -311,7 +312,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
     def is_initialized(self):
         """Check if the neural network was setup already.
         """
-        return not (self.mlp is None or self.f is None)
+        return not (self.ds is None or self.f is None)
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -344,6 +345,8 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
 
         # Only create the MLP if the weights were serialized. Otherwise, it
         # may have been serialized for multiprocessing reasons pre-training.
+        self._create_logger()
+
         if self.weights is not None:
             self._create_mlp()
 
@@ -393,7 +396,6 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
             X, y = self.train_set
         else:
             self.train_set = X, y
-        assert self.ds is not None, "Training after serialization is not (yet) supported."
 
         log.info("Training on dataset of {:,} samples with {:,} total size.".format(data_shape[0], data_size))
         if data_shape[1:] != X.shape[1:]:
@@ -423,7 +425,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
     def _predict(self, X):
         X, _ = self._reshape(X)
 
-        if not self.is_initialized:
+        if self.mlp is None:
             assert self.layers[-1].units is not None,\
                 "You must specify the number of units to predict without fitting."
             if self.weights is None:
@@ -432,8 +434,6 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
             self.input_space = self._create_input_space(X)
             self._create_mlp()
 
-        if X.dtype != numpy.float32:
-            X = X.astype(numpy.float32)
         if not isinstance(X, numpy.ndarray):
             X = X.toarray()
         return self.f(X)

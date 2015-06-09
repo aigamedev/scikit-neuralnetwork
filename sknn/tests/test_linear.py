@@ -108,7 +108,7 @@ class TestSerializedNetwork(TestLinearNetwork):
     def test_PredictNoOutputUnitsAssertion(self):
         # Override base class test, this is not initialized but it
         # should be able to predict without throwing assert.
-        assert_true(self.nn.is_initialized)
+        assert_true(self.nn.mlp is not None)
 
     def test_PredictAlreadyInitialized(self):
         a_in = numpy.zeros((8,16))
