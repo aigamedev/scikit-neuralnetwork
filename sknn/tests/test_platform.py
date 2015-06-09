@@ -9,7 +9,7 @@ import logging
 import sknn
 
 
-class TestBackendPseudoModule(unittest.TestCase):
+class TestPlatformPseudoModule(unittest.TestCase):
 
     def setUp(self):
         if 'THEANO_FLAGS' in os.environ:
@@ -22,7 +22,7 @@ class TestBackendPseudoModule(unittest.TestCase):
             if name.startswith('theano'):
                 self.removed[name] = sys.modules[name]
                 del sys.modules[name]
-        sys.modules['sknn.backend'].configured = False
+        sys.modules['sknn.platform'].configured = False
 
         self.buf = io.StringIO()
         self.hnd = logging.StreamHandler(self.buf)
@@ -36,7 +36,7 @@ class TestBackendPseudoModule(unittest.TestCase):
 
     def test_TheanoWarning(self):
         import theano
-        from sknn.backend import cpu
+        from sknn.platform import cpu
         assert_equal('Theano was already imported and cannot be reconfigured.\n',
                      self.buf.getvalue())
 
@@ -47,17 +47,17 @@ class TestBackendPseudoModule(unittest.TestCase):
             assert_in(f, variable)
 
     def test_FlagsGPU32(self):
-        from sknn.backend import gpu32
+        from sknn.platform import gpu32
         self._check(['floatX=float32','device=gpu'])
 
     def test_FlagsCPU32(self):
-        from sknn.backend import cpu32
+        from sknn.platform import cpu32
         self._check(['floatX=float32','device=cpu'])
 
     def test_FlagsGPU64(self):
-        from sknn.backend import gpu64
+        from sknn.platform import gpu64
         self._check(['floatX=float64','device=gpu'])
 
     def test_FlagsCPU64(self):
-        from sknn.backend import cpu64
+        from sknn.platform import cpu64
         self._check(['floatX=float64','device=cpu'])

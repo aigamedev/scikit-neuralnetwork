@@ -62,8 +62,8 @@ class TestLearningRules(LoggingTestCase):
                        n_iter=1))
 
     def test_UnknownRule(self):
-        assert_raises(NotImplementedError, MLPR,
-                      layers=[], learning_rule='unknown')
+        nn = MLPR(layers=[L("Linear")], learning_rule='unknown')
+        assert_raises(NotImplementedError, self._run, nn)
 
 
 class TestRegularization(LoggingTestCase):

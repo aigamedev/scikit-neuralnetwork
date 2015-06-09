@@ -52,4 +52,4 @@ class TheanoConfigurator(object):
         return getattr(sys.modules['sknn'], name)
 
 
-sys.modules['sknn.backend'] = TheanoConfigurator()
+sys.modules['sknn.platform'] = TheanoConfigurator()
