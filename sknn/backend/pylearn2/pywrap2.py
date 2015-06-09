@@ -7,6 +7,7 @@ from __future__ import (absolute_import, unicode_literals, print_function)
 
 import os
 import sys
+import logging
 
 
 # Setup self-contained distributions for PIP packaged PyLearn2.
@@ -26,3 +27,8 @@ from pylearn2.models import (mlp, maxout, autoencoder)
 from pylearn2.training_algorithms import (sgd, learning_rule)
 from pylearn2.costs import (mlp as mlp_cost, autoencoder as ae_costs, cost)
 from pylearn2.costs.mlp import (dropout)
+
+
+# Configure logging so we have full control of regular cases.
+sgd.log.setLevel(logging.WARNING)
+mlp.logger.setLevel(logging.WARNING)

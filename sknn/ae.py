@@ -12,7 +12,7 @@ log = logging.getLogger('sknn')
 
 import sklearn
 
-from .pywrap2 import (autoencoder, sgd, transformer_dataset, blocks, ae_costs, corruption)
+from .backend.pylearn2.ae import AutoEncoder as BaseAE
 from . import nn
 
 
@@ -91,17 +91,8 @@ class Layer(nn.Layer):
         self.tied_weights = tied_weights
         self.corruption_level = corruption_level
 
-    def _get_cost(self):
-        if self.cost == 'msre':
-            return ae_costs.MeanSquaredReconstructionError()
-        if self.cost == 'mbce':
-            return ae_costs.MeanBinaryCrossEntropy()
 
-
-class AutoEncoder(nn.NeuralNetwork, sklearn.base.TransformerMixin):
-
-    def _setup(self):
-        self.dca = None
+class AutoEncoder(BaseAE, sklearn.base.TransformerMixin):
 
     def fit(self, X):
         """Fit the auto-encoder to the given data using layerwise training.
@@ -117,7 +108,6 @@ class AutoEncoder(nn.NeuralNetwork, sklearn.base.TransformerMixin):
         self : object
             Returns this instance.
         """
-        sgd.log.setLevel(logging.WARNING)
         num_samples, data_size = X.shape[0], X.size
 
         log.info("Training on dataset of {:,} samples with {:,} total size.".format(num_samples, data_size))
@@ -129,20 +119,8 @@ class AutoEncoder(nn.NeuralNetwork, sklearn.base.TransformerMixin):
         if self.verbose:
             log.debug("\nEpoch    Validation Error    Time"
                       "\n---------------------------------")
-
-        input_size = [X.shape[1]] + [l.units for l in self.layers[:-1]]
-        ae_layers = []
-        for v, l in zip(input_size, self.layers):
-            ae_layers.append(self._create_ae_layer(v, l))
-        self.dca = autoencoder.DeepComposedAutoencoder(ae_layers)
-
-        input_space = self._create_input_space(X)
-        ds = self._create_dataset(input_space, X=X)
-        datasets = self._create_ae_datasets(ds, ae_layers)
-        trainers = [self._create_trainer(d, l._get_cost()) for d, l in zip(datasets, self.layers)]
-        for l, t, d in zip(ae_layers, trainers, datasets):
-            t.setup(l, d)
-            self._train_layer(t, l, d)
+        
+        self._fit_impl(X)
         return self
 
     def transform(self, X):
@@ -159,8 +137,7 @@ class AutoEncoder(nn.NeuralNetwork, sklearn.base.TransformerMixin):
         y : numpy array, shape (n_samples, n_features)
             Transformed output array from the auto-encoder.
         """
-        assert self.dca is not None, "The auto-encoder has not been trained yet."
-        return self.dca.perform(X)
+        return self._transform_impl(X)
 
     def transfer(self, nn):
         assert not nn.is_initialized,\
@@ -173,40 +150,5 @@ class AutoEncoder(nn.NeuralNetwork, sklearn.base.TransformerMixin):
             assert a.units == l.units,\
                 "Different number of units in target MLP; expected `%i` but found `%i`."\
                 % (a.units, l.units)
-
-        nn.weights = []
-        for a in self.dca.autoencoders:
-            nn.weights.append((a.weights.get_value(), a.hidbias.get_value()))
-
-    def _create_ae_layer(self, size, layer):
-        """Construct an internal pylearn2 layer based on the requested layer type.
-        """
-        activation = layer.activation.lower()
-        if layer.type == 'autoencoder':
-            return autoencoder.Autoencoder(size,
-                                           layer.units,
-                                           activation,
-                                           activation,
-                                           layer.tied_weights,
-                                           rng=self.random_state)
-        if layer.type == 'denoising':
-            corruptor = corruption.GaussianCorruptor(layer.corruption_level,
-                                                     self.random_state)
-            return autoencoder.DenoisingAutoencoder(corruptor,
-                                                    size,
-                                                    layer.units,
-                                                    activation,
-                                                    activation,
-                                                    tied_weights=layer.tied_weights,
-                                                    rng=self.random_state)
-
-    def _create_ae_datasets(self, ds, layers):
-        """Setup pylearn2 transformer datasets for each layer, passing the inputs through
-        previous layers before training the current layer.
-        """
-        trainsets = [ds]
-        for i, l in enumerate(layers):
-            stack = layers[0] if i == 0 else blocks.StackedBlocks(layers[0:i+1])
-            trds = transformer_dataset.TransformerDataset(raw=ds, transformer=stack)
-            trainsets.append(trds)
-        return trainsets
+       
+        self._transfer_impl(nn)

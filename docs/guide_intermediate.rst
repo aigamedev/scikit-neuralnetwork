@@ -63,17 +63,17 @@ If you want to manually interrupt the main training loop by pressing ``CTRL+C`` 
 This was designed to work with both multi-layer perceptrons in :mod:`sknn.mlp` and auto-encoders in :mod:`sknn.ae`.  
 
 
-GPU Backend
------------
+CPU vs. GPU Platform
+--------------------
 
-To setup the library to use your GPU or CPU explicitly in 32-bit or 64-bit mode, you can use the ``backend`` pseudo-module.  It's a syntactic helper to setup ``THEANO_FLAGS`` in a Pythonic way, for example:
+To setup the library to use your GPU or CPU explicitly in 32-bit or 64-bit mode, you can use the ``platform`` pseudo-module.  It's a syntactic helper to setup the ``THEANO_FLAGS`` environment variable in a Pythonic way, for example:
 
 .. code:: python
 
     # Use the GPU in 32-bit mode, falling back otherwise.
-    from sknn.backend import gpu32
+    from sknn.platform import gpu32
     
     # Use the CPU in 64-bit mode.
-    from sknn.backend import cpu64
+    from sknn.platform import cpu64
 
-WARNING: This will only work if your program has not yet imported the ``theano`` module, due to the way the library is designed.  If ``THEANO_FLAGS`` are set on the command-line, they are not overwridden.
+WARNING: This will only work if your program has not yet imported the ``theano`` module, due to the way that library is designed.  If ``THEANO_FLAGS`` are set on the command-line, they are not overwridden.
