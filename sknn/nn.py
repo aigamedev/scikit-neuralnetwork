@@ -395,6 +395,8 @@ class NeuralNetwork(object):
         self.debug = debug
         self.verbose = verbose
 
+        self.weights = None
+
         self._create_logger()
 
         assert self.regularize in (None, 'L1', 'L2', 'dropout'),\
@@ -435,15 +437,6 @@ class NeuralNetwork(object):
         hnd.setLevel(lvl)
         log.addHandler(hnd)
         log.setLevel(lvl)
-        
-    def _create_input_space(self, X):
-        raise NotImplementedError()
-
-    def _create_dataset(self, input_space, X, y=None):
-        raise NotImplementedError()
-
-    def _create_trainer(self, dataset, cost):
-        raise NotImplementedError()
 
     def _train_layer(self, trainer, layer, dataset):
         # Bug in PyLearn2 that has some unicode channels, can't sort.

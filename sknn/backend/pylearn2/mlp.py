@@ -35,7 +35,6 @@ class MultiLayerPerceptron(NeuralNetwork):
         self.unit_counts = None
         self.input_space = None
         self.mlp = None
-        self.weights = None
         self.ds = None
         self.vs = None
         self.f = None
@@ -56,8 +55,10 @@ class MultiLayerPerceptron(NeuralNetwork):
             # Use the globally specified dropout rate when there are no layer-specific ones.
             incl = 1.0 - (self.dropout_rate or 0.5)
             default_prob, default_scale = incl, 1.0 / incl
-            self.regularize = 'dropout'
-            
+
+            if self.regularize is None:
+                self.regularize = 'dropout*'
+
             # Pass all the parameters to pylearn2 as a custom cost function.
             self.cost = dropout.Dropout(
                 default_input_include_prob=default_prob,
@@ -78,7 +79,9 @@ class MultiLayerPerceptron(NeuralNetwork):
                 l1 = mlp_cost.L1WeightDecay(layer_decay)
                 self.cost = cost.SumOfCosts([mlp_default_cost,l1])
             else: # Default is 'L2'.
-                self.regularize = 'L2'
+                if self.regularize is None:
+                    self.regularize = 'L2*'
+
                 l2 =  mlp_cost.WeightDecay(layer_decay)
                 self.cost = cost.SumOfCosts([mlp_default_cost,l2])
 
@@ -228,10 +231,19 @@ class MultiLayerPerceptron(NeuralNetwork):
         inputs = self.mlp.get_input_space().make_theano_batch()
         self.f = theano.function([inputs], self.mlp.fprop(inputs))
 
-    def _initialize(self, X, y):
+    def _initialize(self, X, y=None):
         assert not self.is_initialized,\
             "This neural network has already been initialized."
         self._create_specs(X, y)
+
+        # Convolution networks need a custom input space.
+        self.input_space = self._create_input_space(X)
+        if self.mlp is None:
+            self._create_mlp()
+
+        # Can do partial initialization when predicting, no trainer needed.
+        if y is None:
+            return
 
         if self.valid_size > 0.0:
             assert self.valid_set is None, "Can't specify valid_size and valid_set together."
@@ -242,10 +254,7 @@ class MultiLayerPerceptron(NeuralNetwork):
             self.valid_set = X_v, y_v
         self.train_set = X, y
 
-        # Convolution networks need a custom input space.
-        self.input_space = self._create_input_space(X)
         self.ds = self._create_dataset(self.input_space, X, y)
-
         if self.valid_set is not None:
             X_v, y_v = self.valid_set
             input_space = self._create_input_space(X_v)
@@ -253,11 +262,18 @@ class MultiLayerPerceptron(NeuralNetwork):
         else:
             self.vs = None
 
-        if self.mlp is None:
-            self._create_mlp()
-
         self.trainer = self._create_mlp_trainer(self.vs)
         self.trainer.setup(self.mlp, self.ds)
+
+    def _predict_impl(self, X):
+        return self.f(X)
+
+    def _train_impl(self, X, y):
+        if self.is_convolution:
+            X = self.ds.view_converter.topo_view_to_design_mat(X)
+        self.ds.X, self.ds.y = X, y
+
+        self._train_layer(self.trainer, self.mlp, self.ds)
 
     @property
     def is_initialized(self):

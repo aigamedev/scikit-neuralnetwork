@@ -133,7 +133,7 @@ class MultiLayerPerceptron(BaseMLP, sklearn.base.BaseEstimator):
         if self.valid_set is not None:
             X_v, _ = self.valid_set
             log.debug("  - Train: {: <9,}  Valid: {: <4,}".format(X.shape[0], X_v.shape[0]))
-        if self.cost or self.regularize:
+        if self.regularize:
             comment = ", auto-enabled from layers" if self.regularize is None else ""
             log.debug("  - Using `%s` for regularization%s." % (self.regularize, comment))
         if self.n_iter is not None:
@@ -141,16 +141,12 @@ class MultiLayerPerceptron(BaseMLP, sklearn.base.BaseEstimator):
         if self.n_stable is not None and self.n_stable < (self.n_iter or sys.maxsize):
             log.debug("  - Early termination after {} stable iterations.".format(self.n_stable))
 
-        if self.is_convolution:
-            X = self.ds.view_converter.topo_view_to_design_mat(X)
-        self.ds.X, self.ds.y = X, y
-
         if self.verbose:
             log.debug("\nEpoch    Validation Error    Time"
                       "\n---------------------------------")
 
         try:
-            self._train_layer(self.trainer, self.mlp, self.ds)
+            self._train_impl(X, y)
         except RuntimeError as e:
             log.error("\n{}{}{}\n\n{}\n".format(
                 ansi.RED,
@@ -171,13 +167,11 @@ class MultiLayerPerceptron(BaseMLP, sklearn.base.BaseEstimator):
                 "You must specify the number of units to predict without fitting."
             if self.weights is None:
                 log.warning("WARNING: Computing estimates with an untrained network.")
-            self._create_specs(X)
-            self.input_space = self._create_input_space(X)
-            self._create_mlp()
+            self._initialize(X)
 
         if not isinstance(X, numpy.ndarray):
             X = X.toarray()
-        return self.f(X)
+        return self._predict_impl(X)
 
     def get_params(self, deep=True):
         result = super(MultiLayerPerceptron, self).get_params(deep=True)
