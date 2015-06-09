@@ -120,7 +120,7 @@ class AutoEncoder(BaseAE, sklearn.base.TransformerMixin):
             log.debug("\nEpoch    Validation Error    Time"
                       "\n---------------------------------")
         
-        self._fit(X)
+        self._fit_impl(X)
         return self
 
     def transform(self, X):
@@ -137,8 +137,7 @@ class AutoEncoder(BaseAE, sklearn.base.TransformerMixin):
         y : numpy array, shape (n_samples, n_features)
             Transformed output array from the auto-encoder.
         """
-        assert self.dca is not None, "The auto-encoder has not been trained yet."
-        return self.dca.perform(X)
+        return self._transform_impl(X)
 
     def transfer(self, nn):
         assert not nn.is_initialized,\
@@ -152,4 +151,4 @@ class AutoEncoder(BaseAE, sklearn.base.TransformerMixin):
                 "Different number of units in target MLP; expected `%i` but found `%i`."\
                 % (a.units, l.units)
        
-        self._transfer(nn)
+        self._transfer_impl(nn)

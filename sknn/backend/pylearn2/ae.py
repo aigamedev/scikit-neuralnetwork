@@ -21,14 +21,13 @@ class AutoEncoder(nn.NeuralNetwork):
     def _setup(self):
         self.dca = None
 
-
     def _ae_get_cost(self, layer):
         if layer.cost == 'msre':
             return ae_costs.MeanSquaredReconstructionError()
         if layer.cost == 'mbce':
             return ae_costs.MeanBinaryCrossEntropy()
 
-    def _fit(self, X):
+    def _fit_impl(self, X):
         input_size = [X.shape[1]] + [l.units for l in self.layers[:-1]]
         ae_layers = []
         for v, l in zip(input_size, self.layers):
@@ -44,11 +43,11 @@ class AutoEncoder(nn.NeuralNetwork):
             self._train_layer(t, l, d)
         return self
 
-    def _transform(self, X):
+    def _transform_impl(self, X):
         assert self.dca is not None, "The auto-encoder has not been trained yet."
         return self.dca.perform(X)
 
-    def _transfer(self, nn):
+    def _transfer_impl(self, nn):
         nn.weights = []
         for a in self.dca.autoencoders:
             nn.weights.append((a.weights.get_value(), a.hidbias.get_value()))

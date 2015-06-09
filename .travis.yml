@@ -19,7 +19,7 @@ install:
   - pip install -e git+https://github.com/lisa-lab/pylearn2.git#egg=pylearn2
 
 script:
-  - echo -e "[run]\nomit=*pywrap2*" > .coveragerc
+  - echo -e "[run]\nomit=\n    sknn/backend/pylearn2/pywrap2.py\n    sknn/backend/deepy/*\n" > .coveragerc
   - nosetests --with-coverage --cover-package=sknn -v sknn
 
 after_success:
