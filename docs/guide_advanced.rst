@@ -80,7 +80,7 @@ Keep in mind you can manually specify the ``name`` of any ``Layer`` in the const
     from sklearn.grid_search import GridSearchCV
 
     gs = GridSearchCV(nn, param_grid={
-        learning_rate: [0.05, 0.01, 0.005, 0.001],
+        'learning_rate': [0.05, 0.01, 0.005, 0.001],
         'hidden0__units': [4, 8, 12],
         'hidden0__type': ["Rectifier", "Sigmoid", "Tanh"]})
     gs.fit(a_in, a_out)
