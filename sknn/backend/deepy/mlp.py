@@ -36,6 +36,7 @@ class MultiLayerPerceptron(NeuralNetwork):
     """
 
     def _setup(self):
+        self.iterations = 0        
         self.trainer = None
         self.mlp = None
 
@@ -114,8 +115,14 @@ class MultiLayerPerceptron(NeuralNetwork):
         
         self.trainer = MomentumTrainer(self.mlp)
         self.controllers = [
-            self.trainer,
+            self,
             LearningRateAnnealer(self.trainer, patience=self.n_stable, anneal_times=0)]
+
+    def invoke(self):
+        """Controller interface for deepy's trainer.
+        """
+        self.iterations += 1
+        return bool(self.iterations >= self.n_iter)
 
     @property
     def is_initialized(self):
@@ -139,10 +146,11 @@ class MultiLayerPerceptron(NeuralNetwork):
         return X, y
 
     def _train_impl(self, X, y):
+        self.iterations = 0        
         data = zip(X, y)
         self.dataset = SequentialDataset(data)
         minibatches = MiniBatches(self.dataset, batch_size=20)
-        self.trainer.run(minibatches, controllers=[self.trainer])
+        self.trainer.run(minibatches, controllers=self.controllers)
         return self
 
     def _predict_impl(self, X):
