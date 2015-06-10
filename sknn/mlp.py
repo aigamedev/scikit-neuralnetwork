@@ -20,16 +20,24 @@ import sklearn.pipeline
 import sklearn.preprocessing
 import sklearn.cross_validation
 
-from .nn import Layer, Convolution, ansi
+from .nn import NeuralNetwork, Layer, Convolution, ansi
 
-from .backend.pylearn2.mlp import MultiLayerPerceptron as BaseMLP
+from .backend.pylearn2.mlp import MultiLayerPerceptron as BackendMLP
 
 
-class MultiLayerPerceptron(BaseMLP, sklearn.base.BaseEstimator):
+class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
     """
     Abstract base class for wrapping the multi-layer perceptron functionality
     from PyLearn2.
     """
+    
+    def _initialize(self, X, y):
+        assert not self.is_initialized,\
+            "This neural network has already been initialized."
+        self._create_specs(X, y)
+
+        self._backend = BackendMLP(self)
+        self._backend._initialize_impl(X, y)
 
     def _check_layer(self, layer, required, optional=[]):
         required.extend(['name', 'type'])
@@ -55,7 +63,7 @@ class MultiLayerPerceptron(BaseMLP, sklearn.base.BaseEstimator):
                 "Mismatch between dataset size and units in output layer."
 
         # Then compute the number of units in each layer for initialization.
-        self.unit_counts = [numpy.product(X.shape[1:]) if self.is_convolution else X.shape[1]]
+        self._unit_counts = [numpy.product(X.shape[1:]) if self.is_convolution else X.shape[1]]
         res = X.shape[1:3] if self.is_convolution else None
 
         for l in self.layers:
@@ -72,7 +80,7 @@ class MultiLayerPerceptron(BaseMLP, sklearn.base.BaseEstimator):
             else:
                 unit_count = l.units
 
-            self.unit_counts.append(unit_count)
+            self._unit_counts.append(unit_count)
 
     def __getstate__(self):
         d = self.__dict__.copy()

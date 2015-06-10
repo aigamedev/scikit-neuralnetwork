@@ -31,8 +31,8 @@ class MultiLayerPerceptron(NeuralNetwork):
     from PyLearn2.
     """
 
-    def _setup(self):
-        self.unit_counts = None
+    def __init__(self, spec):
+        super(MultiLayerPerceptron, self).__init__(spec)
         self.input_space = None
         self.mlp = None
         self.ds = None
@@ -45,7 +45,7 @@ class MultiLayerPerceptron(NeuralNetwork):
     def _create_mlp_trainer(self, dataset):
         # Aggregate all the dropout parameters into shared dictionaries.
         dropout_probs, dropout_scales = {}, {}
-        for l in [l for l in self.layers if l.dropout is not None]:
+        for l in [l for l in self.spec.layers if l.dropout is not None]:
             incl = 1.0 - l.dropout
             dropout_probs[l.name] = incl
             dropout_scales[l.name] = 1.0 / incl
@@ -69,7 +69,7 @@ class MultiLayerPerceptron(NeuralNetwork):
         layer_decay = {}
         if self.regularize in ('L1', 'L2') or any(l.weight_decay for l in self.layers):
             wd = self.weight_decay or 0.0001
-            for l in self.layers:
+            for l in self.spec.layers:
                 layer_decay[l.name] = l.weight_decay or wd
         assert len(layer_decay) == 0 or self.regularize in ('L1', 'L2', None)
 
@@ -115,6 +115,9 @@ class MultiLayerPerceptron(NeuralNetwork):
             pool_stride=(1,1),
             irange=irange)
 
+    def _check_layer(self, *args):
+        self.spec._check_layer(*args)
+
     def _create_layer(self, name, layer, irange):
         if isinstance(layer, Convolution):
             return self._create_convolution_layer(name, layer, irange)
@@ -154,7 +157,7 @@ class MultiLayerPerceptron(NeuralNetwork):
                 layer_name=layer.name,
                 dim=layer.units,
                 irange=irange,
-                use_abs_loss=bool(self.loss_type == 'mae'))
+                use_abs_loss=bool(self.spec.loss_type == 'mae'))
 
         if layer.type == 'Gaussian':
             self._check_layer(layer, ['units'])
@@ -166,7 +169,7 @@ class MultiLayerPerceptron(NeuralNetwork):
                 beta_lr_scale=None,
                 dim=layer.units,
                 irange=irange,
-                use_abs_loss=bool(self.loss_type == 'mae'))
+                use_abs_loss=bool(self.spec.loss_type == 'mae'))
 
         if layer.type == 'Softmax':
             self._check_layer(layer, ['units'])
@@ -178,9 +181,9 @@ class MultiLayerPerceptron(NeuralNetwork):
     def _create_mlp(self):
         # Create the layers one by one, connecting to previous.
         mlp_layers = []
-        for i, layer in enumerate(self.layers):
-            fan_in = self.unit_counts[i]
-            fan_out = self.unit_counts[i + 1]
+        for i, layer in enumerate(self.spec.layers):
+            fan_in = self.spec._unit_counts[i]
+            fan_out = self.spec._unit_counts[i + 1]
 
             lim = numpy.sqrt(6) / numpy.sqrt(fan_in + fan_out)
             if layer.type == 'Tanh':
@@ -196,15 +199,15 @@ class MultiLayerPerceptron(NeuralNetwork):
 
         log.info(
             "Initializing neural network with %i layers, %i inputs and %i outputs.",
-            len(self.layers), self.unit_counts[0], self.layers[-1].units)
+            len(self.spec.layers), self.spec._unit_counts[0], self.spec.layers[-1].units)
 
         self.mlp = mlp.MLP(
             mlp_layers,
-            nvis=None if self.input_space else self.unit_counts[0],
-            seed=self.random_state,
+            nvis=None if self.input_space else self.spec._unit_counts[0],
+            seed=self.spec.random_state,
             input_space=self.input_space)
 
-        for l, p, count in zip(self.layers, self.mlp.layers, self.unit_counts[1:]):
+        for l, p, count in zip(self.spec.layers, self.mlp.layers, self.spec._unit_counts[1:]):
             space = p.get_output_space()
             if isinstance(l, Convolution):                
                 log.debug("  - Convl: {}{: <10}{} Output: {}{: <10}{} Channels: {}{}{}".format(
@@ -221,7 +224,7 @@ class MultiLayerPerceptron(NeuralNetwork):
                 assert count == space.get_total_dimension(),\
                     "Mismatch in the calculated number of dense layer outputs."
 
-        if self.weights is not None:
+        if self.spec.weights is not None:
             l  = min(len(self.weights), len(self.mlp.layers))
             log.info("Reloading parameters for %i layer weights and biases." % (l,))
             self._array_to_mlp(self.weights, self.mlp)
@@ -231,11 +234,7 @@ class MultiLayerPerceptron(NeuralNetwork):
         inputs = self.mlp.get_input_space().make_theano_batch()
         self.f = theano.function([inputs], self.mlp.fprop(inputs))
 
-    def _initialize(self, X, y=None):
-        assert not self.is_initialized,\
-            "This neural network has already been initialized."
-        self._create_specs(X, y)
-
+    def _initialize_impl(self, X, y=None):
         # Convolution networks need a custom input space.
         self.input_space = self._create_input_space(X)
         if self.mlp is None:

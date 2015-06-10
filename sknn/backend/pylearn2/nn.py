@@ -12,29 +12,32 @@ log = logging.getLogger('sknn')
 
 import numpy
 
-from ...nn import ansi
-from ...nn import NeuralNetwork as BaseNetwork
-
 from .pywrap2 import (datasets, space, sgd)
 from .pywrap2 import learning_rule as lr, termination_criteria as tc
 from .dataset import SparseDesignMatrix, FastVectorSpace
 
 
-class NeuralNetwork(BaseNetwork):
+class NeuralNetwork(object):
+
+    def __init__(self, spec):
+        self.spec = spec
+    
+    def __getattr__(self, key):
+        return getattr(self.spec, key)
 
     def _create_input_space(self, X):
-        if self.is_convolution:
+        if self.spec.is_convolution:
             # Using `b01c` arrangement of data, see this for details:
             #   http://benanne.github.io/2014/04/03/faster-convolutions-in-theano.html
             # input: (batch size, channels, rows, columns)
             # filters: (number of filters, channels, rows, columns)
             return space.Conv2DSpace(shape=X.shape[1:3], num_channels=X.shape[-1])
         else:
-            InputSpace = space.VectorSpace if self.debug else FastVectorSpace
+            InputSpace = space.VectorSpace if self.spec.debug else FastVectorSpace
             return InputSpace(X.shape[-1])
 
     def _create_dataset(self, input_space, X, y=None):
-        if self.is_convolution:
+        if self.spec.is_convolution:
             view = input_space.get_origin_batch(X.shape[0])
             return datasets.DenseDesignMatrix(topo_view=view, y=y)
         else:

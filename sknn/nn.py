@@ -377,6 +377,12 @@ class NeuralNetwork(object):
         assert len(params) == 0,\
             "The specified additional parameters are unknown: %s." % ','.join(params.keys())
 
+        # Basic checking of the freeform string options.
+        assert regularize in (None, 'L1', 'L2', 'dropout'),\
+            "Unknown type of regularization specified: %s." % self.regularize
+        assert loss_type in ('mse', 'mae'),\
+            "Unknown loss function type specified: %s." % self.loss_type
+
         self.random_state = random_state
         self.learning_rule = learning_rule
         self.learning_rate = learning_rate
@@ -394,26 +400,16 @@ class NeuralNetwork(object):
         self.loss_type = loss_type
         self.debug = debug
         self.verbose = verbose
-
         self.weights = None
-
+        
+        self._backend = None
         self._create_logger()
-
-        assert self.regularize in (None, 'L1', 'L2', 'dropout'),\
-            "Unknown type of regularization specified: %s." % self.regularize
-        assert self.loss_type in ('mse', 'mae'),\
-            "Unknown loss function type specified: %s." % self.loss_type
-
-        self._setup()
-
-    def _setup(self):
-        raise NotImplementedError("NeuralNetwork is an abstract class; "
-                                  "use the mlp.Classifier or mlp.Regressor instead.")
 
     @property
     def is_initialized(self):
         """Check if the neural network was setup already.
         """
+        return self._backend is not None and self._backend.is_initialized()
         raise NotImplementedError("NeuralNetwork is an abstract class; "
                                   "use the mlp.Classifier or mlp.Regressor instead.")
 
