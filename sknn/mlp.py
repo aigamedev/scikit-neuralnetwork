@@ -31,7 +31,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
     from PyLearn2.
     """
     
-    def _initialize(self, X, y):
+    def _initialize(self, X, y=None):
         assert not self.is_initialized,\
             "This neural network has already been initialized."
         self._create_specs(X, y)
@@ -63,7 +63,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
                 "Mismatch between dataset size and units in output layer."
 
         # Then compute the number of units in each layer for initialization.
-        self._unit_counts = [numpy.product(X.shape[1:]) if self.is_convolution else X.shape[1]]
+        self.unit_counts = [numpy.product(X.shape[1:]) if self.is_convolution else X.shape[1]]
         res = X.shape[1:3] if self.is_convolution else None
 
         for l in self.layers:
@@ -80,34 +80,30 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
             else:
                 unit_count = l.units
 
-            self._unit_counts.append(unit_count)
+            self.unit_counts.append(unit_count)
 
     def __getstate__(self):
         d = self.__dict__.copy()
 
         # If the MLP does not exist, then the client code is trying to serialize
         # this object to communicate between multiple processes.
-        if self.mlp is not None:
-            d['weights'] = self._mlp_to_array()
+        if self._backend is not None:
+            d['weights'] = self._backend._mlp_to_array()
 
-        # TODO: Use a standard '_' prefix to filter these out.
-        for k in ['ds', 'vs', 'f', 'trainer', 'mlp']:
-            if k in d:
-                del d[k]
+        for k in [k for k in d.keys() if k.startswith('_')]:
+            del d[k]
         return d
 
     def __setstate__(self, d):
         self.__dict__.update(d)
-        # TODO: Use a standard '_' prefix to filter these out.
-        for k in ['ds', 'vs', 'f', 'trainer', 'mlp']:
-            setattr(self, k, None)
 
         # Only create the MLP if the weights were serialized. Otherwise, it
         # may have been serialized for multiprocessing reasons pre-training.
         self._create_logger()
 
         if self.weights is not None:
-            self._create_mlp()
+            self._backend = BackendMLP(self)
+            self._backend._create_mlp()
 
     def _reshape(self, X, y=None):
         if y is not None and y.ndim == 1:
@@ -131,9 +127,6 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
 
         if not self.is_initialized:
             self._initialize(X, y)
-            X, y = self.train_set
-        else:
-            self.train_set = X, y
 
         log.info("Training on dataset of {:,} samples with {:,} total size.".format(data_shape[0], data_size))
         if data_shape[1:] != X.shape[1:]:
@@ -154,7 +147,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
                       "\n---------------------------------")
 
         try:
-            self._train_impl(X, y)
+            self._backend._train_impl(X, y)
         except RuntimeError as e:
             log.error("\n{}{}{}\n\n{}\n".format(
                 ansi.RED,
@@ -170,7 +163,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
     def _predict(self, X):
         X, _ = self._reshape(X)
 
-        if self.mlp is None:
+        if self._backend is None:
             assert self.layers[-1].units is not None,\
                 "You must specify the number of units to predict without fitting."
             if self.weights is None:
@@ -179,7 +172,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
 
         if not isinstance(X, numpy.ndarray):
             X = X.toarray()
-        return self._predict_impl(X)
+        return self._backend._predict_impl(X)
 
     def get_params(self, deep=True):
         result = super(MultiLayerPerceptron, self).get_params(deep=True)

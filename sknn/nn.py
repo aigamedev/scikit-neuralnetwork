@@ -409,7 +409,7 @@ class NeuralNetwork(object):
     def is_initialized(self):
         """Check if the neural network was setup already.
         """
-        return self._backend is not None and self._backend.is_initialized()
+        return self._backend is not None and self._backend.is_initialized
         raise NotImplementedError("NeuralNetwork is an abstract class; "
                                   "use the mlp.Classifier or mlp.Regressor instead.")
 

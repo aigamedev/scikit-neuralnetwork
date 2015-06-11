@@ -56,7 +56,6 @@ class TestInputOutputs(unittest.TestCase):
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,))
         self.nn.fit(a_in, a_out)
 
-"""
 
 class TestSerialization(unittest.TestCase):
 
@@ -79,7 +78,7 @@ class TestSerialization(unittest.TestCase):
         buf.seek(0)
         nn = pickle.load(buf)
 
-        assert_is_not_none(nn.mlp)
+        assert_is_not_none(nn._backend)
         assert_equal(nn.layers, self.nn.layers)
 
 
@@ -96,7 +95,7 @@ class TestSerializedNetwork(TestLinearNetwork):
         self.nn = pickle.load(buf)
 
     def test_TypeOfWeightsArray(self):
-        for w, b in self.nn._mlp_to_array():
+        for w, b in self.nn._backend._mlp_to_array():
             assert_equal(type(w), numpy.ndarray)
             assert_equal(type(b), numpy.ndarray)
 
@@ -109,10 +108,8 @@ class TestSerializedNetwork(TestLinearNetwork):
     def test_PredictNoOutputUnitsAssertion(self):
         # Override base class test, this is not initialized but it
         # should be able to predict without throwing assert.
-        assert_true(self.nn.mlp is not None)
+        assert_true(self.nn._backend is not None)
 
     def test_PredictAlreadyInitialized(self):
         a_in = numpy.zeros((8,16))
         self.nn.predict(a_in)
-
-"""
