@@ -26,16 +26,17 @@ from deepy.layers import Dense, Softmax, Dropout
 from deepy.trainers import MomentumTrainer, LearningRateAnnealer
 
 from ...nn import Layer, Convolution, ansi
-from ...nn import NeuralNetwork
+from ..base import BackendBase
 
 
-class MultiLayerPerceptron(NeuralNetwork):
+class MultiLayerPerceptron(BackendBase):
     """
     Abstract base class for wrapping the multi-layer perceptron functionality
     from ``deepy``.
     """
 
-    def _setup(self):
+    def __init__(self, spec):
+        super(MultiLayerPerceptron, self).__init__(spec)
         self.iterations = 0        
         self.trainer = None
         self.mlp = None
@@ -95,7 +96,7 @@ class MultiLayerPerceptron(NeuralNetwork):
         model.stack_layer(Softmax())
         self.mlp = model
 
-    def _initialize(self, X, y=None):
+    def _initialize_impl(self, X, y=None):
         assert not self.is_initialized,\
             "This neural network has already been initialized."
         self._create_specs(X, y)
