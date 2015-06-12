@@ -228,7 +228,7 @@ class MultiLayerPerceptron(NeuralNetwork):
         log.debug("")
 
         inputs = self.mlp.get_input_space().make_theano_batch()
-        self.f = theano.function([inputs], self.mlp.fprop(inputs))
+        self.f = theano.function([inputs], self.mlp.fprop(inputs), allow_input_downcast=True)
 
     def _initialize_impl(self, X, y=None):
         # Convolution networks need a custom input space.
