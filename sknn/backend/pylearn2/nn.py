@@ -12,15 +12,18 @@ log = logging.getLogger('sknn')
 
 import numpy
 
-from ...nn import ansi
-from ...nn import NeuralNetwork as BaseNetwork
-
 from .pywrap2 import (datasets, space, sgd)
 from .pywrap2 import learning_rule as lr, termination_criteria as tc
 from .dataset import SparseDesignMatrix, FastVectorSpace
 
 
-class NeuralNetwork(BaseNetwork):
+class NeuralNetwork(object):
+
+    def __init__(self, spec):
+        self.spec = spec
+    
+    def __getattr__(self, key):
+        return getattr(self.spec, key)
 
     def _create_input_space(self, X):
         if self.is_convolution:

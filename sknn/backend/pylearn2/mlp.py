@@ -31,8 +31,8 @@ class MultiLayerPerceptron(NeuralNetwork):
     from PyLearn2.
     """
 
-    def _setup(self):
-        self.unit_counts = None
+    def __init__(self, spec):
+        super(MultiLayerPerceptron, self).__init__(spec)
         self.input_space = None
         self.mlp = None
         self.ds = None
@@ -40,7 +40,6 @@ class MultiLayerPerceptron(NeuralNetwork):
         self.f = None
         self.trainer = None
         self.cost = None
-        self.train_set = None
 
     def _create_mlp_trainer(self, dataset):
         # Aggregate all the dropout parameters into shared dictionaries.
@@ -57,7 +56,7 @@ class MultiLayerPerceptron(NeuralNetwork):
             default_prob, default_scale = incl, 1.0 / incl
 
             if self.regularize is None:
-                self.regularize = 'dropout*'
+                self.regularize = 'dropout'
 
             # Pass all the parameters to pylearn2 as a custom cost function.
             self.cost = dropout.Dropout(
@@ -80,7 +79,7 @@ class MultiLayerPerceptron(NeuralNetwork):
                 self.cost = cost.SumOfCosts([mlp_default_cost,l1])
             else: # Default is 'L2'.
                 if self.regularize is None:
-                    self.regularize = 'L2*'
+                    self.regularize = 'L2'
 
                 l2 =  mlp_cost.WeightDecay(layer_decay)
                 self.cost = cost.SumOfCosts([mlp_default_cost,l2])
@@ -229,13 +228,9 @@ class MultiLayerPerceptron(NeuralNetwork):
         log.debug("")
 
         inputs = self.mlp.get_input_space().make_theano_batch()
-        self.f = theano.function([inputs], self.mlp.fprop(inputs))
+        self.f = theano.function([inputs], self.mlp.fprop(inputs), allow_input_downcast=True)
 
-    def _initialize(self, X, y=None):
-        assert not self.is_initialized,\
-            "This neural network has already been initialized."
-        self._create_specs(X, y)
-
+    def _initialize_impl(self, X, y=None):
         # Convolution networks need a custom input space.
         self.input_space = self._create_input_space(X)
         if self.mlp is None:
@@ -252,7 +247,6 @@ class MultiLayerPerceptron(NeuralNetwork):
                                 test_size=self.valid_size,
                                 random_state=self.random_state)
             self.valid_set = X_v, y_v
-        self.train_set = X, y
 
         self.ds = self._create_dataset(self.input_space, X, y)
         if self.valid_set is not None:
@@ -264,8 +258,11 @@ class MultiLayerPerceptron(NeuralNetwork):
 
         self.trainer = self._create_mlp_trainer(self.vs)
         self.trainer.setup(self.mlp, self.ds)
+        return X, y
 
     def _predict_impl(self, X):
+        if not self.is_initialized:
+            self._initialize_impl(X)
         return self.f(X)
 
     def _train_impl(self, X, y):

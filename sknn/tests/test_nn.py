@@ -8,6 +8,3 @@ class TestAbstractNeuralNetwork(unittest.TestCase):
 
     def test_SetupRaisesException(self):
         assert_raises(NotImplementedError, NN, layers=[])
-
-    def test_IsInitializedRaisesExecption(self):
-        assert_raises(NotImplementedError, NN.is_initialized.fget, object())

@@ -12,6 +12,7 @@ from sknn.mlp import Layer as L, Convolution as C
 class TestConvolution(unittest.TestCase):
 
     def _run(self, nn, a_in=None, fit=True):
+        assert_true(nn.is_convolution)
         if a_in is None:
             a_in = numpy.zeros((8,32,16,1))
         a_out = numpy.zeros((8,4))

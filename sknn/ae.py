@@ -12,7 +12,7 @@ log = logging.getLogger('sknn')
 
 import sklearn
 
-from .backend.pylearn2.ae import AutoEncoder as BaseAE
+from .backend.pylearn2.ae import AutoEncoder as BackendAE
 from . import nn
 
 
@@ -92,7 +92,12 @@ class Layer(nn.Layer):
         self.corruption_level = corruption_level
 
 
-class AutoEncoder(BaseAE, sklearn.base.TransformerMixin):
+class AutoEncoder(nn.NeuralNetwork, sklearn.base.TransformerMixin):
+
+    def _setup(self):
+        assert not self.is_initialized,\
+            "This auto-encoder has already been initialized."
+        self._backend = BackendAE(self)
 
     def fit(self, X):
         """Fit the auto-encoder to the given data using layerwise training.
@@ -120,7 +125,7 @@ class AutoEncoder(BaseAE, sklearn.base.TransformerMixin):
             log.debug("\nEpoch    Validation Error    Time"
                       "\n---------------------------------")
         
-        self._fit_impl(X)
+        self._backend._fit_impl(X)
         return self
 
     def transform(self, X):
@@ -137,7 +142,7 @@ class AutoEncoder(BaseAE, sklearn.base.TransformerMixin):
         y : numpy array, shape (n_samples, n_features)
             Transformed output array from the auto-encoder.
         """
-        return self._transform_impl(X)
+        return self._backend._transform_impl(X)
 
     def transfer(self, nn):
         assert not nn.is_initialized,\
@@ -151,4 +156,4 @@ class AutoEncoder(BaseAE, sklearn.base.TransformerMixin):
                 "Different number of units in target MLP; expected `%i` but found `%i`."\
                 % (a.units, l.units)
        
-        self._transfer_impl(nn)
+        self._backend._transfer_impl(nn)
