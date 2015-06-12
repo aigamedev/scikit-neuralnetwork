@@ -27,7 +27,7 @@ from sklearn.datasets import make_moons, make_circles, make_classification
 import logging
 logging.basicConfig(format="%(message)s", level=logging.WARNING, stream=sys.stdout)
 
-from sknn.backend import gpu32
+#from sknn.backend import gpu32
 from sknn import mlp
 
 
