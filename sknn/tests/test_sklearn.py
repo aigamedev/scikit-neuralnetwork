@@ -45,7 +45,7 @@ class TestGridSearchRegressor(unittest.TestCase):
                     n_iter=2)
         clf.fit(self.a_in, self.a_out)
 
-    def __test_RandomMultipleJobs(self):
+    def test_RandomMultipleJobs(self):
         clf = RandomizedSearchCV(
                     self.__estimator__(layers=[L("Softmax", units=12), L("Linear")], n_iter=1),
                     param_distributions={'hidden0__units': randint(4, 12)},
