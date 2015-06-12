@@ -13,12 +13,13 @@ log = logging.getLogger('sknn')
 import sklearn
 
 from .pywrap2 import (autoencoder, sgd, transformer_dataset, blocks, ae_costs, corruption)
-from . import nn
+from .nn import NeuralNetwork
 
 
-class AutoEncoder(nn.NeuralNetwork):
+class AutoEncoder(NeuralNetwork):
 
-    def _setup(self):
+    def __init__(self, spec):
+        super(AutoEncoder, self).__init__(spec)
         self.dca = None
 
     def _ae_get_cost(self, layer):

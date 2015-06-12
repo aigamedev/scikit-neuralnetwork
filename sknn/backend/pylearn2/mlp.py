@@ -261,6 +261,8 @@ class MultiLayerPerceptron(NeuralNetwork):
         return X, y
 
     def _predict_impl(self, X):
+        if not self.is_initialized:
+            self._initialize_impl(X)
         return self.f(X)
 
     def _train_impl(self, X, y):

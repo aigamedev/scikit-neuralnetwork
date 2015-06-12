@@ -106,7 +106,6 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
 
         if self.weights is not None:
             self._backend = BackendMLP(self)
-            self._backend._create_mlp()
 
     def _reshape(self, X, y=None):
         if y is not None and y.ndim == 1:

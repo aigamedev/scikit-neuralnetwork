@@ -379,9 +379,9 @@ class NeuralNetwork(object):
 
         # Basic checking of the freeform string options.
         assert regularize in (None, 'L1', 'L2', 'dropout'),\
-            "Unknown type of regularization specified: %s." % self.regularize
+            "Unknown type of regularization specified: %s." % regularize
         assert loss_type in ('mse', 'mae'),\
-            "Unknown loss function type specified: %s." % self.loss_type
+            "Unknown loss function type specified: %s." % loss_type
 
         self.random_state = random_state
         self.learning_rule = learning_rule

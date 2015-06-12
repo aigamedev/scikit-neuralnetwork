@@ -27,7 +27,6 @@ class NeuralNetwork(object):
 
     def _create_input_space(self, X):
         if self.is_convolution:
-            print('CONV, YEAH')
             # Using `b01c` arrangement of data, see this for details:
             #   http://benanne.github.io/2014/04/03/faster-convolutions-in-theano.html
             # input: (batch size, channels, rows, columns)

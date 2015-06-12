@@ -95,6 +95,9 @@ class TestSerializedNetwork(TestLinearNetwork):
         self.nn = pickle.load(buf)
 
     def test_TypeOfWeightsArray(self):
+        a_in = numpy.zeros((8,16))
+        self.nn.predict(a_in)
+
         for w, b in self.nn._backend._mlp_to_array():
             assert_equal(type(w), numpy.ndarray)
             assert_equal(type(b), numpy.ndarray)
