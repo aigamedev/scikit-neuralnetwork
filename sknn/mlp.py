@@ -103,9 +103,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         # Only create the MLP if the weights were serialized. Otherwise, it
         # may have been serialized for multiprocessing reasons pre-training.
         self._create_logger()
-
-        if self.weights is not None:
-            self._backend = BackendMLP(self)
+        self._backend = None
 
     def _reshape(self, X, y=None):
         if y is not None and y.ndim == 1:

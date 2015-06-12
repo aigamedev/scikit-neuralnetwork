@@ -78,7 +78,6 @@ class TestSerialization(unittest.TestCase):
         buf.seek(0)
         nn = pickle.load(buf)
 
-        assert_is_not_none(nn._backend)
         assert_equal(nn.layers, self.nn.layers)
 
 
@@ -111,7 +110,7 @@ class TestSerializedNetwork(TestLinearNetwork):
     def test_PredictNoOutputUnitsAssertion(self):
         # Override base class test, this is not initialized but it
         # should be able to predict without throwing assert.
-        assert_true(self.nn._backend is not None)
+        assert_true(self.nn._backend is None)
 
     def test_PredictAlreadyInitialized(self):
         a_in = numpy.zeros((8,16))
