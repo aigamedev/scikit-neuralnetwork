@@ -31,6 +31,9 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
     from PyLearn2.
     """
     
+    def _setup(self):
+        pass
+
     def _initialize(self, X, y=None):
         assert not self.is_initialized,\
             "This neural network has already been initialized."
