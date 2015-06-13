@@ -16,10 +16,10 @@ from .pywrap2 import (datasets, space, sgd)
 from .pywrap2 import learning_rule as lr, termination_criteria as tc
 from .dataset import SparseDesignMatrix, FastVectorSpace
 
-from ..base import BackendBase
+from ..base import BaseBackend
 
 
-class NeuralNetwork(BackendBase):
+class NeuralNetworkBackend(BaseBackend):
 
     def _create_input_space(self, X):
         if self.is_convolution:

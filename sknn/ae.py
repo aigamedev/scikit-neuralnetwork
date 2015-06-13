@@ -12,7 +12,7 @@ log = logging.getLogger('sknn')
 
 import sklearn
 
-from .backend.pylearn2.ae import AutoEncoder as BackendAE
+from .backend import AutoEncoderBackend
 from . import nn
 
 
@@ -97,7 +97,7 @@ class AutoEncoder(nn.NeuralNetwork, sklearn.base.TransformerMixin):
     def _setup(self):
         assert not self.is_initialized,\
             "This auto-encoder has already been initialized."
-        self._backend = BackendAE(self)
+        self._backend = AutoEncoderBackend(self)
 
     def fit(self, X):
         """Fit the auto-encoder to the given data using layerwise training.

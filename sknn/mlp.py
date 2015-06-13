@@ -22,7 +22,7 @@ import sklearn.cross_validation
 
 from .nn import NeuralNetwork, Layer, Convolution, ansi
 
-from .backend.pylearn2.mlp import MultiLayerPerceptron as BackendMLP
+from .backend import MultiLayerPerceptronBackend
 
 
 class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
@@ -39,7 +39,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
             "This neural network has already been initialized."
         self._create_specs(X, y)
 
-        self._backend = BackendMLP(self)
+        self._backend = MultiLayerPerceptronBackend(self)
         self._backend._initialize_impl(X, y)
 
     def _check_layer(self, layer, required, optional=[]):

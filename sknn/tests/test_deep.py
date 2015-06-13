@@ -49,6 +49,10 @@ class TestDeepDeterminism(unittest.TestCase):
             nn1._initialize(self.a_in, self.a_out)
 
             nn2 = copier(nn1, activation)
+            print('activation', activation)
+            a_out1 = nn1.predict(self.a_in)
+            a_out2 = nn2.predict(self.a_in)
+            print(a_out1, a_out2)
             asserter(numpy.all(nn1.predict(self.a_in) == nn2.predict(self.a_in)))
 
     def test_DifferentSeedPredictNotEquals(self):
@@ -93,6 +97,7 @@ class TestActivations(unittest.TestCase):
         assert_equal('', self.buf.getvalue())
         sknn.mlp.log.removeHandler(self.hnd)
 
+    # Only applies to PyLearn2 backend.
     def test_MissingParameterException(self):
         nn = MLPR(layers=[L("Maxout", units=32), L("Linear")])
         a_in = numpy.zeros((8,16))

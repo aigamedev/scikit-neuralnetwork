@@ -21,18 +21,18 @@ import sklearn.preprocessing
 import sklearn.cross_validation
 
 from ...nn import Layer, Convolution, ansi
-from .nn import NeuralNetwork
+from .nn import NeuralNetworkBackend
 from .pywrap2 import (mlp, maxout, cost, dropout, mlp_cost)
 
 
-class MultiLayerPerceptron(NeuralNetwork):
+class MultiLayerPerceptronBackend(NeuralNetworkBackend):
     """
     Abstract base class for wrapping the multi-layer perceptron functionality
     from PyLearn2.
     """
 
     def __init__(self, spec):
-        super(MultiLayerPerceptron, self).__init__(spec)
+        super(MultiLayerPerceptronBackend, self).__init__(spec)
         self.input_space = None
         self.mlp = None
         self.ds = None

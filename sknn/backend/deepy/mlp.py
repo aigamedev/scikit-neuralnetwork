@@ -24,12 +24,13 @@ from deepy.dataset import MiniBatches, SequentialDataset
 from deepy.networks import NeuralRegressor
 from deepy.layers import Dense, Softmax, Dropout
 from deepy.trainers import MomentumTrainer, LearningRateAnnealer
+from deepy.utils import UniformInitializer
 
 from ...nn import Layer, Convolution, ansi
-from ..base import BackendBase
+from ..base import BaseBackend
 
 
-class MultiLayerPerceptron(BackendBase):
+class MultiLayerPerceptronBackend(BaseBackend):
     """
     Abstract base class for wrapping the multi-layer perceptron functionality
     from ``deepy``.
@@ -88,12 +89,19 @@ class MultiLayerPerceptron(BackendBase):
 
     def _create_mlp(self):
         model = NeuralRegressor(input_dim=self.unit_counts[0])
+        initializer = UniformInitializer(seed=self.random_state)
+
         for l, n in zip(self.layers, self.unit_counts[1:]):
-            t = 'relu'
-            if l.type == 'Rectifier': t = 'relu'
-            if l.type == 'Linear': t = 'linear'
-            model.stack_layer(Dense(n, t))
-        model.stack_layer(Softmax())
+            t = None
+            if l.type in ('Tanh', 'Sigmoid'): t = l.type.lower()
+            if l.type in ('Rectifier', 'Maxout'): t = 'relu'
+            if l.type in ('Linear', 'Softmax'): t = 'linear'
+            assert t is not None, "Unknown activation type `%s`." % l.type
+
+            model.stack_layer(Dense(n, t, init=initializer))
+            if l.type == 'Softmax':
+                model.stack_layer(Softmax())
+
         self.mlp = model
 
     def _initialize_impl(self, X, y=None):
