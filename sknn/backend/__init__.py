@@ -8,11 +8,11 @@ name = None
 # This placeholder multi-layer perceptron class is replaced on importing
 # a submodule from this backend module, e.g. from PyLearn2's implementation.
 class MultiLayerPerceptronBackend(object):
-    def __init__(self):
+    def __init__(self, _):
         raise NotImplementedError("No backend sub-module imported.")
 
 # This placeholder auto-encoder class is replaced on importing a submodule
 # from this backend module, e.g. from PyLearn2's implementation.
 class AutoEncoderBackend(object):
-    def __init__(self):
+    def __init__(self, _):
         raise NotImplementedError("No backend sub-module imported.")

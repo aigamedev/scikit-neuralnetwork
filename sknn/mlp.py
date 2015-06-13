@@ -134,7 +134,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         if self.valid_set is not None:
             X_v, _ = self.valid_set
             log.debug("  - Train: {: <9,}  Valid: {: <4,}".format(X.shape[0], X_v.shape[0]))
-        if self.regularize:
+        if self.regularize is not None:
             comment = ", auto-enabled from layers" if self.regularize is None else ""
             log.debug("  - Using `%s` for regularization%s." % (self.regularize, comment))
         if self.n_iter is not None:

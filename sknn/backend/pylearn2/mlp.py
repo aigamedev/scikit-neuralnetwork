@@ -79,6 +79,7 @@ class MultiLayerPerceptronBackend(NeuralNetworkBackend):
                 self.cost = cost.SumOfCosts([mlp_default_cost,l1])
             else: # Default is 'L2'.
                 if self.regularize is None:
+                    print('AUTO-ENABLE REGULARIZE.')
                     self.regularize = 'L2'
 
                 l2 =  mlp_cost.WeightDecay(layer_decay)
