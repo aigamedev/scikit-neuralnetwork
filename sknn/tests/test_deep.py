@@ -45,6 +45,10 @@ class TestDeepDeterminism(unittest.TestCase):
 
     def run_EqualityTest(self, copier, asserter):
         for activation in ["Rectifier", "Sigmoid", "Maxout", "Tanh"]:
+            # Only PyLearn2 supports Maxout.
+            if activation == 'Maxout' and sknn.backend.name != 'pylearn2':
+                continue
+ 
             nn1 = MLPR(layers=[L(activation, units=16, pieces=2), L("Linear", units=1)], random_state=1234)
             nn1._initialize(self.a_in, self.a_out)
 
@@ -97,7 +101,7 @@ class TestActivations(unittest.TestCase):
         assert_equal('', self.buf.getvalue())
         sknn.mlp.log.removeHandler(self.hnd)
 
-    # Only applies to PyLearn2 backend.
+    @unittest.skipIf(sknn.backend.name != 'pylearn2', 'only pylearn2')
     def test_MissingParameterException(self):
         nn = MLPR(layers=[L("Maxout", units=32), L("Linear")])
         a_in = numpy.zeros((8,16))

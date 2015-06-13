@@ -1,1 +1,1 @@
-from sknn.backend import pylearn2
+from sknn.backend import deepy

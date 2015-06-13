@@ -18,7 +18,7 @@ SPARSE_TYPES = ['csr_matrix', 'csc_matrix', 'dok_matrix', 'lil_matrix']
 class TestScipySparseMatrix(unittest.TestCase):
 
     def setUp(self):
-        self.nn = MLP(layers=[L("Gaussian", units=4)], n_iter=1)
+        self.nn = MLP(layers=[L("Linear", units=4)], n_iter=1)
 
     def test_FitFloat64(self):
         for t in SPARSE_TYPES:

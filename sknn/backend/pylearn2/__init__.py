@@ -8,3 +8,4 @@ from .ae import AutoEncoderBackend
 # Register this implementation as the MLP backend.
 backend.MultiLayerPerceptronBackend = MultiLayerPerceptronBackend
 backend.AutoEncoderBackend = AutoEncoderBackend
+backend.name = 'pylearn2'
