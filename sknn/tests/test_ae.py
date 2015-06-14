@@ -3,9 +3,12 @@ from nose.tools import (assert_raises, assert_equals)
 
 import numpy
 
+import sknn
 from sknn.ae import AutoEncoder as AE, Layer as L
 from sknn import mlp
 
+
+@unittest.skipIf(sknn.backend.name != 'pylearn2', 'only pylearn2')
 class TestAutoEncoder(unittest.TestCase):
     
     def test_LifeCycle(self):
@@ -41,6 +44,7 @@ class TestAutoEncoder(unittest.TestCase):
         assert_raises(AssertionError, ae.transfer, nn)
 
 
+@unittest.skipIf(sknn.backend.name != 'pylearn2', 'only pylearn2')
 class TestParameters(unittest.TestCase):
     
     def test_CostFunctions(self):

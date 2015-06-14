@@ -22,7 +22,7 @@ import sklearn.cross_validation
 
 from deepy.dataset import MiniBatches, SequentialDataset
 from deepy.networks import NeuralRegressor
-from deepy.layers import Dense, Softmax, Dropout
+from deepy import layers
 from deepy.trainers import MomentumTrainer, LearningRateAnnealer
 from deepy.utils import UniformInitializer
 
@@ -41,7 +41,8 @@ class MultiLayerPerceptronBackend(BaseBackend):
         self.iterations = 0
         self.trainer = None
         self.mlp = None
-        l = logging.getLogger('sknn')
+
+        l = logging.getLogger('deepy')
         l.setLevel(logging.WARNING)
 
     @property
@@ -52,17 +53,29 @@ class MultiLayerPerceptronBackend(BaseBackend):
         model = NeuralRegressor(input_dim=self.unit_counts[0])
         initializer = UniformInitializer(seed=self.random_state)
 
+        if self.spec.is_convolution:
+            model.stack_layer(layers.DimShuffle((0, 'x', 1, 2)))
+
         for l, n in zip(self.layers, self.unit_counts[1:]):
             t = None
             if l.type in ('Tanh', 'Sigmoid'): t = l.type.lower()
             if l.type in ('Rectifier'): t = 'relu'
             if l.type in ('Linear', 'Softmax'): t = 'linear'
             assert t is not None, "Unknown activation type `%s`." % l.type
-            self._check_layer(l, ['units'])
 
-            model.stack_layer(Dense(n, t, init=initializer))
-            if l.type == 'Softmax':
-                model.stack_layer(Softmax())
+            if isinstance(l, Layer):
+                # self._check_layer(l, ['units'])
+                model.stack_layer(layers.Dense(n, t, init=initializer))
+                if l.type == 'Softmax':
+                    model.stack_layer(layers.Softmax())
+            if isinstance(l, layers.Convolution):
+                # self._check_layer(l, ['channel', 'kernel_shape'])
+                model.stack_layer(layers.Convolution(
+                    activation=t,
+                    filter_shape=(l.channels, l.kernel_shape[0], l.kernel_shape[1]),
+                    pool_size=l.pool_shape,
+                    border_mode=l.border_mode,
+                    init=initializer))
 
         self.mlp = model
 
@@ -102,7 +115,9 @@ class MultiLayerPerceptronBackend(BaseBackend):
         return self.trainer is not None
 
     def _train_impl(self, X, y):
-        self.iterations = 0        
+        if self.spec.is_convolution:
+            X = X.reshape(X.shape[:3])
+        self.iterations = 0
         data = zip(X, y)
         self.dataset = SequentialDataset(data)
         minibatches = MiniBatches(self.dataset, batch_size=20)
