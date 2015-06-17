@@ -122,8 +122,8 @@ class AutoEncoder(nn.NeuralNetwork, sklearn.base.TransformerMixin):
             log.debug("  - Early termination after {} stable iterations.".format(self.n_stable))
 
         if self.verbose:
-            log.debug("\nEpoch    Validation Error    Time"
-                      "\n---------------------------------")
+            log.debug("\nEpoch    Validation Error        Time"
+                      "\n-------------------------------------")
         
         self._backend._fit_impl(X)
         return self

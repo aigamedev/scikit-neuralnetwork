@@ -40,7 +40,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         self._create_specs(X, y)
 
         self._backend = MultiLayerPerceptronBackend(self)
-        self._backend._initialize_impl(X, y)
+        return self._backend._initialize_impl(X, y)
 
     def _check_layer(self, layer, required, optional=[]):
         required.extend(['name', 'type'])
@@ -126,7 +126,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         X, y = self._reshape(X, y)
 
         if not self.is_initialized:
-            self._initialize(X, y)
+            X, y = self._initialize(X, y)
 
         log.info("Training on dataset of {:,} samples with {:,} total size.".format(data_shape[0], data_size))
         if data_shape[1:] != X.shape[1:]:
@@ -143,8 +143,8 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
             log.debug("  - Early termination after {} stable iterations.".format(self.n_stable))
 
         if self.verbose:
-            log.debug("\nEpoch    Validation Error    Time"
-                      "\n---------------------------------")
+            log.debug("\nEpoch    Validation Error      Time"
+                      "\n-----------------------------------")
 
         try:
             self._backend._train_impl(X, y)
@@ -250,11 +250,11 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
         yp = self.label_binarizer.transform(y)
 
         # Also transform the validation set if it was explicitly specified.
-        if self.valid_set is not None and self.valid_set[1].ndim == 1:
+        if self.valid_set is not None:
             X_v, y_v = self.valid_set
             y_vp = self.label_binarizer.transform(y_v)
             self.valid_set = self._reshape(X_v, y_vp)
-
+ 
         # Now train based on a problem transformed into regression.
         return super(Classifier, self)._fit(X, yp)
 
