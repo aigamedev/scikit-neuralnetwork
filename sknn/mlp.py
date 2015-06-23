@@ -248,6 +248,13 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
         if y.ndim == 1:
             y = y.reshape((y.shape[0], 1))
 
+        if y.shape[1] == 1 and self.layers[-1].type != 'Softmax':
+            log.warning('{}WARNING: Expecting `Softmax` type for the last layer '
+                        'in classifier.{}\n'.format(ansi.YELLOW, ansi.ENDC))
+        if y.shape[1] > 1 and self.layers[-1].type != 'Sigmoid':
+            log.warning('{}WARNING: Expecting `Sigmoid` for last layer in '
+                        'multi-output classifier.{}\n'.format(ansi.YELLOW, ansi.ENDC))
+
         yp = []
         for i in range(y.shape[1]):
             preproc = sklearn.preprocessing.LabelBinarizer()
