@@ -38,6 +38,7 @@ if 'dbn' in sys.argv:
     classifiers.append(('nolearn.dbn', clf))
 
 if 'sknn' in sys.argv:
+    from sknn.backend import pylearn2
     from sknn.mlp import Classifier, Layer, Convolution
 
     clf = Classifier(
@@ -49,7 +50,7 @@ if 'sknn' in sys.argv:
         learning_rule='momentum',
         learning_momentum=0.9,
         batch_size=25,
-        valid_set=0.1,
+        valid_size=0.1,
         # valid_set=(X_test, y_test),
         n_stable=10,
         n_iter=10,
