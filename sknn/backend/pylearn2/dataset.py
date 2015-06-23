@@ -4,6 +4,7 @@ from __future__ import (absolute_import, unicode_literals, print_function)
 __all__ = ['FastVectorSpace', 'SparseDesignMatrix']
 
 import functools
+import numpy
 import theano
 
 from .pywrap2 import (utils, dataset, space, iteration)
@@ -92,6 +93,11 @@ class SparseDesignMatrix(dataset.Dataset):
         """
         return (self.X, self.y)
 
+    def _conv_fn(self, array):
+        if type(array) != numpy.ndarray:
+            array = array.todense()
+        return array.astype(theano.config.floatX)
+
     @functools.wraps(dataset.Dataset.iterator)
     def iterator(self, mode=None, batch_size=None, num_batches=None,
                  rng=None, data_specs=None, return_tuple=False):
@@ -110,10 +116,9 @@ class SparseDesignMatrix(dataset.Dataset):
         sub_spaces = composite.components
         sub_sources = source
 
-        conv_fn = lambda x: x.todense().astype(theano.config.floatX)
         convert = []
         for sp, src in utils.safe_zip(sub_spaces, sub_sources):
-            convert.append(conv_fn if src in ('features', 'targets') else None)
+            convert.append(self._conv_fn if src in ('features', 'targets') else None)
 
         assert mode is not None,\
                 "Iteration mode not provided for %s" % str(self)

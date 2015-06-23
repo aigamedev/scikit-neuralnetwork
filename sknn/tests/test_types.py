@@ -34,6 +34,13 @@ class TestScipySparseMatrix(unittest.TestCase):
             y = sparse_matrix((8, 4), dtype=numpy.float32)
             self.nn._fit(X, y)
 
+    def test_FitHybrid(self):
+        for t in SPARSE_TYPES:
+            sparse_matrix = getattr(scipy.sparse, t)
+            X = sparse_matrix((8, 4), dtype=numpy.float32)
+            y = numpy.zeros((8, 4), dtype=numpy.float32)
+            self.nn._fit(X, y)
+
     def test_Predict64(self):
         theano.config.floatX = 'float64'
         for t in SPARSE_TYPES:
@@ -69,17 +76,13 @@ class TestConvolution(unittest.TestCase):
 
     def test_FitResizeSquare(self):
         # The sparse matrices can't store anything but 2D, but convolution needs 3D or more.
-        for t in SPARSE_TYPES:
-            sparse_matrix = getattr(scipy.sparse, t)
-            X, y = numpy.zeros((8, 36)), numpy.zeros((8, 4))
-            self.nn._fit(X, y)
+        X, y = numpy.zeros((8, 36)), numpy.zeros((8, 4))
+        self.nn._fit(X, y)
 
     def test_FitResizeFails(self):
         # The sparse matrices can't store anything but 2D, but convolution needs 3D or more.
-        for t in SPARSE_TYPES:
-            sparse_matrix = getattr(scipy.sparse, t)
-            X, y = numpy.zeros((8, 35)), numpy.zeros((8, 4))
-            assert_raises(AssertionError, self.nn._fit, X, y)
+        X, y = numpy.zeros((8, 35)), numpy.zeros((8, 4))
+        assert_raises(AssertionError, self.nn._fit, X, y)
 
 
 class TestFormatDeterminism(unittest.TestCase):
