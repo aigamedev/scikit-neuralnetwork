@@ -15,18 +15,18 @@ class TestClassifierFunctionality(unittest.TestCase):
         self.nn = MLPC(layers=[L("Linear")], n_iter=1)
 
     def test_FitAutoInitialize(self):
-        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,), dtype=numpy.int32)
+        a_in, a_out = numpy.zeros((8,16)), numpy.random.randint(0, 5, (8,))
         self.nn.fit(a_in, a_out)
         assert_true(self.nn.is_initialized)
 
-    def test_ExplicitValidSet(self):
-        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,), dtype=numpy.int32)
+    def __test_ExplicitValidSet(self):
+        a_in, a_out = numpy.zeros((8,16)), numpy.random.randint(0, 5, (8,))
         self.nn.valid_set = (a_in, a_out)
         self.nn.fit(a_in, a_out)
         assert_true(self.nn.is_initialized)
 
-    def test_PartialFit(self):
-        a_in, a_out = numpy.zeros((8,4)), numpy.zeros((8,), dtype=numpy.int32)
+    def __test_PartialFit(self):
+        a_in, a_out = numpy.zeros((8,4)), numpy.random.randint(0, 5, (8,))
         self.nn.partial_fit(a_in, a_out, classes=[0,1,2,3])
         self.nn.partial_fit(a_in*2.0, a_out+1, classes=[0,1,2,3])
 
@@ -37,23 +37,30 @@ class TestClassifierFunctionality(unittest.TestCase):
     def test_PredictUninitializedNoLabels(self):
         self.nn.layers[-1].units = 4
         a_in = numpy.zeros((8,16))
-        assert_raises(ValueError, self.nn.predict, a_in)
+        assert_raises(AssertionError, self.nn.predict, a_in)
 
     def test_PredictClasses(self):
-        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,), dtype=numpy.int32)
+        a_in, a_out = numpy.zeros((8,16)), numpy.random.randint(0, 5, (8,))
+        self.nn.fit(a_in, a_out)
+        a_test = self.nn.predict(a_in)
+        assert_equal(type(a_out), type(a_test))
+        assert_equal(a_out.shape[0], a_test.shape[0])
+
+    def test_PredictMultiClass(self):
+        a_in, a_out = numpy.zeros((8,16)), numpy.random.randint(0, 3, (8,2))
         self.nn.fit(a_in, a_out)
         a_test = self.nn.predict(a_in)
         assert_equal(type(a_out), type(a_test))
         assert_equal(a_out.shape, a_test.shape)
 
     def test_EstimateProbalities(self):
-        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,), dtype=numpy.int32)
+        a_in, a_out = numpy.zeros((8,16)), numpy.random.randint(0, 5, (8,))
         self.nn.fit(a_in, a_out)
         a_test = self.nn.predict_proba(a_in)
         assert_equal(type(a_out), type(a_test))
 
     def test_CalculateScore(self):
-        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,), dtype=numpy.int32)
+        a_in, a_out = numpy.zeros((8,16)), numpy.random.randint(0, 5, (8,))
         self.nn.fit(a_in, a_out)
         f = self.nn.score(a_in, a_out)
         assert_equal(type(f), numpy.float64)

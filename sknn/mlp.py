@@ -227,6 +227,7 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
 
     def _setup(self):
         super(Classifier, self)._setup()
+        self.label_binarizer = []
 
         # WARNING: Unfortunately, sklearn's LabelBinarizer handles binary data
         # as a special case and encodes it very differently to multiclass cases.
@@ -238,16 +239,22 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
         import sklearn.preprocessing.label as spl
         spl.type_of_target = lambda _: "multiclass"
 
-        self.label_binarizer = sklearn.preprocessing.LabelBinarizer()
-
     def fit(self, X, y):
         # check now for correct shapes
         assert X.shape[0] == y.shape[0],\
             "Expecting same number of input and output samples."
 
         # Scan training samples to find all different classes, then transform data.
-        self.label_binarizer.fit(y)
-        yp = self.label_binarizer.transform(y)
+        if y.ndim == 1:
+            y = y.reshape((y.shape[0], 1))
+
+        yp = []
+        for i in range(y.shape[1]):
+            preproc = sklearn.preprocessing.LabelBinarizer()
+            a = y[:,i]
+            yp.append(preproc.fit_transform(a))
+            self.label_binarizer.append(preproc)
+        yp = numpy.concatenate(yp, axis=1)
 
         # Also transform the validation set if it was explicitly specified.
         if self.valid_set is not None:
@@ -258,8 +265,9 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
         # Now train based on a problem transformed into regression.
         return super(Classifier, self)._fit(X, yp)
 
-    def partial_fit(self, X, y, classes=None):
+    def __partial_fit(self, X, y, classes=None):
         if classes is not None:
+            self.label_binarizer = sklearn.preprocessing.LabelBinarizer()
             self.label_binarizer.fit(classes)
         return self.fit(X, y)
 
@@ -278,7 +286,12 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
             model, in the same order as the classes.
         """
         proba = super(Classifier, self)._predict(X)
-        return proba / proba.sum(1, keepdims=True)
+        index = 0
+        for lb in self.label_binarizer:
+            sz = len(lb.classes_)
+            proba[:,index:index+sz] /= proba[:,index:index+sz].sum(1, keepdims=True) 
+            index += sz
+        return proba
 
     def predict(self, X):
         """Predict class by converting the problem to a regression problem.
@@ -293,5 +306,16 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
         y : array-like, shape (n_samples,) or (n_samples, n_classes)
             The predicted classes, or the predicted values.
         """
-        y = self.predict_proba(X)
-        return self.label_binarizer.inverse_transform(y, threshold=0.5)
+        assert self.label_binarizer != [],\
+            "Can't predict without fitting: output classes are unknown."
+
+        yp = self.predict_proba(X)
+        ys = []
+        index = 0
+        for lb in self.label_binarizer:
+            sz = len(lb.classes_)
+            y = lb.inverse_transform(yp[:,index:index+sz], threshold=0.5)
+            ys.append(y.reshape((y.shape[0], 1)))
+            index += sz
+        y = numpy.concatenate(ys, axis=1)
+        return y
