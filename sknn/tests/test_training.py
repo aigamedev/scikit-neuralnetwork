@@ -73,14 +73,14 @@ class TestTrainingOutput(unittest.TestCase):
         nn = MLPR(layers=[L("Linear")], verbose=1, n_iter=1)
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
         nn.fit(a_in, a_out)
-        assert_in("Epoch    Validation Error    Time", self.buf.getvalue())
+        assert_in("Epoch    Validation Error      Time", self.buf.getvalue())
         assert_in("    1           N/A          ", self.buf.getvalue())
 
     def test_VerboseClassifier(self):
         nn = MLPC(layers=[L("Linear")], verbose=1, n_iter=1)
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,1), dtype=numpy.int32)
         nn.fit(a_in, a_out)
-        assert_in("Epoch    Validation Error    Time", self.buf.getvalue())
+        assert_in("Epoch    Validation Error      Time", self.buf.getvalue())
         assert_in("    1           N/A          ", self.buf.getvalue())
 
     def test_CaughtRuntimeError(self):

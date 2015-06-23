@@ -458,10 +458,10 @@ class NeuralNetwork(object):
                 avg_valid_error = None
 
             best_valid = bool(best_valid_error == avg_valid_error)
-            log.debug("{:>5}      {}{}{}        {:>3.1f}s".format(
+            log.debug("{:>5}      {}{}{}        {:>5.1f}s".format(
                       i,
                       ansi.GREEN if best_valid else "",
-                      "{:>10.6f}".format(float(avg_valid_error)) if avg_valid_error else "     N/A  ",
+                      "{:>10.6f}".format(float(avg_valid_error)) if (avg_valid_error is not None) else "     N/A  ",
                       ansi.ENDC if best_valid else "",
                       time.time() - start
                       ))

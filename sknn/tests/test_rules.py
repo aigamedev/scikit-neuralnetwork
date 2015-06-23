@@ -1,5 +1,5 @@
 import unittest
-from nose.tools import (assert_true, assert_raises, assert_equal)
+from nose.tools import (assert_true, assert_in, assert_raises, assert_equal)
 
 import io
 import numpy
@@ -15,8 +15,8 @@ class LoggingTestCase(unittest.TestCase):
     def setUp(self):
         self.buf = io.StringIO()
         self.hnd = logging.StreamHandler(self.buf)
+        self.hnd.setLevel(logging.WARNING)
         logging.getLogger('sknn').addHandler(self.hnd)
-        logging.getLogger().setLevel(logging.WARNING)
 
     def tearDown(self):
         assert_equal('', self.buf.getvalue())
@@ -68,13 +68,24 @@ class TestLearningRules(LoggingTestCase):
 
 class TestRegularization(LoggingTestCase):
 
+    def setUp(self):
+        super(TestRegularization, self).setUp()
+        self.output = io.StringIO()
+        self.hnd2 = logging.StreamHandler(self.output)
+        self.hnd2.setLevel(logging.DEBUG)
+        logging.getLogger('sknn').addHandler(self.hnd2)
+
+    def tearDown(self):
+        super(TestRegularization, self).tearDown()
+        sknn.mlp.log.removeHandler(self.hnd2)
+
     def test_DropoutExplicit(self):
         nn = MLPR(layers=[L("Tanh", units=8), L("Linear",)],
                   regularize='dropout',
                   n_iter=1)
         assert_equal(nn.regularize, 'dropout')
         self._run(nn)
-        assert_true(nn._backend.cost is not None)
+        assert_in('Using `dropout` for regularization.', self.output.getvalue())
 
     def test_DropoutAsFloat(self):
         nn = MLPR(layers=[L("Tanh", units=8), L("Linear",)],
@@ -83,20 +94,20 @@ class TestRegularization(LoggingTestCase):
         assert_equal(nn.regularize, 'dropout')
         assert_equal(nn.dropout_rate, 0.25)
         self._run(nn)
-        assert_true(nn._backend.cost is not None)
+        assert_in('Using `dropout` for regularization.', self.output.getvalue())
 
     def test_DropoutPerLayer(self):
-        nn = MLPR(layers=[L("Maxout", units=8, pieces=2, dropout=0.25), L("Linear")],
+        nn = MLPR(layers=[L("Rectifier", units=8, dropout=0.25), L("Linear")],
                   regularize='dropout',
                   n_iter=1)
         assert_equal(nn.regularize, 'dropout')
         self._run(nn)
-        assert_true(nn._backend.cost is not None)
+        assert_in('Using `dropout` for regularization.', self.output.getvalue())
 
     def test_AutomaticDropout(self):
         nn = MLPR(layers=[L("Tanh", units=8, dropout=0.25), L("Linear")], n_iter=1)
         self._run(nn)
-        assert_true(nn._backend.cost is not None)
+        assert_in('Using `dropout` for regularization.', self.output.getvalue())
 
     def test_RegularizeExplicitL1(self):
         nn = MLPR(layers=[L("Tanh", units=8), L("Linear",)],
@@ -104,15 +115,15 @@ class TestRegularization(LoggingTestCase):
                   n_iter=1)
         assert_equal(nn.regularize, 'L1')
         self._run(nn)
-        assert_true(nn._backend.cost is not None)
+        assert_in('Using `L1` for regularization.', self.output.getvalue())
 
     def test_RegularizeExplicitL2(self):
-        nn = MLPR(layers=[L("Tanh", units=8), L("Linear",)],
+        nn = MLPR(layers=[L("Sigmoid", units=8), L("Softmax",)],
                   regularize='L2',
                   n_iter=1)
         assert_equal(nn.regularize, 'L2')
         self._run(nn)
-        assert_true(nn._backend.cost is not None)
+        assert_in('Using `L2` for regularization.', self.output.getvalue())
 
     def test_RegularizeCustomParam(self):
         nn = MLPR(layers=[L("Tanh", units=8), L("Linear",)],
@@ -120,15 +131,15 @@ class TestRegularization(LoggingTestCase):
                   n_iter=1)
         assert_equal(nn.weight_decay, 0.01)
         self._run(nn)
-        assert_true(nn._backend.cost is not None)
+        assert_in('Using `L2` for regularization.', self.output.getvalue())
 
     def test_RegularizePerLayer(self):
-        nn = MLPR(layers=[L("Maxout", units=8, pieces=2, weight_decay=0.01), L("Linear", weight_decay=0.001)],
+        nn = MLPR(layers=[L("Rectifier", units=8, weight_decay=0.01), L("Linear", weight_decay=0.001)],
                   n_iter=1)
         self._run(nn)
-        assert_true(nn._backend.cost is not None)
+        assert_in('Using `L2` for regularization.', self.output.getvalue())
 
     def test_AutomaticRegularize(self):
         nn = MLPR(layers=[L("Tanh", units=8, weight_decay=0.0001), L("Linear")], n_iter=1)
         self._run(nn)
-        assert_true(nn._backend.cost is not None)
+        assert_in('Using `L2` for regularization.', self.output.getvalue())

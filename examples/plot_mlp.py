@@ -27,6 +27,7 @@ import logging
 logging.basicConfig(format="%(message)s", level=logging.WARNING, stream=sys.stdout)
 
 from sknn.platform import gpu32
+from sknn.backend import pylearn2
 from sknn import mlp
 
 
