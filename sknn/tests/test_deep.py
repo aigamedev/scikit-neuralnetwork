@@ -44,11 +44,9 @@ class TestDeepDeterminism(unittest.TestCase):
         self.a_out = numpy.zeros((8,1))
 
     def run_EqualityTest(self, copier, asserter):
-        for activation in ["Rectifier", "Sigmoid", "Maxout", "Tanh"]:
-            # Only PyLearn2 supports Maxout.
-            if activation == 'Maxout' and sknn.backend.name != 'pylearn2':
-                continue
- 
+        # Only PyLearn2 supports Maxout.
+        extra =  ["Maxout"] if sknn.backend.name != 'pylearn2' else []
+        for activation in ["Rectifier", "Sigmoid", "Tanh"] + extra:
             nn1 = MLPR(layers=[L(activation, units=16, pieces=2), L("Linear", units=1)], random_state=1234)
             nn1._initialize(self.a_in, self.a_out)
 
