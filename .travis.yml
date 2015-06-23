@@ -20,7 +20,7 @@ install:
 
 script:
   - echo -e "[run]\nomit=\n    sknn/backend/pylearn2/pywrap2.py\n    sknn/backend/deepy/*\n" > .coveragerc
-  - nosetests --with-coverage --cover-package=sknn -v sknn
+  - nosetests --with-coverage --cover-package=sknn -v sknn.tests
 
 after_success:
   - coveralls
