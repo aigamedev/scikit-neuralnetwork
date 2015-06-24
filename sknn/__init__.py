@@ -53,3 +53,9 @@ class TheanoConfigurator(object):
 
 
 sys.modules['sknn.platform'] = TheanoConfigurator()
+
+
+try:
+    import colorama; colorama.init(); del colorama
+except ImportError:
+    pass
