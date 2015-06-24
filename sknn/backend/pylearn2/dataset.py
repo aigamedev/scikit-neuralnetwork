@@ -7,7 +7,7 @@ import functools
 import numpy
 import theano
 
-from .pywrap2 import (utils, dataset, space, iteration)
+from .pywrap2 import (utils, dataset, datasets, space, iteration)
 
 
 class FastVectorSpace(space.VectorSpace):
@@ -50,19 +50,20 @@ class SparseDesignMatrix(dataset.Dataset):
     based on the data that's passed to the function ``fit()``.
     """
 
-    def __init__(self, X, y):
+    def __init__(self, X, y, mutator=None):
         self.X = X
         self.y = y
+        self.mutator = mutator
 
         self.data_n_rows = self.X.shape[0]
         self.num_examples = self.data_n_rows
         self.fancy = False
         self.stochastic = False
-        X_space = space.VectorSpace(dim=self.X.shape[1])
+        X_space = FastVectorSpace(dim=self.X.shape[1])
         X_source = 'features'
 
         dim = self.y.shape[-1] if self.y.ndim > 1 else 1
-        y_space = space.VectorSpace(dim=dim)
+        y_space = FastVectorSpace(dim=dim)
         y_source = 'targets'
 
         composite = space.CompositeSpace((X_space, y_space))
@@ -98,6 +99,13 @@ class SparseDesignMatrix(dataset.Dataset):
             array = array.todense()
         return array.astype(theano.config.floatX)
 
+    def _mutate_fn(self, array):
+        array = self._conv_fn(array)
+        if self.mutator is not None:
+            for i in range(array.shape[0]):
+                self.mutator(array[i])
+        return array
+
     @functools.wraps(dataset.Dataset.iterator)
     def iterator(self, mode=None, batch_size=None, num_batches=None,
                  rng=None, data_specs=None, return_tuple=False):
@@ -108,7 +116,7 @@ class SparseDesignMatrix(dataset.Dataset):
         self.batch_size = batch_size
         self._return_tuple = return_tuple
 
-        # TODO: If there is a view_converter, we have to use it to convert
+        # TODO: If there is a view_mutator, we have to use it to convert
         # the stored data for "features" into one that the iterator can return.
         composite, source = data_specs or (self.X_space, 'features')
         assert isinstance(composite, space.CompositeSpace),\
@@ -118,7 +126,10 @@ class SparseDesignMatrix(dataset.Dataset):
 
         convert = []
         for sp, src in utils.safe_zip(sub_spaces, sub_sources):
-            convert.append(self._conv_fn if src in ('features', 'targets') else None)
+            if src == 'features':
+                convert.append(self._mutate_fn)
+            if src == 'targets':
+                convert.append(self._conv_fn)
 
         assert mode is not None,\
                 "Iteration mode not provided for %s" % str(self)
@@ -130,3 +141,36 @@ class SparseDesignMatrix(dataset.Dataset):
                                                data_specs=data_specs,
                                                return_tuple=return_tuple,
                                                convert=convert)
+
+class DenseDesignMatrix(datasets.DenseDesignMatrix):
+
+    def __init__(self, mutator=None, **kwargs):
+        super(DenseDesignMatrix, self).__init__(**kwargs)
+        self.mutator = mutator
+
+    def _conv_fn(self, array):
+        if self.mutator is not None:
+            for i in range(array.shape[0]):
+                self.mutator(array[i])
+        return array
+
+    @functools.wraps(dataset.Dataset.iterator)
+    def iterator(self, **kwargs):
+        bit = super(DenseDesignMatrix, self).iterator(**kwargs)
+        if self.mutator is not None:
+            bit._convert[0] = self._conv_fn
+        return bit
+
+"""
+OriginalDatasetIterator = iteration.FiniteDatasetIterator
+
+def create_finite_iterator(*args, **kwargs):
+    print('create_finite_iterator', kwargs['convert'])
+    def conv_fn(x):
+        return x + 0.01
+    kwargs['convert'] = [conv_fn, None]
+    return OriginalDatasetIterator(*args, **kwargs)
+    # convert=convert)
+
+datasets.dense_design_matrix.FiniteDatasetIterator = create_finite_iterator
+"""

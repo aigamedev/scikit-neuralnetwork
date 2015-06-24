@@ -317,6 +317,11 @@ class NeuralNetwork(object):
         The default option is ``mse``, and ``mae`` can only be applied to layers of type
         ``Linear`` or ``Gaussian`` and they must be used as the output layer.
 
+    mutator: callable, optional
+        A function that takes a single training sample input at each epoch and modifies
+        it in-place.  This is useful for dataset augmentation, e.g. mirroring input images
+        or jittering.  It only applies to the ``X`` part of the data passed to ``fit()``.
+
     debug: bool, optional
         Should the underlying training algorithms perform validation on the data
         as it's optimizing the model?  This makes things slower, but errors can
@@ -352,6 +357,7 @@ class NeuralNetwork(object):
             valid_set=None,
             valid_size=0.0,
             loss_type='mse',
+            mutator=None,
             debug=False,
             verbose=None,
             **params):
@@ -398,6 +404,7 @@ class NeuralNetwork(object):
         self.valid_set = valid_set
         self.valid_size = valid_size
         self.loss_type = loss_type
+        self.mutator = mutator
         self.debug = debug
         self.verbose = verbose
         self.weights = None

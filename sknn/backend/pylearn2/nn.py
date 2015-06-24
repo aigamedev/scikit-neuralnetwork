@@ -14,7 +14,7 @@ import numpy
 
 from .pywrap2 import (datasets, space, sgd)
 from .pywrap2 import learning_rule as lr, termination_criteria as tc
-from .dataset import SparseDesignMatrix, FastVectorSpace
+from .dataset import DenseDesignMatrix, SparseDesignMatrix, FastVectorSpace
 
 from ..base import BaseBackend
 
@@ -35,12 +35,12 @@ class NeuralNetworkBackend(BaseBackend):
     def _create_dataset(self, input_space, X, y=None):
         if self.is_convolution:
             view = input_space.get_origin_batch(X.shape[0])
-            return datasets.DenseDesignMatrix(topo_view=view, y=y)
+            return DenseDesignMatrix(topo_view=view, y=y, mutator=self.mutator)
         else:
             if all([isinstance(a, numpy.ndarray) for a in (X, y) if a is not None]):
-                return datasets.DenseDesignMatrix(X=X, y=y)
+                return DenseDesignMatrix(X=X, y=y, mutator=self.mutator)
             else:
-                return SparseDesignMatrix(X=X, y=y)
+                return SparseDesignMatrix(X=X, y=y, mutator=self.mutator)
 
     def _create_trainer(self, dataset, cost):
         logging.getLogger('pylearn2.monitor').setLevel(logging.WARNING)
