@@ -18,9 +18,9 @@ class TestDataAugmentation(unittest.TestCase):
                     layers=[L("Linear")],
                     n_iter=1,
                     batch_size=2,
-                    converter=self._conv_fn)
+                    mutator=self._mutate_fn)
 
-    def _conv_fn(self, sample):
+    def _mutate_fn(self, sample):
         self.called += 1
         sample[sample == 0.0] = self.value
 
