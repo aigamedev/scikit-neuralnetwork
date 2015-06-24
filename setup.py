@@ -22,6 +22,7 @@ install_requires = [
     'scikit-learn',
     'theano',
     'pyyaml',
+    'colorama' if sys.platform == 'win32' else '',
     # 'pylearn2',
 ]
 
