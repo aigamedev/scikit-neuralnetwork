@@ -41,6 +41,22 @@ class TestScipySparseMatrix(unittest.TestCase):
             y = numpy.zeros((8, 4), dtype=numpy.float32)
             self.nn._fit(X, y)
 
+    def test_FitMutator(self):
+        def mutate(x):
+            x -= 0.5
+            self.count += 1
+        self.nn.mutator = mutate
+
+        for t in SPARSE_TYPES:
+            sparse_matrix = getattr(scipy.sparse, t)
+            X = sparse_matrix((8, 4), dtype=numpy.float32)
+            y = numpy.zeros((8, 4), dtype=numpy.float32)
+
+            self.count = 0
+            assert_equal(0, self.count)
+            self.nn._fit(X, y)
+            assert_equal(8, self.count)
+
     def test_Predict64(self):
         theano.config.floatX = 'float64'
         for t in SPARSE_TYPES:

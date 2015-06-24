@@ -97,12 +97,13 @@ class SparseDesignMatrix(dataset.Dataset):
     def _conv_fn(self, array):
         if type(array) != numpy.ndarray:
             array = array.todense()
-        array = array.astype(theano.config.floatX)
+        return array.astype(theano.config.floatX)
 
+    def _mutate_fn(self, array):
+        array = self._conv_fn(array)
         if self.mutator is not None:
             for i in range(array.shape[0]):
                 self.mutator(array[i])
-
         return array
 
     @functools.wraps(dataset.Dataset.iterator)
@@ -125,7 +126,10 @@ class SparseDesignMatrix(dataset.Dataset):
 
         convert = []
         for sp, src in utils.safe_zip(sub_spaces, sub_sources):
-            convert.append(self._conv_fn if src in ('features', 'targets') else None)
+            if src == 'features':
+                convert.append(self._mutate_fn)
+            if src == 'targets':
+                convert.append(self._conv_fn)
 
         assert mode is not None,\
                 "Iteration mode not provided for %s" % str(self)
