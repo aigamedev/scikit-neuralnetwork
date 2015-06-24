@@ -226,8 +226,8 @@ class Convolution(Layer):
 class NeuralNetwork(object):
     """
     Abstract base class for wrapping all neural network functionality from PyLearn2,
-    common to multi-layer perceptrons in :module:`sknn.mlp` and auto-encoders in
-    in :module:`sknn.ae`.
+    common to multi-layer perceptrons in :mod:`sknn.mlp` and auto-encoders in
+    in :mod:`sknn.ae`.
 
     Parameters
     ----------

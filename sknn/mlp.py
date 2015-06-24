@@ -26,6 +26,7 @@ from . import backend
 
 class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
     # Abstract base class for wrapping multi-layer perceptron functionality.
+    __doc__ = NeuralNetwork.__doc__
 
     def _setup(self):
         pass
@@ -182,7 +183,7 @@ class Regressor(MultiLayerPerceptron, sklearn.base.RegressorMixin):
     # Regressor compatible with sklearn that wraps various NN implementations.
 
     def fit(self, X, y):
-        """Fit the neural network to the given data.
+        """Fit the neural network to the given continuous data as a regression problem.
 
         Parameters
         ----------
@@ -191,8 +192,7 @@ class Regressor(MultiLayerPerceptron, sklearn.base.RegressorMixin):
             samples and n_inputs is the number of input features.
 
         y : array-like, shape (n_samples, n_outputs)
-            Target values as real numbers, either as regression targets or
-            label probabilities for classification.
+            Target values are real numbers used as regression targets.
 
         Returns
         -------
@@ -235,7 +235,24 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
         spl.type_of_target = lambda _: "multiclass"
 
     def fit(self, X, y):
-        # check now for correct shapes
+        """Fit the neural network to symbolic labels as a classification problem.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Training vectors as real numbers, where n_samples is the number of
+            samples and n_inputs is the number of input features.
+
+        y : array-like, shape (n_samples, n_classes)
+            Target values as integer symbols, for either single- or multi-output
+            classification problems.
+
+        Returns
+        -------
+        self : object
+            Returns this instance.
+        """
+
         assert X.shape[0] == y.shape[0],\
             "Expecting same number of input and output samples."
         if y.ndim == 1:
