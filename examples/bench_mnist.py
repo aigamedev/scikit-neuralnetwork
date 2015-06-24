@@ -38,7 +38,6 @@ if 'dbn' in sys.argv:
     classifiers.append(('nolearn.dbn', clf))
 
 if 'sknn' in sys.argv:
-    from sknn.backend import pylearn2
     from sknn.mlp import Classifier, Layer, Convolution
 
     clf = Classifier(
@@ -91,12 +90,6 @@ if 'lasagne' in sys.argv:
 RUNS = 1
 
 for name, orig in classifiers:
-    y_train = y_train.reshape((y_train.shape[0], 1))
-    y_train = np.concatenate([y_train, (9-y_train)], axis=1)
-
-    y_test = y_test.reshape((y_test.shape[0], 1))
-    y_test = np.concatenate([y_test, (9-y_test)], axis=1)
-
     times = []
     accuracies = []
     for i in range(RUNS):
@@ -106,14 +99,13 @@ for name, orig in classifiers:
         clf.random_state = int(time.time())
         clf.fit(X_train, y_train)
 
-        y_proba = clf.predict_proba(X_test)
-        y_pred = clf.predict(X_test)
-
         accuracies.append(clf.score(X_test, y_test))
         times.append(time.time() - start)
 
     a_t = np.array(times)
     a_s = np.array(accuracies)
+
+    y_pred = clf.predict(X_test)
 
     print("\n"+name)
     print("\tAccuracy: %5.2f%% ±%4.2f" % (100.0 * a_s.mean(), 100.0 * a_s.std()))

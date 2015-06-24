@@ -16,3 +16,10 @@ class MultiLayerPerceptronBackend(object):
 class AutoEncoderBackend(object):
     def __init__(self, _):
         raise NotImplementedError("No backend sub-module imported.")
+
+
+# Automatically import the recommended backend if none was manually imported.
+def setup():
+    if name == None:
+        from . import pylearn2
+    assert name is not None
