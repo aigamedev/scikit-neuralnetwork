@@ -14,9 +14,9 @@ import logging
 try:
     import pylearn2
 except ImportError:
-    pwd = os.path.dirname(__file__)
-    if os.path.exists(os.path.join(pwd, 'pylearn2')):
-        sys.path.insert(0, pwd)
+    libdir = os.path.join(os.path.dirname(__file__), '..', '_libs')
+    if os.path.exists(libdir):
+        sys.path.insert(0, libdir)
 
 
 # This wrapper module can only contain 'leaf' modules.
