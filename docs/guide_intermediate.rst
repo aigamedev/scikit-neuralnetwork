@@ -77,3 +77,15 @@ To setup the library to use your GPU or CPU explicitly in 32-bit or 64-bit mode,
     from sknn.platform import cpu64
 
 WARNING: This will only work if your program has not yet imported the ``theano`` module, due to the way that library is designed.  If ``THEANO_FLAGS`` are set on the command-line, they are not overwridden.
+
+
+Backend Configuration
+---------------------
+
+As of version 0.3, ``scikit-neuralnetwork`` supports multiple neural network implementations called backends, each wrapped behind an identical standardized interface.  To configure a backend, you can do so by importing the corresponding module:
+
+.. code:: python
+
+    from sknn.backend import pylearn2
+
+As long as you call this before creating a neural network, this will register the PyLearn2 implementation as the one that's used.  Supported backends are currently ``pylearn2`` (default) and ``deepy`` (incomplete).
