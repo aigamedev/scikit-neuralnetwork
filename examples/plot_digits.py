@@ -36,15 +36,15 @@ y_pred = nn.predict(X_test)
 
 
 # Show some training images and some test images too.
-import pylab
+import matplotlib.pyplot as pylab
 
-for index, (image, label) in enumerate(zip(digits.images, digits.target)[:6]):
+for index, (image, label) in enumerate(zip(digits.images[:6], digits.target[:6])):
     pylab.subplot(2, 6, index + 1)
     pylab.axis('off')
     pylab.imshow(image, cmap=pylab.cm.gray_r, interpolation='nearest')
     pylab.title('Training: %i' % label)
 
-for index, (image, prediction) in enumerate(zip(X_test, y_pred)[:6]):
+for index, (image, prediction) in enumerate(zip(X_test[:6], y_pred[:6])):
     pylab.subplot(2, 6, index + 7)
     pylab.axis('off')
     pylab.imshow(image.reshape((8,8)), cmap=pylab.cm.gray_r, interpolation='nearest')
