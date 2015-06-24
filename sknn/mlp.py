@@ -227,7 +227,7 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
 
     def _setup(self):
         super(Classifier, self)._setup()
-        self.label_binarizer = []
+        self.label_binarizers = []
 
         # WARNING: Unfortunately, sklearn's LabelBinarizer handles binary data
         # as a special case and encodes it very differently to multiclass cases.
@@ -243,8 +243,6 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
         # check now for correct shapes
         assert X.shape[0] == y.shape[0],\
             "Expecting same number of input and output samples."
-
-        # Scan training samples to find all different classes, then transform data.
         if y.ndim == 1:
             y = y.reshape((y.shape[0], 1))
 
@@ -255,27 +253,33 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
             log.warning('{}WARNING: Expecting `Sigmoid` for last layer in '
                         'multi-output classifier.{}\n'.format(ansi.YELLOW, ansi.ENDC))
 
-        yp = []
-        for i in range(y.shape[1]):
-            preproc = sklearn.preprocessing.LabelBinarizer()
-            a = y[:,i]
-            yp.append(preproc.fit_transform(a))
-            self.label_binarizer.append(preproc)
-        yp = numpy.concatenate(yp, axis=1)
+        # Deal deal with single- and multi-output classification problems.
+        self.label_binarizers = [sklearn.preprocessing.LabelBinarizer() for _ in range(y.shape[1])]
+        ys = [lb.fit_transform(y[:,i]) for i, lb in enumerate(self.label_binarizers)]
+        yp = numpy.concatenate(ys, axis=1)
 
         # Also transform the validation set if it was explicitly specified.
         if self.valid_set is not None:
             X_v, y_v = self.valid_set
-            y_vp = self.label_binarizer.transform(y_v)
+            if y_v.ndim == 1:
+                y_v = y_v.reshape((y_v.shape[0], 1))
+            ys = [lb.transform(y_v[:,i]) for i, lb in enumerate(self.label_binarizers)]
+            y_vp = numpy.concatenate(ys, axis=1)
             self.valid_set = self._reshape(X_v, y_vp)
  
         # Now train based on a problem transformed into regression.
         return super(Classifier, self)._fit(X, yp)
 
-    def __partial_fit(self, X, y, classes=None):
+    def partial_fit(self, X, y, classes=None):
+        if y.ndim == 1:
+            y = y.reshape((y.shape[0], 1))
+
         if classes is not None:
-            self.label_binarizer = sklearn.preprocessing.LabelBinarizer()
-            self.label_binarizer.fit(classes)
+            if isinstance(classes[0], int):
+                classes = [classes]
+            self.label_binarizers = [sklearn.preprocessing.LabelBinarizer() for _ in range(y.shape[1])]
+            for lb, cls in zip(self.label_binarizers, classes):
+                lb.fit(cls)
         return self.fit(X, y)
 
     def predict_proba(self, X):
@@ -294,7 +298,7 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
         """
         proba = super(Classifier, self)._predict(X)
         index = 0
-        for lb in self.label_binarizer:
+        for lb in self.label_binarizers:
             sz = len(lb.classes_)
             proba[:,index:index+sz] /= proba[:,index:index+sz].sum(1, keepdims=True) 
             index += sz
@@ -313,13 +317,13 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
         y : array-like, shape (n_samples,) or (n_samples, n_classes)
             The predicted classes, or the predicted values.
         """
-        assert self.label_binarizer != [],\
+        assert self.label_binarizers != [],\
             "Can't predict without fitting: output classes are unknown."
 
         yp = self.predict_proba(X)
         ys = []
         index = 0
-        for lb in self.label_binarizer:
+        for lb in self.label_binarizers:
             sz = len(lb.classes_)
             y = lb.inverse_transform(yp[:,index:index+sz], threshold=0.5)
             ys.append(y.reshape((y.shape[0], 1)))

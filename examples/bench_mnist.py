@@ -46,7 +46,7 @@ if 'sknn' in sys.argv:
             # Convolution("Rectifier", channels=10, pool_shape=(2,2), kernel_shape=(3, 3)),
             Layer('Rectifier', units=200),
             Layer('Softmax')],
-        learning_rate=0.02,
+        learning_rate=0.01,
         learning_rule='momentum',
         learning_momentum=0.9,
         batch_size=25,
@@ -91,6 +91,12 @@ if 'lasagne' in sys.argv:
 RUNS = 1
 
 for name, orig in classifiers:
+    y_train = y_train.reshape((y_train.shape[0], 1))
+    y_train = np.concatenate([y_train, (9-y_train)], axis=1)
+
+    y_test = y_test.reshape((y_test.shape[0], 1))
+    y_test = np.concatenate([y_test, (9-y_test)], axis=1)
+
     times = []
     accuracies = []
     for i in range(RUNS):
@@ -100,7 +106,9 @@ for name, orig in classifiers:
         clf.random_state = int(time.time())
         clf.fit(X_train, y_train)
 
+        y_proba = clf.predict_proba(X_test)
         y_pred = clf.predict(X_test)
+
         accuracies.append(clf.score(X_test, y_test))
         times.append(time.time() - start)
 
