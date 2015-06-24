@@ -30,15 +30,18 @@ print("Loading...")
 dataset1 = load('data_batch_1')
 dataset2 = load('data_batch_2')
 dataset3 = load('data_batch_3')
+dataset4 = load('data_batch_4')
+dataset5 = load('data_batch_5')
+dataset0 = load('test_batch')
 print("")
 
-data_train = np.vstack([dataset1['data']]) #, dataset2['data']])
-labels_train = np.hstack([dataset1['labels']]) #, dataset2['labels']])
+data_train = np.vstack([dataset1['data']]) #, dataset2['data'], dataset3['data'], dataset4['data'], dataset5['data']])
+labels_train = np.hstack([dataset1['labels']]) #, dataset2['labels'], dataset3['labels'], dataset4['labels'], dataset5['labels']])
 
 data_train = data_train.astype('float') / 255.
 labels_train = labels_train
-data_test = dataset3['data'].astype('float') / 255.
-labels_test = np.array(dataset3['labels'])
+data_test = dataset0['data'].astype('float') / 255.
+labels_test = np.array(dataset0['labels'])
 
 n_feat = data_train.shape[1]
 n_targets = labels_train.max() + 1
@@ -48,21 +51,22 @@ from sknn import mlp
 
 nn = mlp.Classifier(
         layers=[
-            mlp.Layer("Tanh", units=n_feat*2/3),
-            mlp.Layer("Sigmoid", units=n_feat*1/3),
+            mlp.Layer("Tanh", units=n_feat/8),
+            mlp.Layer("Sigmoid", units=n_feat/16),
             mlp.Layer("Softmax", units=n_targets)],
         n_iter=50,
         n_stable=10,
-        learning_rate=0.001,
-        valid_size=0.5,
+        learning_rate=0.002,
+        learning_rule="momentum",
+        valid_size=0.1,
         verbose=1)
 
 if PRETRAIN:
     from sknn import ae
     ae = ae.AutoEncoder(
             layers=[
-                ae.Layer("Tanh", units=n_feat*2/3),
-                ae.Layer("Sigmoid", units=n_feat*2/3)],
+                ae.Layer("Tanh", units=n_feat/8),
+                ae.Layer("Sigmoid", units=n_feat/16)],
             learning_rate=0.002,
             n_iter=10,
             verbose=1)
@@ -76,8 +80,8 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 
 expected = labels_test
-predicted = net.predict(data_test)
+predicted = nn.predict(data_test)
 
 print("Classification report for classifier %s:\n%s\n" % (
-    net, classification_report(expected, predicted)))
+    nn, classification_report(expected, predicted)))
 print("Confusion matrix:\n%s" % confusion_matrix(expected, predicted))
