@@ -26,11 +26,8 @@ from .backend import MultiLayerPerceptronBackend
 
 
 class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
-    """
-    Abstract base class for wrapping the multi-layer perceptron functionality
-    from PyLearn2.
-    """
-    
+    # Abstract base class for wrapping multi-layer perceptron functionality.
+
     def _setup(self):
         pass
 
@@ -182,8 +179,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
 
 
 class Regressor(MultiLayerPerceptron, sklearn.base.RegressorMixin):
-    """Regressor compatible with sklearn that wraps PyLearn2.
-    """
+    # Regressor compatible with sklearn that wraps various NN implementations.
 
     def fit(self, X, y):
         """Fit the neural network to the given data.
@@ -222,8 +218,7 @@ class Regressor(MultiLayerPerceptron, sklearn.base.RegressorMixin):
 
 
 class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
-    """Classifier compatible with sklearn that wraps PyLearn2.
-    """
+    # Classifier compatible with sklearn that wraps various NN implementations.
 
     def _setup(self):
         super(Classifier, self)._setup()

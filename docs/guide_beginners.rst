@@ -52,6 +52,8 @@ If your data in ``numpy.ndarray`` contains integer labels as outputs and you wan
 
 It's also a good idea to normalize or standardize your data in this case too, for example using a :ref:`example-pipeline` below.  The code here will train for 25 iterations.  Note that a ``Softmax`` output layer activation type is used here, and it's recommended as a default for classification problems.
 
+If you want to do multi-label classification, simply fit using a ``y`` array of integers that has multiple dimensions, e.g. shape `(N, 3)` for three different classes.  Then, make sure the last layer is ``Sigmoid`` instead.
+
 .. code:: python
 
     y_example = nn.predict(X_example)
