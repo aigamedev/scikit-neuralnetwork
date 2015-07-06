@@ -15,7 +15,7 @@ Here's how to setup such a pipeline with a multi-layer perceptron as a classifie
 
 .. code:: python
 
-    from sknn.mlp improt Classifier, Layer
+    from sknn.mlp import Classifier, Layer
 
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import MinMaxScaler
