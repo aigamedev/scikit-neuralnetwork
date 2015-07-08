@@ -98,8 +98,8 @@ In the cases when you have large numbers of hyper-parameters that you want to tr
     from scipy import stats
     from sklearn.grid_search import RandomizedSearchCV
 
-    rs = RandomizedSearchCV(nn, param_grid={
-        learning_rate: stats.uniform(0.001, 0.05),
+    rs = RandomizedSearchCV(nn, param_distributions={
+        'learning_rate': stats.uniform(0.001, 0.05),
         'hidden0__units': stats.randint(4, 12),
         'hidden0__type': ["Rectifier", "Sigmoid", "Tanh"]})
     rs.fit(a_in, a_out)
