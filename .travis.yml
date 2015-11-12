@@ -5,11 +5,11 @@ python:
   - "3.4"
 
 before_install:
-  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - wget -q http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
-  - ./miniconda.sh -b
-  - export PATH=/home/travis/miniconda/bin:$PATH
-  - conda update --yes conda
+  - ./miniconda.sh -b -p ~/anaconda
+  - export PATH=~/anaconda/bin:$PATH
+  - conda update --yes --quiet conda
 
 install:
   - conda create --yes -q -n pyenv python=$TRAVIS_PYTHON_VERSION pip numpy scipy cython matplotlib scikit-learn nose pyyaml
