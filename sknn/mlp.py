@@ -199,6 +199,10 @@ class Regressor(MultiLayerPerceptron, sklearn.base.RegressorMixin):
         self : object
             Returns this instance.
         """
+
+        if self.valid_set is not None:
+            self.valid_set = self._reshape(*self.valid_set)
+
         return super(Regressor, self)._fit(X, y)
 
     def predict(self, X):
@@ -277,7 +281,7 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
                 y_v = y_v.reshape((y_v.shape[0], 1))
             ys = [lb.transform(y_v[:,i]) for i, lb in enumerate(self.label_binarizers)]
             y_vp = numpy.concatenate(ys, axis=1)
-            self.valid_set = self._reshape(X_v, y_vp)
+            self.valid_set = (X_v, y_vp)
  
         # Now train based on a problem transformed into regression.
         return super(Classifier, self)._fit(X, yp)
