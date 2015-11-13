@@ -12,7 +12,7 @@ copyright = u'2015, scikit-neuralnetwork developers (BSD License)'
 
 # -- Configuration of documentation -------------------------------------------
 
-# sys.path.append(os.path.dirname(os.path.dirname(__file__)).encode('utf-8'))
+sys.path.append(os.path.dirname(os.path.dirname(__file__)).encode('utf-8'))
 
 import sknn
 version = sknn.__version__
