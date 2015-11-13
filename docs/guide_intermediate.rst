@@ -33,8 +33,10 @@ To save a trained neural network to disk, you can do the following after having 
 
 After this, the file ``nn.pkl`` will be available in the current working directory — which you can reload at any time:
 
+.. code:: python
+
     import pickle
-    nn == pickle.load(open('nn.pkl', 'rb'))
+    nn = pickle.load(open('nn.pkl', 'rb'))
 
 In this case, you can use the reloaded multi-layer perceptron as if it had just been trained.  This will also work on different machines, whether CPU or GPU.
 
