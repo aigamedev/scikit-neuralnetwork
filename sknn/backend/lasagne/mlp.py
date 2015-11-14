@@ -42,32 +42,6 @@ class MultiLayerPerceptronBackend(BaseBackend):
         self.cost = None
 
     def _create_mlp_trainer(self, params):
-        # Aggregate all the dropout parameters into shared dictionaries.
-        dropout_probs, dropout_scales = {}, {}
-        for l in [l for l in self.layers if l.dropout is not None]:
-            incl = 1.0 - l.dropout
-            dropout_probs[l.name] = incl
-            dropout_scales[l.name] = 1.0 / incl
-        assert len(dropout_probs) == 0 or self.regularize in ('dropout', None)
-
-        if self.regularize == 'dropout' or len(dropout_probs) > 0:
-            # Use the globally specified dropout rate when there are no layer-specific ones.
-            incl = 1.0 - (self.dropout_rate or 0.5)
-            default_prob, default_scale = incl, 1.0 / incl
-
-            if self.regularize is None:
-                self.regularize = 'dropout'
-
-            log.warning('Dropout not yet fully implemented.')
-
-            """
-            # Pass all the parameters to pylearn2 as a custom cost function.
-            self.cost = dropout.Dropout(
-                default_input_include_prob=default_prob,
-                default_input_scale=default_scale,
-                input_include_probs=dropout_probs, input_scales=dropout_scales)
-             """
-
         # Aggregate all regularization parameters into common dictionaries.
         layer_decay = {}
         if self.regularize in ('L1', 'L2') or any(l.weight_decay for l in self.layers):
@@ -94,7 +68,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
                 self.cost = cost.SumOfCosts([mlp_default_cost,l2])
                 """
 
-        self.cost = lasagne.objectives.squared_error(self.symbol_output, self.tensor_output).mean()
+        self.cost = lasagne.objectives.categorical_crossentropy(self.symbol_output, self.tensor_output).mean()
         return self._create_trainer(params, self.cost)
 
     def _create_trainer(self, params, cost):
@@ -102,6 +76,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
             lr = getattr(lasagne.updates, self.learning_rule)
             self._learning_rule = lr(cost, params, learning_rate=self.learning_rate)
         elif self.learning_rule in ('momentum', 'nesterov'):
+            lasagne.updates.nesterov = lasagne.updates.nesterov_momentum
             lr = getattr(lasagne.updates, self.learning_rule)
             self._learning_rule = lr(cost, params, learning_rate=self.learning_rate, momentum=self.learning_momentum)
         else:
@@ -145,8 +120,9 @@ class MultiLayerPerceptronBackend(BaseBackend):
         if isinstance(layer, Convolution):
             return self._create_convolution_layer(name, layer, irange)
 
-        if layer.dropout:
-            network = lasagne.layers.dropout(network, 0.5)
+        dropout = layer.dropout or self.dropout_rate
+        if dropout is not None:
+            network = lasagne.layers.dropout(network, dropout)
 
         return lasagne.layers.DenseLayer(network,
                                          num_units=layer.units,
@@ -162,22 +138,10 @@ class MultiLayerPerceptronBackend(BaseBackend):
         for i, layer in enumerate(self.layers):
             
             """
-            TODO: Refactor this into common wrapper code.
-
-            fan_in = self.unit_counts[i]
-            fan_out = self.unit_counts[i + 1]
-
-            lim = numpy.sqrt(6) / numpy.sqrt(fan_in + fan_out)
-            if layer.type == 'Tanh':
-                lim *= 1.1 * lim
-            elif layer.type in ('Rectifier', 'Maxout'):
-                # He, Rang, Zhen and Sun, converted to uniform.
-                lim *= numpy.sqrt(2.0)
-            elif layer.type == 'Sigmoid':
-                lim *= 4.0
+            TODO: Expose weight initialization policy.
+            TODO: self.random_state
             """
 
-            # TODO: self.random_state
             network = self._create_layer(layer.name, layer, network)
             self.mlp.append(network)
 
@@ -185,11 +149,8 @@ class MultiLayerPerceptronBackend(BaseBackend):
             "Initializing neural network with %i layers, %i inputs and %i outputs.",
             len(self.layers), self.unit_counts[0], self.layers[-1].units)
 
-        """
-        TODO: Display the network's layers for information.
-
-        for l, p, count in zip(self.layers, self.mlp.layers, self.unit_counts[1:]):
-            space = p.get_output_space()
+        for l, p, count in zip(self.layers, self.mlp, self.unit_counts[1:]):
+            space = p.output_shape
             if isinstance(l, Convolution):                
                 log.debug("  - Convl: {}{: <10}{} Output: {}{: <10}{} Channels: {}{}{}".format(
                     ansi.BOLD, l.type, ansi.ENDC,
@@ -202,9 +163,8 @@ class MultiLayerPerceptronBackend(BaseBackend):
             else:
                 log.debug("  - Dense: {}{: <10}{} Units:  {}{: <4}{}".format(
                     ansi.BOLD, l.type, ansi.ENDC, ansi.BOLD, l.units, ansi.ENDC))
-                assert count == space.get_total_dimension(),\
+                assert count == space[1],\
                     "Mismatch in the calculated number of dense layer outputs."
-        """
 
         if self.weights is not None:
             l  = min(len(self.weights), len(self.mlp))
@@ -232,16 +192,6 @@ class MultiLayerPerceptronBackend(BaseBackend):
                                 test_size=self.valid_size,
                                 random_state=self.random_state)
             self.valid_set = X_v, y_v
-
-        """
-        self.ds = self._create_dataset(self.input_space, X, y)
-        if self.valid_set is not None:
-            X_v, y_v = self.valid_set
-            input_space = self._create_input_space(X_v)
-            self.vs = self._create_dataset(input_space, X_v, y_v)
-        else:
-            self.vs = None
-        """
 
         params = lasagne.layers.get_all_params(self.mlp[-1], trainable=True)
         self.trainer = self._create_mlp_trainer(params)
