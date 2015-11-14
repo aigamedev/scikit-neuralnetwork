@@ -37,8 +37,6 @@ class MultiLayerPerceptronBackend(BaseBackend):
     def __init__(self, spec):
         super(MultiLayerPerceptronBackend, self).__init__(spec)
         self.mlp = None
-        self.ds = None
-        self.vs = None
         self.f = None
         self.trainer = None
         self.cost = None
@@ -96,34 +94,43 @@ class MultiLayerPerceptronBackend(BaseBackend):
                 self.cost = cost.SumOfCosts([mlp_default_cost,l2])
                 """
 
+        self.cost = lasagne.objectives.squared_error(self.symbol_output, self.tensor_output).mean()
         return self._create_trainer(params, self.cost)
 
     def _create_trainer(self, params, cost):
-        if self.learning_rule != 'sgd':                            
+        if self.learning_rule in ('sgd', 'adagrad', 'adadelta', 'rmsprop', 'adam'):
+            lr = getattr(lasagne.updates, self.learning_rule)
+            self._learning_rule = lr(cost, params, learning_rate=self.learning_rate)
+        elif self.learning_rule in ('momentum', 'nesterov'):
+            lr = getattr(lasagne.updates, self.learning_rule)
+            self._learning_rule = lr(cost, params, learning_rate=self.learning_rate, momentum=self.learning_momentum)
+        else:
             raise NotImplementedError(
                 "Learning rule type `%s` is not supported." % self.learning_rule)
 
-        return lasagne.updates.sgd(cost, params,
-                                   learning_rate=self.learning_rate)
+        return theano.function([self.tensor_input, self.tensor_output], cost, updates=self._learning_rule)
+
+    def _get_activation(self, l):        
+        nonlinearities = {'Rectifier': nl.rectify,
+                          'Sigmoid': nl.sigmoid,
+                          'Tanh': nl.tanh,
+                          'Softmax': nl.softmax,
+                          'Linear': nl.linear}
+
+        assert l.type in nonlinearities,\
+            "Layer type `%s` is not supported for `%s`." % (layer.type, layer.name)
+        return nonlinearities[l.type]
 
     def _create_convolution_layer(self, name, layer, network):
         self._check_layer(layer,
                           required=['channels', 'kernel_shape'],
                           optional=['kernel_stride', 'border_mode', 'pool_shape', 'pool_type'])
-
-        nonlinearities = {'Rectifier': nl.rectify,
-                          'Signmoid': nl.sigmoid,
-                          'Tanh': nl.tanh,
-                          'Softmax': nl.softmax,
-                          'Linear': nl.linear}
-        assert layer.type in nonlinearities,\
-            "Convolution layer type `%s` is not supported." % layer.type
  
         network = lasagne.layers.Conv2DLayer(
                         network,
                         num_filters=layer.channels,
                         filter_size=layer.kernel_shape,
-                        nonlinearity=nonlinearities[layer.type])
+                        nonlinearity=self._get_activation(layer))
 
         if layer.pool_shape != (1, 1):
             network = lasagne.layers.Pool2DLayer(
@@ -138,22 +145,16 @@ class MultiLayerPerceptronBackend(BaseBackend):
         if isinstance(layer, Convolution):
             return self._create_convolution_layer(name, layer, irange)
 
-        nonlinearities = {'Rectifier': nl.rectify,
-                          'Signmoid': nl.sigmoid,
-                          'Tanh': nl.tanh,
-                          'Softmax': nl.softmax,
-                          'Linear': nl.linear}
-
         if layer.dropout:
             network = lasagne.layers.dropout(network, 0.5)
 
         return lasagne.layers.DenseLayer(network,
                                          num_units=layer.units,
-                                         nonlinearity=nonlinearities[layer.type])
+                                         nonlinearity=self._get_activation(layer))
 
     def _create_mlp(self, X):
         self.tensor_input = T.matrix('X')
-        self.tensor_output = T.vector('y')
+        self.tensor_output = T.matrix('y')
         network = lasagne.layers.InputLayer((None, X.shape[1]), self.tensor_input)
 
         # Create the layers one by one, connecting to previous.
@@ -213,8 +214,8 @@ class MultiLayerPerceptronBackend(BaseBackend):
 
         log.debug("")
 
-        output = lasagne.layers.get_output(network, deterministic=True)
-        self.f = theano.function([self.tensor_input], output) # allow_input_downcast=True
+        self.symbol_output = lasagne.layers.get_output(network, deterministic=True)
+        self.f = theano.function([self.tensor_input], self.symbol_output) # allow_input_downcast=True
 
     def _initialize_impl(self, X, y=None):
         if self.mlp is None:            
@@ -242,33 +243,63 @@ class MultiLayerPerceptronBackend(BaseBackend):
             self.vs = None
         """
 
-        params = lasagne.layers.get_all_params(self.mlp, trainable=True)
+        params = lasagne.layers.get_all_params(self.mlp[-1], trainable=True)
         self.trainer = self._create_mlp_trainer(params)
-        self.trainer.setup(self.mlp, self.ds)
         return X, y
 
     def _predict_impl(self, X):
         if not self.is_initialized:
             self._initialize_impl(X)
         return self.f(X)
+    
+    def _iterate_data(self, X, y, batch_size):
+        indices = numpy.arange(len(X))
+        numpy.random.shuffle(indices)
+        for start_idx in range(0, len(X) - batch_size + 1, batch_size):
+            excerpt = indices[start_idx:start_idx + batch_size]
+            yield X[excerpt], y[excerpt]
 
     def _train_impl(self, X, y):
-        if self.is_convolution:
-            X = self.ds.view_converter.topo_view_to_design_mat(X)
-        self.ds.X, self.ds.y = X, y
+        best_valid_error = float("inf")
 
-        self._train_layer(self.trainer, self.mlp, self.ds)
+        for i in itertools.count(1):
+            start = time.time()
+
+            loss, batches = 0.0, 0
+            for Xb, yb in self._iterate_data(X, y, self.batch_size):
+                loss += self.trainer(X, y)
+                batches += 1
+                print('.', end='', flush=True)
+
+            avg_valid_error = loss / batches
+            best_valid_error = min(best_valid_error, avg_valid_error)
+
+            best_valid = bool(best_valid_error == avg_valid_error)
+            log.debug("\r{:>5}      {}{}{}        {:>5.1f}s".format(
+                      i,
+                      ansi.GREEN if best_valid else "",
+                      "{:>10.6f}".format(float(avg_valid_error)) if (avg_valid_error is not None) else "     N/A  ",
+                      ansi.ENDC if best_valid else "",
+                      time.time() - start
+                      ))
+
+            if False: # TODO: Monitor n_stable
+                log.debug("")
+                log.info("Early termination condition fired at %i iterations.", i)
+                break
+            if self.n_iter is not None and i >= self.n_iter:
+                log.debug("")
+                log.info("Terminating after specified %i total iterations.", i)
+                break
 
     @property
     def is_initialized(self):
         """Check if the neural network was setup already.
         """
-        return not (self.ds is None or self.f is None)
+        return not (self.f is None)
 
     def _mlp_to_array(self):
-        result = [(l.W.value, l.b.value) for l in self.mlp.layers]
-        print(result)
-        return result
+        return [(l.W.get_value(), l.b.get_value()) for l in self.mlp]
 
     def _array_to_mlp(self, array, nn):
         for layer, (weights, biases) in zip(nn, array):
