@@ -83,7 +83,9 @@ class MultiLayerPerceptronBackend(BaseBackend):
             raise NotImplementedError(
                 "Learning rule type `%s` is not supported." % self.learning_rule)
 
-        return theano.function([self.tensor_input, self.tensor_output], cost, updates=self._learning_rule)
+        return theano.function([self.tensor_input, self.tensor_output], cost,
+                               updates=self._learning_rule,
+                               allow_input_downcast=True)
 
     def _get_activation(self, l):        
         nonlinearities = {'Rectifier': nl.rectify,
@@ -101,7 +103,6 @@ class MultiLayerPerceptronBackend(BaseBackend):
                           required=['channels', 'kernel_shape'],
                           optional=['kernel_stride', 'border_mode', 'pool_shape', 'pool_type'])
  
-        print(layer.kernel_shape, layer.kernel_stride)
         network = lasagne.layers.Conv2DLayer(
                         network,
                         num_filters=layer.channels,
@@ -179,7 +180,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
         log.debug("")
 
         self.symbol_output = lasagne.layers.get_output(network, deterministic=True)
-        self.f = theano.function([self.tensor_input], self.symbol_output) # allow_input_downcast=True
+        self.f = theano.function([self.tensor_input], self.symbol_output, allow_input_downcast=True)
 
     def _initialize_impl(self, X, y=None):
         X = numpy.transpose(X, (0, 3, 2, 1))
@@ -225,8 +226,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
 
             loss, batches = 0.0, 0
             for Xb, yb in self._iterate_data(X, y, self.batch_size):
-                print('.', end='', flush=True)
-                loss += self.trainer(X, y)
+                loss += self.trainer(Xb, yb)
                 batches += 1
 
             avg_valid_error = loss / batches
