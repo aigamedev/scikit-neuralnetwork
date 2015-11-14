@@ -136,18 +136,14 @@ class MultiLayerPerceptronBackend(BaseBackend):
         self.tensor_input = T.tensor4('X') if self.is_convolution else T.matrix('X')
         self.tensor_output = T.matrix('y')
         
+        lasagne.random.get_rng().seed(self.random_state)
+
         shape = list(X.shape)
         network = lasagne.layers.InputLayer([None]+shape[1:], self.tensor_input)
 
         # Create the layers one by one, connecting to previous.
         self.mlp = []
         for i, layer in enumerate(self.layers):
-            
-            """
-            TODO: Expose weight initialization policy.
-            TODO: self.random_state
-            """
-
             network = self._create_layer(layer.name, layer, network)
             self.mlp.append(network)
 
@@ -243,6 +239,9 @@ class MultiLayerPerceptronBackend(BaseBackend):
             for Xb, yb in self._iterate_data(X, y, self.batch_size):
                 loss += self.trainer(Xb, yb)
                 batches += 1
+
+            if math.isnan(loss):
+                raise RuntimeError("Training diverged and returned NaN.")
 
             avg_valid_error = loss / batches
             best_valid_error = min(best_valid_error, avg_valid_error)

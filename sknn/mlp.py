@@ -150,7 +150,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
             log.error("\n{}{}{}\n\n{}\n".format(
                 ansi.RED,
                 "A runtime exception was caught during training. This likely occurred due to\n"
-                "a divergence of the SGD algorithm, and NaN floats were found by PyLearn2.",
+                "a divergence of the SGD algorithm, and NaN floats were found by the backend.",
                 ansi.ENDC,
                 "Try setting the `learning_rate` 10x lower to resolve this, for example:\n"
                 "    learning_rate=%f" % (self.learning_rate * 0.1)))
