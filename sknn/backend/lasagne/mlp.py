@@ -95,7 +95,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
                           'Linear': nl.linear}
 
         assert l.type in nonlinearities,\
-            "Layer type `%s` is not supported for `%s`." % (layer.type, layer.name)
+            "Layer type `%s` is not supported for `%s`." % (l.type, l.name)
         return nonlinearities[l.type]
 
     def _create_convolution_layer(self, name, layer, network):
@@ -123,6 +123,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
         if isinstance(layer, Convolution):
             return self._create_convolution_layer(name, layer, network)
 
+        self._check_layer(layer, required=['units'])
         dropout = layer.dropout or self.dropout_rate
         if dropout is not None:
             network = lasagne.layers.dropout(network, dropout)
@@ -214,11 +215,23 @@ class MultiLayerPerceptronBackend(BaseBackend):
         return self.f(X)
     
     def _iterate_data(self, X, y, batch_size):
-        indices = numpy.arange(len(X))
+        
+        def cast(array):
+            if type(array) != numpy.ndarray:
+                array = array.todense()
+            return array.astype(theano.config.floatX)
+
+        print(X.shape)
+        total_size = X.shape[0]
+        indices = numpy.arange(total_size)
         numpy.random.shuffle(indices)
-        for start_idx in range(0, len(X) - batch_size + 1, batch_size):
+        for start_idx in range(0, total_size - batch_size + 1, batch_size):
             excerpt = indices[start_idx:start_idx + batch_size]
-            yield X[excerpt], y[excerpt]
+            Xb, yb = cast(X[excerpt]), cast(y[excerpt])
+            if self.mutator is not None:
+                for x, y in zip(Xb, yb):
+                    self.mutator(x)
+            yield Xb, yb
 
     def _train_impl(self, X, y):
         best_valid_error = float("inf")
