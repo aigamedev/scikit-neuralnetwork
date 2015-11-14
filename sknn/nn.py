@@ -150,17 +150,18 @@ class Convolution(Layer):
 
     kernel_stride: tuple of ints, optional
         A two-dimensional tuple of integers that represents the steps taken by the kernel
-        through the input image.  By default, this is set to the same as `pool_shape` but can
-        be customized separately even if pooling is turned off.
+        through the input image.  By default, this is set to  `(1,1)` and can be 
+        customized separately to pooling.
 
     border_mode: str
         String indicating the way borders in the image should be processed, one of two options:
 
             * `valid` — Only pixels from input where the kernel fits within bounds are processed.
             * `full` — All pixels from input are processed, and the boundaries are zero-padded.
+            * `same` — The output resolution is set to the exact same as the input.
 
         The size of the output will depend on this mode, for `full` it's identical to the input,
-        but for `valid` it will be smaller or equal.
+        but for `valid` (default) it will be smaller or equal.
 
     pool_shape: tuple of ints, optional
         A two-dimensional tuple of integers corresponding to the pool size.  This should be
@@ -205,7 +206,7 @@ class Convolution(Layer):
 
         if type not in ['Rectifier', 'Sigmoid', 'Tanh', 'Linear']:
             raise NotImplementedError("Convolution type `%s` is not implemented." % (type,))
-        if border_mode not in ['valid', 'full']:
+        if border_mode not in ['valid', 'full', 'same']:
             raise NotImplementedError("Convolution border_mode `%s` is not implemented." % (border_mode,))
 
         super(Convolution, self).__init__(
@@ -219,7 +220,7 @@ class Convolution(Layer):
         self.pool_shape = pool_shape or (1,1)
         self.pool_type = pool_type or ('max' if pool_shape else None)
         self.kernel_shape = kernel_shape
-        self.kernel_stride = kernel_stride or self.pool_shape
+        self.kernel_stride = kernel_stride or (1,1)
         self.border_mode = border_mode
 
 

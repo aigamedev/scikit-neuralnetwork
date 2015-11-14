@@ -101,24 +101,26 @@ class MultiLayerPerceptronBackend(BaseBackend):
                           required=['channels', 'kernel_shape'],
                           optional=['kernel_stride', 'border_mode', 'pool_shape', 'pool_type'])
  
+        print(layer.kernel_shape, layer.kernel_stride)
         network = lasagne.layers.Conv2DLayer(
                         network,
                         num_filters=layer.channels,
                         filter_size=layer.kernel_shape,
+                        stride=layer.kernel_stride,
+                        pad=layer.border_mode,
                         nonlinearity=self._get_activation(layer))
 
         if layer.pool_shape != (1, 1):
             network = lasagne.layers.Pool2DLayer(
                         network,
                         pool_size=layer.pool_shape,
-                        stride=layer.pool_stride,
-                        mode=border_mode)
+                        stride=layer.pool_shape)
 
         return network
 
     def _create_layer(self, name, layer, network):
         if isinstance(layer, Convolution):
-            return self._create_convolution_layer(name, layer, irange)
+            return self._create_convolution_layer(name, layer, network)
 
         dropout = layer.dropout or self.dropout_rate
         if dropout is not None:
@@ -129,9 +131,11 @@ class MultiLayerPerceptronBackend(BaseBackend):
                                          nonlinearity=self._get_activation(layer))
 
     def _create_mlp(self, X):
-        self.tensor_input = T.matrix('X')
+        self.tensor_input = T.tensor4('X')
         self.tensor_output = T.matrix('y')
-        network = lasagne.layers.InputLayer((None, X.shape[1]), self.tensor_input)
+        
+        shape = list(X.shape)
+        network = lasagne.layers.InputLayer([None]+shape[1:], self.tensor_input)
 
         # Create the layers one by one, connecting to previous.
         self.mlp = []
@@ -154,8 +158,8 @@ class MultiLayerPerceptronBackend(BaseBackend):
             if isinstance(l, Convolution):                
                 log.debug("  - Convl: {}{: <10}{} Output: {}{: <10}{} Channels: {}{}{}".format(
                     ansi.BOLD, l.type, ansi.ENDC,
-                    ansi.BOLD, repr(space.shape), ansi.ENDC,
-                    ansi.BOLD, space.num_channels, ansi.ENDC))
+                    ansi.BOLD, repr(space[2:]), ansi.ENDC,
+                    ansi.BOLD, space[1], ansi.ENDC))
 
                 # NOTE: Numbers don't match up exactly for pooling; one off. The logic is convoluted!
                 # assert count == numpy.product(space.shape) * space.num_channels,\
@@ -178,6 +182,8 @@ class MultiLayerPerceptronBackend(BaseBackend):
         self.f = theano.function([self.tensor_input], self.symbol_output) # allow_input_downcast=True
 
     def _initialize_impl(self, X, y=None):
+        X = numpy.transpose(X, (0, 3, 2, 1))
+
         if self.mlp is None:            
             self._create_mlp(X)
 
@@ -200,6 +206,8 @@ class MultiLayerPerceptronBackend(BaseBackend):
     def _predict_impl(self, X):
         if not self.is_initialized:
             self._initialize_impl(X)
+        
+        X = numpy.transpose(X, (0, 3, 2, 1))
         return self.f(X)
     
     def _iterate_data(self, X, y, batch_size):
@@ -217,9 +225,9 @@ class MultiLayerPerceptronBackend(BaseBackend):
 
             loss, batches = 0.0, 0
             for Xb, yb in self._iterate_data(X, y, self.batch_size):
+                print('.', end='', flush=True)
                 loss += self.trainer(X, y)
                 batches += 1
-                print('.', end='', flush=True)
 
             avg_valid_error = loss / batches
             best_valid_error = min(best_valid_error, avg_valid_error)
