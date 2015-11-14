@@ -132,7 +132,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
                                          nonlinearity=self._get_activation(layer))
 
     def _create_mlp(self, X):
-        self.tensor_input = T.tensor4('X')
+        self.tensor_input = T.tensor4('X') if self.is_convolution else T.matrix('X')
         self.tensor_output = T.matrix('y')
         
         shape = list(X.shape)
@@ -183,7 +183,8 @@ class MultiLayerPerceptronBackend(BaseBackend):
         self.f = theano.function([self.tensor_input], self.symbol_output, allow_input_downcast=True)
 
     def _initialize_impl(self, X, y=None):
-        X = numpy.transpose(X, (0, 3, 2, 1))
+        if self.is_convolution:
+            X = numpy.transpose(X, (0, 3, 1, 2))
 
         if self.mlp is None:            
             self._create_mlp(X)
@@ -208,7 +209,8 @@ class MultiLayerPerceptronBackend(BaseBackend):
         if not self.is_initialized:
             self._initialize_impl(X)
         
-        X = numpy.transpose(X, (0, 3, 2, 1))
+        if self.is_convolution:
+            X = numpy.transpose(X, (0, 3, 1, 2))
         return self.f(X)
     
     def _iterate_data(self, X, y, batch_size):

@@ -47,21 +47,21 @@ class TestConvolution(unittest.TestCase):
     def test_VerticalKernel(self):
         self._run(MLPR(
             layers=[
-                C("Rectifier", channels=4, kernel_shape=(16,1)),
+                C("Rectifier", channels=4, kernel_shape=(16,1), border_mode='valid'),
                 L("Linear")],
             n_iter=1))
 
     def test_VerticalVerbose(self):
         self._run(MLPR(
             layers=[
-                C("Sigmoid", channels=4, kernel_shape=(16,1)),
+                C("Sigmoid", channels=4, kernel_shape=(16,1), border_mode='valid'),
                 L("Linear")],
             n_iter=1, verbose=1, valid_size=0.1))
 
     def test_HorizontalKernel(self):
         self._run(MLPR(
             layers=[
-                C("Rectifier", channels=4, kernel_shape=(1,16)),
+                C("Rectifier", channels=4, kernel_shape=(1,16), border_mode='valid'),
                 L("Linear")],
             n_iter=1))
 
@@ -103,7 +103,7 @@ class TestConvolutionSpecs(unittest.TestCase):
 
     def test_SmallSquareKernel(self):
         nn = MLPR(layers=[
-                    C("Rectifier", channels=4, kernel_shape=(3,3)),
+                    C("Rectifier", channels=4, kernel_shape=(3,3), border_mode='valid'),
                     L("Linear", units=5)])
 
         a_in = numpy.zeros((8,32,32,1))
@@ -121,7 +121,7 @@ class TestConvolutionSpecs(unittest.TestCase):
 
     def test_HorizontalKernel(self):
         nn = MLPR(layers=[
-                    C("Rectifier", channels=7, kernel_shape=(16,1)),
+                    C("Rectifier", channels=7, kernel_shape=(16,1), border_mode='valid'),
                     L("Linear", units=5)])
 
         a_in = numpy.zeros((8,16,16,1))
@@ -130,7 +130,7 @@ class TestConvolutionSpecs(unittest.TestCase):
 
     def test_VerticalKernel(self):
         nn = MLPR(layers=[
-                    C("Rectifier", channels=4, kernel_shape=(1,16)),
+                    C("Rectifier", channels=4, kernel_shape=(1,16), border_mode='valid'),
                     L("Linear", units=7)])
 
         a_in = numpy.zeros((8,16,16,1))
@@ -139,7 +139,7 @@ class TestConvolutionSpecs(unittest.TestCase):
 
     def test_SquareKernelPool(self):
         nn = MLPR(layers=[
-                    C("Rectifier", channels=4, kernel_shape=(3,3), pool_shape=(2,2)),
+                    C("Rectifier", channels=4, kernel_shape=(3,3), pool_shape=(2,2), border_mode='valid'),
                     L("Linear", units=5)])
 
         a_in = numpy.zeros((8,32,32,1))
