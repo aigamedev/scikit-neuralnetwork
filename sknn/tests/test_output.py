@@ -9,6 +9,7 @@ from sknn.mlp import Layer as L
 from . import test_linear
 
 
+@unittest.skipIf(sknn.backend.name != 'pylearn2', 'only pylearn2')
 class TestGaussianOutput(test_linear.TestLinearNetwork):
 
     def setUp(self):
@@ -34,10 +35,12 @@ class TestLossTypes(unittest.TestCase):
         nn = MLPR(layers=[L("Linear")], loss_type='mse', n_iter=1)
         self._run(nn)
 
+    @unittest.skipIf(sknn.backend.name != 'pylearn2', 'only pylearn2')
     def test_MeanAverageErrorGaussian(self):
         nn = MLPR(layers=[L("Gaussian")], loss_type='mae', n_iter=1)
         self._run(nn)
 
+    @unittest.skipIf(sknn.backend.name != 'pylearn2', 'only pylearn2')
     def test_MeanSquaredErrorGaussian(self):
         nn = MLPR(layers=[L("Gaussian")], loss_type='mse', n_iter=1)
         self._run(nn)

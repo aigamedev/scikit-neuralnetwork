@@ -68,7 +68,12 @@ class MultiLayerPerceptronBackend(BaseBackend):
                 self.cost = cost.SumOfCosts([mlp_default_cost,l2])
                 """
 
-        self.cost = lasagne.objectives.categorical_crossentropy(self.symbol_output, self.tensor_output).mean()
+        cost_functions = {'mse': 'squared_error', 'mcc': 'categorical_crossentropy'}
+        loss_type = self.loss_type or ('mcc' if self.is_classifier else 'mse')
+        assert loss_type in cost_functions,\
+                    "Loss type `%s` not supported by Lasagne backend." % loss_type
+        cost_fn = getattr(lasagne.objectives, cost_functions[loss_type])
+        self.cost = cost_fn(self.symbol_output, self.tensor_output).mean()
         return self._create_trainer(params, self.cost)
 
     def _create_trainer(self, params, cost):
@@ -120,14 +125,14 @@ class MultiLayerPerceptronBackend(BaseBackend):
         return network
 
     def _create_layer(self, name, layer, network):
-        if isinstance(layer, Convolution):
-            return self._create_convolution_layer(name, layer, network)
-
-        self._check_layer(layer, required=['units'])
         dropout = layer.dropout or self.dropout_rate
         if dropout is not None:
             network = lasagne.layers.dropout(network, dropout)
 
+        if isinstance(layer, Convolution):
+            return self._create_convolution_layer(name, layer, network)
+
+        self._check_layer(layer, required=['units'])
         return lasagne.layers.DenseLayer(network,
                                          num_units=layer.units,
                                          nonlinearity=self._get_activation(layer))
@@ -217,15 +222,15 @@ class MultiLayerPerceptronBackend(BaseBackend):
                 array = array.todense()
             return array.astype(theano.config.floatX)
 
-        print(X.shape)
-        total_size = X.shape[0]
+        total_size = len(X)
+        assert len(X) == X.shape[0]
         indices = numpy.arange(total_size)
         numpy.random.shuffle(indices)
         for start_idx in range(0, total_size - batch_size + 1, batch_size):
             excerpt = indices[start_idx:start_idx + batch_size]
             Xb, yb = cast(X[excerpt]), cast(y[excerpt])
             if self.mutator is not None:
-                for x, y in zip(Xb, yb):
+                for x, _ in zip(Xb, yb):
                     self.mutator(x)
             yield Xb, yb
 
@@ -239,9 +244,8 @@ class MultiLayerPerceptronBackend(BaseBackend):
             for Xb, yb in self._iterate_data(X, y, self.batch_size):
                 loss += self.trainer(Xb, yb)
                 batches += 1
-
-            if math.isnan(loss):
-                raise RuntimeError("Training diverged and returned NaN.")
+                if math.isnan(loss):
+                    raise RuntimeError("Training diverged and returned NaN at batch %i." % batches)
 
             avg_valid_error = loss / batches
             best_valid_error = min(best_valid_error, avg_valid_error)
@@ -269,6 +273,11 @@ class MultiLayerPerceptronBackend(BaseBackend):
         """Check if the neural network was setup already.
         """
         return not (self.f is None)
+
+    def check(self):
+        for l in self.mlp:
+            assert not numpy.isnan(numpy.sum(l.W.get_value()))
+            assert not numpy.isnan(numpy.sum(l.b.get_value()))
 
     def _mlp_to_array(self):
         return [(l.W.get_value(), l.b.get_value()) for l in self.mlp]
