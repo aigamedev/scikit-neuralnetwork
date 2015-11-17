@@ -87,10 +87,7 @@ class NeuralNetworkBackend(BaseBackend):
     def _valid_layer(self, layer):
         layer.monitor.report_epoch()
         layer.monitor()
-        
+
+        # 'objective' channel is only defined with validation set.        
         objective = layer.monitor.channels.get('objective', None)
-        if objective:
-            return objective.val_shared.get_value()
-        else:
-            # 'objective' channel is only defined with validation set.
-            return None
+        return objective.val_shared.get_value() if objective else None

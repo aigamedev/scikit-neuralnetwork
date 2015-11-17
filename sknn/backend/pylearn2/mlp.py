@@ -270,10 +270,10 @@ class MultiLayerPerceptronBackend(NeuralNetworkBackend):
             X = self.ds.view_converter.topo_view_to_design_mat(X)
         self.ds.X, self.ds.y = X, y
 
-        self._train_layer(self.trainer, self.mlp, self.ds)
+        return self._train_layer(self.trainer, self.mlp, self.ds)
 
     def _valid_impl(self, X, y):
-        self._valid_layer(self.mlp)
+        return self._valid_layer(self.mlp)
 
     @property
     def is_initialized(self):
