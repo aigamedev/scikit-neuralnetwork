@@ -26,7 +26,7 @@ class TestLossTypes(unittest.TestCase):
         self._run(nn)
     
     @unittest.skipIf(sknn.backend.name != 'lasagne', 'only lasagne')
-    def test_MeanSquaredErrorLinear(self):
+    def test_CategoricalCrossEntropyLinear(self):
         nn = MLPR(layers=[L("Softmax")], loss_type='mcc', n_iter=1)
         self._run(nn)
 

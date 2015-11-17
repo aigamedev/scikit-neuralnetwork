@@ -194,6 +194,11 @@ class MultiLayerPerceptronBackend(BaseBackend):
                                 test_size=self.valid_size,
                                 random_state=self.random_state)
             self.valid_set = X_v, y_v
+            
+        if self.valid_set and self.is_convolution:
+            X_v, y_v = self.valid_set
+            if X_v.shape[-2:] != X.shape[-2:]:
+                self.valid_set = numpy.transpose(X_v, (0, 3, 1, 2)), y_v
 
         params = []
         for spec, mlp_layer in zip(self.layers, self.mlp):
@@ -204,9 +209,6 @@ class MultiLayerPerceptronBackend(BaseBackend):
         return X, y
 
     def _predict_impl(self, X):
-        if not self.is_initialized:
-            self._initialize_impl(X)
-        
         if self.is_convolution:
             X = numpy.transpose(X, (0, 3, 1, 2))
         return self.f(X)

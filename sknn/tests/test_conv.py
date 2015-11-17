@@ -65,13 +65,24 @@ class TestConvolution(unittest.TestCase):
                 L("Linear")],
             n_iter=1))
 
-    def test_ValidationSet(self):
+    def test_ValidationSize(self):
         self._run(MLPR(
             layers=[
                 C("Tanh", channels=4, kernel_shape=(3,3)),
                 L("Linear")],
             n_iter=1,
             valid_size=0.5))
+
+    def test_ValidationSet(self):
+        v_in = numpy.zeros((8,32,16,1))
+        v_out = numpy.zeros((8,4))
+
+        self._run(MLPR(
+            layers=[
+                C("Tanh", channels=4, kernel_shape=(3,3)),
+                L("Linear")],
+            n_iter=1,
+            valid_set=(v_in, v_out)))
 
     def test_MultipleLayers(self):
         self._run(MLPR(

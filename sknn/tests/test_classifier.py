@@ -14,6 +14,9 @@ class TestClassifierFunctionality(unittest.TestCase):
     def setUp(self):
         self.nn = MLPC(layers=[L("Softmax")], n_iter=1)
 
+    def test_IsClassifier(self):
+        assert_true(self.nn.is_classifier)
+
     def test_FitAutoInitialize(self):
         a_in, a_out = numpy.zeros((8,16)), numpy.random.randint(0, 5, (8,))
         self.nn.fit(a_in, a_out)

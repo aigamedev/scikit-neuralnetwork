@@ -17,6 +17,9 @@ class TestLinearNetwork(unittest.TestCase):
 
     def test_LifeCycle(self):
         del self.nn
+        
+    def test_IsNotClassifier(self):
+        assert_false(self.nn.is_classifier)
 
     def test_PredictNoOutputUnitsAssertion(self):
         a_in = numpy.zeros((8,16))
