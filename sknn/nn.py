@@ -487,12 +487,35 @@ class NeuralNetwork(object):
         -------
         params : list of tuples
             For each layer in the order they are passed to the constructor, a named-tuple
-            of three items `name` (string), `weights` and `biases` (both numpy arrays) in
-            that order.      
+            of three items `weights`, `biases` (both numpy arrays) and `name` (string)
+            in that order.
         """
-
         assert self._backend is not None,\
             "Backend was not initialized; could not retrieve network parameters."
 
-        P = collections.namedtuple('Parameters', 'layer weights biases')
-        return [P(s.name, w, b) for s, (w, b) in zip(self.layers, self._backend._mlp_to_array())]
+        P = collections.namedtuple('Parameters', 'weights biases layer')
+        return [P(w, b, s.name) for s, (w, b) in zip(self.layers, self._backend._mlp_to_array())]
+
+    def set_parameters(self, storage):
+        """Store the given weighs and biases into the neural network.  If the neural network
+        has not been initialized, use the `weights` list as construction parameter instead.
+        Otherwise if the neural network is initialized, this function will extract the parameters
+        from the input list or dictionary and store them accordingly.
+
+        Parameters
+        ----------
+        storage : list of tuples, or dictionary of tuples
+            Either a list of tuples for each layer, storing two items `weights` and `biases` in
+            the exact same order as construction.  Alternatively, if this is a dictionary, a string
+            to tuple mapping for each layer also storing `weights` and `biases` but not necessarily
+            for all layers.
+        """
+        assert self._backend is not None,\
+            "Backend was not initialized; could not store network parameters."
+
+        if isinstance(storage, dict):
+            layers = [storage.get(l.name, None) for l in self.layers]
+        else:
+            layers = storage
+
+        return self._backend._array_to_mlp(layers, self._backend.mlp)

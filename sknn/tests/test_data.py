@@ -49,3 +49,42 @@ class TestNetworkParameters(unittest.TestCase):
         assert_equals(p[0].layer, 'output')
         assert_equals(p[0].weights.shape, (16, 4))
         assert_equals(p[0].biases.shape, (4,))
+
+    def test_SetLayerParamsList(self):
+        nn = MLPR(layers=[L("Linear")])
+        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
+        nn._initialize(a_in, a_out)
+        
+        weights = numpy.random.uniform(-1.0, +1.0, (16,4))
+        biases = numpy.random.uniform(-1.0, +1.0, (4,))
+        nn.set_parameters([(weights, biases)])
+        
+        p = nn.get_parameters()
+        assert_true((p[0].weights == weights).all())
+        assert_true((p[0].biases == biases).all())
+
+    def test_LayerParamsSkipOneWithNone(self):
+        nn = MLPR(layers=[L("Sigmoid", units=32), L("Linear", name='abcd')])
+        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
+        nn._initialize(a_in, a_out)
+        
+        weights = numpy.random.uniform(-1.0, +1.0, (32,4))
+        biases = numpy.random.uniform(-1.0, +1.0, (4,))
+        nn.set_parameters([None, (weights, biases)])
+        
+        p = nn.get_parameters()
+        assert_true((p[1].weights == weights).all())
+        assert_true((p[1].biases == biases).all())
+
+    def test_SetLayerParamsDict(self):
+        nn = MLPR(layers=[L("Sigmoid", units=32), L("Linear", name='abcd')])
+        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
+        nn._initialize(a_in, a_out)
+        
+        weights = numpy.random.uniform(-1.0, +1.0, (32,4))
+        biases = numpy.random.uniform(-1.0, +1.0, (4,))
+        nn.set_parameters({'abcd': (weights, biases)})
+        
+        p = nn.get_parameters()
+        assert_true((p[1].weights == weights).all())
+        assert_true((p[1].biases == biases).all())

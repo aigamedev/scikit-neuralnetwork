@@ -262,7 +262,10 @@ class MultiLayerPerceptronBackend(BaseBackend):
         return [self._mlp_get_params(l) for l in self.mlp]
 
     def _array_to_mlp(self, array, nn):
-        for layer, (weights, biases) in zip(nn, array):
+        for layer, data in zip(nn, array):
+            if data is None: continue
+            weights, biases = data
+
             while not hasattr(layer, 'W') and not hasattr(layer, 'b'):
                 layer = layer.input_layer
 
