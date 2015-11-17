@@ -43,9 +43,9 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
     def _check_layer(self, layer, required, optional=[]):
         required.extend(['name', 'type'])
         for r in required:
-            if getattr(layer, r) is None:
-                raise ValueError("Layer type `%s` requires parameter `%s`."\
-                                 % (layer.type, r))
+            if getattr(layer, r) is None: raise\
+                ValueError("Layer type `%s` requires parameter `%s`."\
+                           % (layer.type, r))
 
         optional.extend(['weight_decay', 'dropout', 'frozen'])
         for a in layer.__dict__:

@@ -88,8 +88,7 @@ class Layer(object):
         assert warning is None,\
             "Specify layer parameters as keyword arguments, not positional arguments."
 
-        if type not in ['Rectifier', 'Sigmoid', 'Tanh', 'Maxout',
-                        'Linear', 'Softmax', 'Gaussian']:
+        if type not in ['Rectifier', 'Sigmoid', 'Tanh', 'Linear', 'Softmax', 'Gaussian']:
             raise NotImplementedError("Layer type `%s` is not implemented." % type)
 
         self.name = name
@@ -250,9 +249,9 @@ class NeuralNetwork(object):
         contains its type, optional name, and any paramaters required.
 
             * For hidden layers, you can use the following layer types:
-              ``Rectifier``, ``Sigmoid``, ``Tanh``, ``Maxout`` or ``Convolution``.
+              ``Rectifier``, ``Sigmoid``, ``Tanh``, or ``Convolution``.
             * For output layers, you can use the following layer types:
-              ``Linear``, ``Softmax`` or ``Gaussian``.
+              ``Linear`` or ``Softmax``.
 
         It's possible to mix and match any of the layer types, though most often
         you should probably use hidden and output types as recommended here.  Typically,
