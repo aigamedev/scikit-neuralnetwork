@@ -65,6 +65,10 @@ class Layer(object):
         means that 25% of the inputs will be excluded for each training sample, with the
         remaining inputs being renormalized accordingly.
 
+    frozen: bool, optional
+        Specify whether to freeze a layer's parameters so they are not adjusted during the
+        training. This is useful when relying on pre-trained neural networks.
+
     warning: None
         You should use keyword arguments after `type` when initializing this object. If not,
         the code will raise an AssertionError.
@@ -78,7 +82,8 @@ class Layer(object):
             units=None,
             pieces=None,
             weight_decay=None,
-            dropout=None):
+            dropout=None,
+            frozen=False):
 
         assert warning is None,\
             "Specify layer parameters as keyword arguments, not positional arguments."
@@ -93,6 +98,7 @@ class Layer(object):
         self.pieces = pieces
         self.weight_decay = weight_decay
         self.dropout = dropout
+        self.frozen = frozen
 
     def set_params(self, **params):
         """Setter for internal variables that's compatible with ``scikit-learn``.
@@ -182,6 +188,10 @@ class Convolution(Layer):
         means that 25% of the inputs will be excluded for each training sample, with the
         remaining inputs being renormalized accordingly.
 
+    frozen: bool, optional
+        Specify whether to freeze a layer's parameters so they are not adjusted during the
+        training. This is useful when relying on pre-trained neural networks.
+
     warning: None
         You should use keyword arguments after `type` when initializing this object. If not,
         the code will raise an AssertionError.
@@ -199,7 +209,8 @@ class Convolution(Layer):
             pool_shape=None,
             pool_type=None,
             weight_decay=None,
-            dropout=None):
+            dropout=None,
+            frozen=False):
 
         assert warning is None,\
             "Specify layer parameters as keyword arguments, not positional arguments."
@@ -214,7 +225,8 @@ class Convolution(Layer):
                 name=name,
                 pieces=pieces,
                 weight_decay=weight_decay,
-                dropout=dropout)
+                dropout=dropout,
+                frozen=frozen)
 
         self.channels = channels
         self.pool_shape = pool_shape or (1,1)
@@ -247,50 +259,56 @@ class NeuralNetwork(object):
         the last entry in this ``layers`` list should contain ``Linear`` for regression,
         or ``Softmax`` for classification.
 
-    random_state: int
+    random_state: int, optional
         Seed for the initialization of the neural network parameters (e.g.
         weights and biases).  This is fully deterministic.
 
-    learning_rule: str
+    weights: list of tuple of array-like, optional
+        A list of ``(weights, biases)`` tuples to be reloaded for each layer, in the same
+        order as ``layers`` was specified.  Useful for initializing with pre-trained
+        networks.
+
+    learning_rule: str, optional
         Name of the learning rule used during stochastic gradient descent,
         one of ``sgd``, ``momentum``, ``nesterov``, ``adadelta``, ``adagrad`` or
         ``rmsprop`` at the moment.  The default is vanilla ``sgd``.
 
-    learning_rate: float
+    learning_rate: float, optional
         Real number indicating the default/starting rate of adjustment for
         the weights during gradient descent.  Different learning rules may
-        take this into account differently.
+        take this into account differently.  Default is ``0.01``.
 
-    learning_momentum: float
+    learning_momentum: float, optional
         Real number indicating the momentum factor to be used for the
-        learning rule 'momentum'.
+        learning rule 'momentum'. Default is ``0.9``.
 
-    batch_size: int
+    batch_size: int, optional
         Number of training samples to group together when performing stochastic
         gradient descent (technically, a "minibatch").  By default each sample is
         treated on its own, with ``batch_size=1``.  Larger batches are usually faster.
 
-    n_iter: int
+    n_iter: int, optional
         The number of iterations of gradient descent to perform on the
         neural network's weights when training with ``fit()``.
 
-    valid_set: tuple of array-like
+    n_stable: int, optional
+        Number of interations after which training should return when the validation
+        error remains constant.  This is a sign that the data has been fitted, or that
+        optimization may have stalled. Default is ``10``.
+
+    f_stable: float, optional
+        Threshold under which the validation error change is assumed to be stable, to
+        be used in combination with `n_stable`. Default is ``0.001`.
+
+    valid_set: tuple of array-like, optional
         Validation set (X_v, y_v) to be used explicitly while training.  Both
         arrays should have the same size for the first dimention, and the second
         dimention should match with the training data specified in ``fit()``.
 
-    valid_size: float
+    valid_size: float, optional
         Ratio of the training data to be used for validation.  0.0 means no
         validation, and 1.0 would mean there's no training data!  Common values are
         0.1 or 0.25.
-
-    n_stable: int
-        Number of interations after which training should return when the validation
-        error remains constant.  This is a sign that the data has been fitted.
-
-    f_stable: float
-        Threshold under which the validation error change is assumed to be stable, to
-        be used in combination with `n_stable`.
 
     regularize: string, optional
         Which regularization technique to use on the weights, for example ``L2`` (most
@@ -321,9 +339,9 @@ class NeuralNetwork(object):
         the output layer (PyLearn2 only).
 
     mutator: callable, optional
-        A function that takes a single training sample input at each epoch and modifies
-        it in-place.  This is useful for dataset augmentation, e.g. mirroring input images
-        or jittering.  It only applies to the ``X`` part of the data passed to ``fit()``.
+        A function that takes a single training sample ``(X, y)`` at each epoch and returns
+        a modified version.  This is useful for dataset augmentation, e.g. mirroring input
+        images or jittering.
 
     debug: bool, optional
         Should the underlying training algorithms perform validation on the data
@@ -341,11 +359,17 @@ class NeuralNetwork(object):
 
         Using the built-in python ``logging`` module, you can control the detail and style of
         output by customising the verbosity level and formatter for ``sknn`` logger.
+        
+    warning: None
+        You should use keyword arguments after `layers` when initializing this object. If not,
+        the code will raise an AssertionError.
     """
 
     def __init__(
             self,
             layers,
+            warning=None,
+            weights=None,
             random_state=None,
             learning_rule='sgd',
             learning_rate=0.01,
@@ -355,7 +379,7 @@ class NeuralNetwork(object):
             dropout_rate=None,
             batch_size=1,
             n_iter=None,
-            n_stable=50,
+            n_stable=10,
             f_stable=0.001,
             valid_set=None,
             valid_size=0.0,
@@ -364,6 +388,9 @@ class NeuralNetwork(object):
             debug=False,
             verbose=None,
             **params):
+
+        assert warning is None,\
+            "Specify network parameters as keyword arguments, not positional arguments."
 
         self.layers = []
         for i, layer in enumerate(layers):
@@ -392,6 +419,7 @@ class NeuralNetwork(object):
         assert loss_type in ('mse', 'mae', 'mcc', None),\
             "Unknown loss function type specified: %s." % loss_type
 
+        self.weights = weights
         self.random_state = random_state
         self.learning_rule = learning_rule
         self.learning_rate = learning_rate
@@ -410,7 +438,6 @@ class NeuralNetwork(object):
         self.mutator = mutator
         self.debug = debug
         self.verbose = verbose
-        self.weights = None
         
         self._backend = None
         self._create_logger()
