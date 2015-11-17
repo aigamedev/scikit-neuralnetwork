@@ -16,6 +16,7 @@ from .pywrap2 import (datasets, space, sgd)
 from .pywrap2 import learning_rule as lr, termination_criteria as tc
 from .dataset import DenseDesignMatrix, SparseDesignMatrix, FastVectorSpace
 
+from ...nn import ansi
 from ..base import BaseBackend
 
 
@@ -75,3 +76,18 @@ class NeuralNetworkBackend(BaseBackend):
             learning_rate=self.learning_rate,
             termination_criterion=termination_criterion,
             monitoring_dataset=dataset)
+
+    def _train_layer(self, trainer, layer, dataset):
+        # Bug in PyLearn2 that has some unicode channels, can't sort.
+        layer.monitor.channels = {str(k): v for k, v in layer.monitor.channels.items()}
+        
+        trainer.train(dataset=dataset)
+        return None
+        
+    def _valid_layer(self, layer):
+        layer.monitor.report_epoch()
+        layer.monitor()
+
+        # 'objective' channel is only defined with validation set.        
+        objective = layer.monitor.channels.get('objective', None)
+        return objective.val_shared.get_value() if objective else None

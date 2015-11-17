@@ -156,17 +156,18 @@ class Convolution(Layer):
 
     kernel_stride: tuple of ints, optional
         A two-dimensional tuple of integers that represents the steps taken by the kernel
-        through the input image.  By default, this is set to the same as `pool_shape` but can
-        be customized separately even if pooling is turned off.
+        through the input image.  By default, this is set to  `(1,1)` and can be 
+        customized separately to pooling.
 
     border_mode: str
         String indicating the way borders in the image should be processed, one of two options:
 
             * `valid` — Only pixels from input where the kernel fits within bounds are processed.
             * `full` — All pixels from input are processed, and the boundaries are zero-padded.
+            * `same` — The output resolution is set to the exact same as the input.
 
         The size of the output will depend on this mode, for `full` it's identical to the input,
-        but for `valid` it will be smaller or equal.
+        but for `valid` (default) it will be smaller or equal.
 
     pool_shape: tuple of ints, optional
         A two-dimensional tuple of integers corresponding to the pool size.  This should be
@@ -216,7 +217,7 @@ class Convolution(Layer):
 
         if type not in ['Rectifier', 'Sigmoid', 'Tanh', 'Linear']:
             raise NotImplementedError("Convolution type `%s` is not implemented." % (type,))
-        if border_mode not in ['valid', 'full']:
+        if border_mode not in ['valid', 'full', 'same']:
             raise NotImplementedError("Convolution border_mode `%s` is not implemented." % (border_mode,))
 
         super(Convolution, self).__init__(
@@ -231,7 +232,7 @@ class Convolution(Layer):
         self.pool_shape = pool_shape or (1,1)
         self.pool_type = pool_type or ('max' if pool_shape else None)
         self.kernel_shape = kernel_shape
-        self.kernel_stride = kernel_stride or self.pool_shape
+        self.kernel_stride = kernel_stride or (1,1)
         self.border_mode = border_mode
 
 
@@ -331,9 +332,11 @@ class NeuralNetwork(object):
 
             * ``mse`` — Use mean squared error, for learning to predict the mean of the data.
             * ``mae`` — Use mean average error, for learning to predict the median of the data.
+            * ``mcc`` — Use mean categorical cross-entropy, particularly for classifiers.
 
-        The default option is ``mse``, and ``mae`` can only be applied to layers of type
-        ``Linear`` or ``Gaussian`` and they must be used as the output layer.
+        The default option is ``mse`` for regressors and ``mcc`` for classifiers, but ``mae`` can
+        only be applied to layers of type ``Linear`` or ``Gaussian`` and they must be used as
+        the output layer (PyLearn2 only).
 
     mutator: callable, optional
         A function that takes a single training sample ``(X, y)`` at each epoch and returns
@@ -380,7 +383,7 @@ class NeuralNetwork(object):
             f_stable=0.001,
             valid_set=None,
             valid_size=0.0,
-            loss_type='mse',
+            loss_type=None,
             mutator=None,
             debug=False,
             verbose=None,
@@ -413,7 +416,7 @@ class NeuralNetwork(object):
         # Basic checking of the freeform string options.
         assert regularize in (None, 'L1', 'L2', 'dropout'),\
             "Unknown type of regularization specified: %s." % regularize
-        assert loss_type in ('mse', 'mae'),\
+        assert loss_type in ('mse', 'mae', 'mcc', None),\
             "Unknown loss function type specified: %s." % loss_type
 
         self.weights = weights
@@ -456,6 +459,11 @@ class NeuralNetwork(object):
         """
         return isinstance(self.layers[0], Convolution)
 
+    @property
+    def is_classifier(self):
+        """Is this neural network instanced as a classifier or regressor?""" 
+        return False
+
     def _create_logger(self):
         # If users have configured logging already, assume they know best.
         if len(log.handlers) > 0 or len(log.parent.handlers) > 0 or self.verbose is None:
@@ -470,41 +478,3 @@ class NeuralNetwork(object):
         hnd.setLevel(lvl)
         log.addHandler(hnd)
         log.setLevel(lvl)
-
-    def _train_layer(self, trainer, layer, dataset):
-        # Bug in PyLearn2 that has some unicode channels, can't sort.
-        layer.monitor.channels = {str(k): v for k, v in layer.monitor.channels.items()}
-        best_valid_error = float("inf")
-
-        for i in itertools.count(1):
-            start = time.time()
-            trainer.train(dataset=dataset)
-
-            layer.monitor.report_epoch()
-            layer.monitor()
-            
-            objective = layer.monitor.channels.get('objective', None)
-            if objective:
-                avg_valid_error = objective.val_shared.get_value()
-                best_valid_error = min(best_valid_error, avg_valid_error)
-            else:
-                # 'objective' channel is only defined with validation set.
-                avg_valid_error = None
-
-            best_valid = bool(best_valid_error == avg_valid_error)
-            log.debug("{:>5}      {}{}{}        {:>5.1f}s".format(
-                      i,
-                      ansi.GREEN if best_valid else "",
-                      "{:>10.6f}".format(float(avg_valid_error)) if (avg_valid_error is not None) else "     N/A  ",
-                      ansi.ENDC if best_valid else "",
-                      time.time() - start
-                      ))
-
-            if not trainer.continue_learning(layer):
-                log.debug("")
-                log.info("Early termination condition fired at %i iterations.", i)
-                break
-            if self.n_iter is not None and i >= self.n_iter:
-                log.debug("")
-                log.info("Terminating after specified %i total iterations.", i)
-                break

@@ -25,7 +25,6 @@ var/
 *.egg
 
 # Machine Learning
-Lasagne/
 nolearn/
 scikit-learn/
 

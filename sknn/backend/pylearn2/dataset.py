@@ -103,7 +103,7 @@ class SparseDesignMatrix(dataset.Dataset):
         array = self._conv_fn(array)
         if self.mutator is not None:
             for i in range(array.shape[0]):
-                self.mutator(array[i])
+                array[i] = self.mutator(array[i])
         return array
 
     @functools.wraps(dataset.Dataset.iterator)
@@ -160,17 +160,3 @@ class DenseDesignMatrix(datasets.DenseDesignMatrix):
         if self.mutator is not None:
             bit._convert[0] = self._conv_fn
         return bit
-
-"""
-OriginalDatasetIterator = iteration.FiniteDatasetIterator
-
-def create_finite_iterator(*args, **kwargs):
-    print('create_finite_iterator', kwargs['convert'])
-    def conv_fn(x):
-        return x + 0.01
-    kwargs['convert'] = [conv_fn, None]
-    return OriginalDatasetIterator(*args, **kwargs)
-    # convert=convert)
-
-datasets.dense_design_matrix.FiniteDatasetIterator = create_finite_iterator
-"""

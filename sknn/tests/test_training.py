@@ -17,9 +17,10 @@ class TestTrainingProcedure(unittest.TestCase):
 
     def test_FitTerminateStable(self):
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
+        activation = "Gaussian" if sknn.backend.name == "pylearn2" else "Linear"
         self.nn = MLP(
-                    layers=[L("Gaussian")], learning_rate=0.001,
-                    n_iter=None, n_stable=1, f_stable=0.1,
+                    layers=[L(activation)], learning_rate=0.001,
+                    n_iter=None, n_stable=1, f_stable=0.01,
                     valid_set=(a_in, a_out))
 
         self.nn._fit(a_in, a_out)
@@ -27,7 +28,7 @@ class TestTrainingProcedure(unittest.TestCase):
     def test_FitAutomaticValidation(self):
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
         self.nn = MLP(
-                    layers=[L("Gaussian")], learning_rate=0.001,
+                    layers=[L("Linear")], learning_rate=0.001,
                     n_iter=10, n_stable=1, f_stable=0.1,
                     valid_size=0.25)
 
@@ -73,15 +74,17 @@ class TestTrainingOutput(unittest.TestCase):
         nn = MLPR(layers=[L("Linear")], verbose=1, n_iter=1)
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
         nn.fit(a_in, a_out)
-        assert_in("Epoch    Validation Error      Time", self.buf.getvalue())
-        assert_in("    1           N/A          ", self.buf.getvalue())
+        assert_in("Epoch       Training Error       Validation Error       Time", self.buf.getvalue())
+        assert_in("    1       ", self.buf.getvalue())
+        assert_in("    N/A     ", self.buf.getvalue())
 
     def test_VerboseClassifier(self):
-        nn = MLPC(layers=[L("Linear")], verbose=1, n_iter=1)
+        nn = MLPC(layers=[L("Softmax")], verbose=1, n_iter=1)
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,1), dtype=numpy.int32)
         nn.fit(a_in, a_out)
-        assert_in("Epoch    Validation Error      Time", self.buf.getvalue())
-        assert_in("    1           N/A          ", self.buf.getvalue())
+        assert_in("Epoch       Training Error       Validation Error       Time", self.buf.getvalue())
+        assert_in("    1       ", self.buf.getvalue())
+        assert_in("    N/A     ", self.buf.getvalue())
 
     def test_CaughtRuntimeError(self):
         nn = MLPC(layers=[L("Linear")], learning_rate=float("nan"), n_iter=1)

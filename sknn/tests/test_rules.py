@@ -32,12 +32,13 @@ class LoggingTestCase(unittest.TestCase):
 class TestLearningRules(LoggingTestCase):
 
     def test_Default(self):
-        self._run(MLPR(layers=[L("Linear")],
+        activation = "Gaussian" if sknn.backend.name == 'pylearn2' else "Linear"
+        self._run(MLPR(layers=[L(activation)],
                        learning_rule='sgd',
                        n_iter=1))
 
     def test_Momentum(self):
-        self._run(MLPR(layers=[L("Gaussian")],
+        self._run(MLPR(layers=[L("Linear")],
                        learning_rule='momentum',
                        n_iter=1))
 
@@ -104,6 +105,7 @@ class TestRegularization(LoggingTestCase):
         self._run(nn)
         assert_in('Using `dropout` for regularization.', self.output.getvalue())
 
+    @unittest.skipIf(sknn.backend.name != 'pylearn2', 'only pylearn2')
     def test_AutomaticDropout(self):
         nn = MLPR(layers=[L("Tanh", units=8, dropout=0.25), L("Linear")], n_iter=1)
         self._run(nn)

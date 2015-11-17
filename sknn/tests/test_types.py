@@ -43,8 +43,8 @@ class TestScipySparseMatrix(unittest.TestCase):
 
     def test_FitMutator(self):
         def mutate(x):
-            x -= 0.5
             self.count += 1
+            return x - 0.5
         self.nn.mutator = mutate
 
         for t in SPARSE_TYPES:
