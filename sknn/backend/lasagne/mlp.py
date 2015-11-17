@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, unicode_literals, print_function)
 
-__all__ = ['Regressor', 'Classifier', 'Layer', 'Convolution']
+__all__ = ['MultiLayerPerceptronBackend']
 
 import os
 import sys
@@ -158,7 +158,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
 
         for l, p, count in zip(self.layers, self.mlp, self.unit_counts[1:]):
             space = p.output_shape
-            if isinstance(l, Convolution):                
+            if isinstance(l, Convolution):
                 log.debug("  - Convl: {}{: <10}{} Output: {}{: <10}{} Channels: {}{}{}".format(
                     ansi.BOLD, l.type, ansi.ENDC,
                     ansi.BOLD, repr(space[2:]), ansi.ENDC,
@@ -203,7 +203,11 @@ class MultiLayerPerceptronBackend(BaseBackend):
                                 random_state=self.random_state)
             self.valid_set = X_v, y_v
 
-        params = lasagne.layers.get_all_params(self.mlp[-1], trainable=True)
+        params = []
+        for spec, mlp_layer in zip(self.layers, self.mlp):
+            if spec.frozen: continue
+            params.extend(mlp_layer.get_params())
+
         self.trainer = self._create_mlp_trainer(params)
         return X, y
 
@@ -215,17 +219,17 @@ class MultiLayerPerceptronBackend(BaseBackend):
             X = numpy.transpose(X, (0, 3, 1, 2))
         return self.f(X)
     
-    def _iterate_data(self, X, y, batch_size):
-        
+    def _iterate_data(self, X, y, batch_size, shuffle=False):
         def cast(array):
             if type(array) != numpy.ndarray:
                 array = array.todense()
             return array.astype(theano.config.floatX)
 
-        total_size = len(X)
-        assert len(X) == X.shape[0]
+        total_size = X.shape[0]
         indices = numpy.arange(total_size)
-        numpy.random.shuffle(indices)
+        if shuffle:
+            numpy.random.shuffle(indices)
+
         for start_idx in range(0, total_size - batch_size + 1, batch_size):
             excerpt = indices[start_idx:start_idx + batch_size]
             Xb, yb = cast(X[excerpt]), cast(y[excerpt])
@@ -235,43 +239,19 @@ class MultiLayerPerceptronBackend(BaseBackend):
             yield Xb, yb
 
     def _train_impl(self, X, y):
-        best_valid_error = float("inf")
-        stable = 0
+        loss, batches = 0.0, 0
+        for Xb, yb in self._iterate_data(X, y, self.batch_size, shuffle=True):
+            loss += self.trainer(Xb, yb)
+            batches += 1
+        return loss / batches
 
-        for i in itertools.count(1):
-            start = time.time()
-
-            loss, batches = 0.0, 0
-            for Xb, yb in self._iterate_data(X, y, self.batch_size):
-                loss += self.trainer(Xb, yb)
-                batches += 1
-                if math.isnan(loss):
-                    raise RuntimeError("Training diverged and returned NaN at batch %i." % batches)
-
-            avg_valid_error = loss / batches
-            best_valid_error = min(best_valid_error, avg_valid_error)
-
-            best_valid = bool(best_valid_error == avg_valid_error)
-            log.debug("\r{:>5}      {}{}{}        {:>5.1f}s".format(
-                      i,
-                      ansi.GREEN if best_valid else "",
-                      "{:>10.6f}".format(float(avg_valid_error)) if (avg_valid_error is not None) else "     N/A  ",
-                      ansi.ENDC if best_valid else "",
-                      time.time() - start
-                      ))
-            if best_valid:
-                stable = 0
-            else:
-                stable += 1
-
-            if stable >= self.n_stable:
-                log.debug("")
-                log.info("Early termination condition fired at %i iterations.", i)
-                break
-            if self.n_iter is not None and i >= self.n_iter:
-                log.debug("")
-                log.info("Terminating after specified %i total iterations.", i)
-                break
+    def _valid_impl(self, X, y):
+        loss, batches = 0.0, 0
+        for Xb, yb in self._iterate_data(X, y, self.batch_size, shuffle=True):
+            ys = self.f(Xb)
+            loss += ((ys - yb) ** 2.0).mean()
+            batches += 1
+        return loss / batches
 
     @property
     def is_initialized(self):

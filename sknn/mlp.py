@@ -72,11 +72,11 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
                 assert l.kernel_shape is not None,\
                     "Layer `%s` requires parameter `kernel_shape` to be set." % (l.name,)
                 if l.border_mode == 'valid':
-                    res = (int((res[0] - l.kernel_shape[0]) / l.kernel_stride[0]) + 1,
-                           int((res[1] - l.kernel_shape[1]) / l.kernel_stride[1]) + 1)
+                    res = (int((res[0] - l.kernel_shape[0]) / l.pool_shape[0]) + 1,
+                           int((res[1] - l.kernel_shape[1]) / l.pool_shape[1]) + 1)
                 if l.border_mode == 'full':
-                    res = (int((res[0] + l.kernel_shape[0]) / l.kernel_stride[0]) - 1,
-                           int((res[1] + l.kernel_shape[1]) / l.kernel_stride[1]) - 1)
+                    res = (int((res[0] + l.kernel_shape[0]) / l.pool_shape[0]) - 1,
+                           int((res[1] + l.kernel_shape[1]) / l.pool_shape[1]) - 1)
                 unit_count = numpy.prod(res) * l.channels
             else:
                 unit_count = l.units
@@ -117,6 +117,55 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         if not self.is_convolution and X.ndim > 2:
             X = X.reshape((X.shape[0], numpy.product(X.shape[1:])))
         return X, y
+        
+    def _train(self, X, y):
+        best_train_error, best_valid_error = float("inf"), float("inf")
+        stable = 0
+
+        for i in itertools.count(1):
+            start = time.time()
+
+            avg_train_error = self._backend._train_impl(X, y)
+            best_train_error = min(best_train_error, avg_train_error)
+            best_train = bool(avg_train_error / best_train_error < (1.0 + self.f_stable))
+
+            if math.isnan(avg_train_error):
+                raise RuntimeError("Training diverged and returned NaN at batch %i." % batches)
+
+            if self.valid_set is not None:
+                avg_valid_error = self._backend._valid_impl(*self.valid_set)
+                best_valid_error = min(best_valid_error, avg_valid_error)
+                best_valid = bool(avg_valid_error / best_valid_error < (1.0 + self.f_stable))
+            else:
+                avg_valid_error = None
+                best_valid = True
+
+            log.debug("\r{:>5}         {}{}{}            {}{}{}        {:>5.1f}s".format(
+                      i,
+                      ansi.BLUE if best_train else "",
+                      "{0:>10.3e}".format(float(avg_train_error)) if (avg_train_error is not None) else "     N/A  ",
+                      ansi.ENDC if best_train else "",
+
+                      ansi.GREEN if best_valid else "",
+                      "{:>10.3e}".format(float(avg_valid_error)) if (avg_valid_error is not None) else "     N/A  ",
+                      ansi.ENDC if best_valid else "",
+
+                      time.time() - start
+                      ))
+
+            if best_valid:
+                stable = 0
+            else:
+                stable += 1
+
+            if stable >= self.n_stable:
+                log.debug("")
+                log.info("Early termination condition fired at %i iterations.", i)
+                break
+            if self.n_iter is not None and i >= self.n_iter:
+                log.debug("")
+                log.info("Terminating after specified %i total iterations.", i)
+                break
 
     def _fit(self, X, y):
         assert X.shape[0] == y.shape[0],\
@@ -142,11 +191,11 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
             log.debug("  - Early termination after {} stable iterations.".format(self.n_stable))
 
         if self.verbose:
-            log.debug("\nEpoch    Validation Error      Time"
-                      "\n-----------------------------------")
+            log.debug("\nEpoch       Training Error       Validation Error       Time"
+                      "\n------------------------------------------------------------")
 
         try:
-            self._backend._train_impl(X, y)
+            self._train(X, y)
         except RuntimeError as e:
             log.error("\n{}{}{}\n\n{}\n".format(
                 ansi.RED,

@@ -3,6 +3,7 @@ from nose.tools import (assert_is_not_none, assert_raises, assert_equal)
 
 import numpy
 
+import sknn
 from sknn.mlp import Regressor as MLPR
 from sknn.mlp import Layer as L
 
