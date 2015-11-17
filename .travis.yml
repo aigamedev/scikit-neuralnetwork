@@ -14,7 +14,7 @@ before_install:
 install:
   - conda create --yes -q -n pyenv python=$TRAVIS_PYTHON_VERSION pip numpy scipy cython matplotlib scikit-learn nose pyyaml
   - source activate pyenv
-  - pip install -q git+https://github.com/Theano/Theano.git@rel-0.7
+  - pip install -q git+https://github.com/Theano/Theano.git@a85a44fc#egg=Theano==0.8-dev
   - pip install -q argparse coveralls lasagne
 
 script:

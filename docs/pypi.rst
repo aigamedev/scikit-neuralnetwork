@@ -3,9 +3,9 @@
 scikit-neuralnetwork
 ====================
 
-Deep neural network implementation without the learning cliff!  This library implements multi-layer perceptrons as a wrapper for the powerful ``pylearn2`` library that's compatible with ``scikit-learn`` for a more user-friendly and Pythonic interface.
+Deep neural network implementation without the learning cliff!  This library implements multi-layer perceptrons as a wrapper for the powerful ``Lasagne`` library that's compatible with ``scikit-learn`` for a more user-friendly and Pythonic interface.
 
-**NOTE**: This project is possible thanks to the `nucl.ai Conference <http://nucl.ai/>`_ on **July 20-22**. Join us in **Vienna**!
+**NOTE**: This project is possible thanks to the `nucl.ai Conference <http://nucl.ai/>`_ on **July 18-20**. Join us in **Vienna**!
 
 |Documentation Status| |Code Coverage| |License Type| |Project Stars|
 
@@ -14,10 +14,10 @@ Deep neural network implementation without the learning cliff!  This library imp
 Features
 --------
 
-Thanks to the underlying ``pylearn2`` implementation, this library supports the following neural network features, which are exposed in an intuitive and `well documented <http://scikit-neuralnetwork.readthedocs.org/>`_ API:
+Thanks to the underlying ``Lasagne`` implementation, this library supports the following neural network features, which are exposed in an intuitive and `well documented <http://scikit-neuralnetwork.readthedocs.org/>`_ API:
 
 * **Activation Functions —**
-    * Nonlinear: ``Sigmoid``, ``Tanh``, ``Rectifier``, ``Maxout``.
+    * Nonlinear: ``Sigmoid``, ``Tanh``, ``Rectifier``.
     * Linear: ``Linear``, ``Gaussian``, ``Softmax``.
 * **Layer Types —** ``Convolution`` (greyscale and color, 2D), ``Dense`` (standard, 1D).
 * **Learning Rules —** ``sgd``, ``momentum``, ``nesterov``, ``adadelta``, ``adagrad``, ``rmsprop``.
@@ -34,7 +34,7 @@ To download and setup the latest official release, you can do so from PYPI direc
 
     > pip install scikit-neuralnetwork
 
-This contains its own packaged version of ``pylearn2`` from the date of the release (and tag) but will use any globally installed version if available.
+This will install a copy of `Lasagne` too as a dependency. We recommend you use a virtual environment for Python.
 
 Then, you can run the tests using ``nosetests -v sknn``, and other samples or benchmarks are available in the ``examples/`` folder.
 

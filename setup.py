@@ -21,9 +21,8 @@ except ImportError:
 install_requires = [
     'scikit-learn',
     'theano',
-    'pyyaml',
     'colorama' if sys.platform == 'win32' else '',
-    # 'pylearn2',
+    'lasagne',
 ]
 
 tests_require = [
@@ -36,7 +35,7 @@ docs_require = [
 
 setup(name='scikit-neuralnetwork',
       version=VERSION,
-      description="Neural Network wrapper for pylearn2 compatible with scikit-learn.",
+      description="Deep neural networks without the learning cliff! A wrapper library compatible with scikit-learn.",
       long_description=README,
       classifiers=[
           "Development Status :: 3 - Alpha",

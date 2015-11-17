@@ -1,7 +1,7 @@
 scikit-neuralnetwork
 ====================
 
-Deep neural network implementation without the learning cliff!  This library implements multi-layer perceptrons, auto-encoders and (soon) recurrent neural networks with a stable Future Proof™ interface that's compatible with ``scikit-learn`` for a more user-friendly and Pythonic interface. It's a wrapper for powerful existing libraries such as ``pylearn2`` now, and soon ``keras`` or ``blocks``.
+Deep neural network implementation without the learning cliff!  This library implements multi-layer perceptrons, auto-encoders and (soon) recurrent neural networks with a stable Future Proof™ interface that's compatible with ``scikit-learn`` for a more user-friendly and Pythonic interface. It's a wrapper for powerful existing libraries such as ``lasagne`` now, and soon ``keras`` or ``blocks``.
 
 **NOTE**: This project is possible thanks to the `nucl.ai Conference <http://nucl.ai/>`_ on **July 20-22**. Join us in **Vienna**!
 
@@ -12,7 +12,7 @@ Deep neural network implementation without the learning cliff!  This library imp
 Features
 --------
 
-Thanks to the underlying ``pylearn2`` implementation, this library supports the following neural network features, which are exposed in an intuitive and `well documented <http://scikit-neuralnetwork.readthedocs.org/>`_ API:
+Thanks to the underlying ``Lasagne`` implementation, this library supports the following neural network features, which are exposed in an intuitive and `well documented <http://scikit-neuralnetwork.readthedocs.org/>`_ API:
 
 * **Activation Functions —**
     * Nonlinear: ``Sigmoid``, ``Tanh``, ``Rectifier``, ``Maxout``.
@@ -35,15 +35,14 @@ If you want to use the latest official release, you can do so from PYPI directly
 
     > pip install scikit-neuralnetwork
 
-This contains its own packaged version of ``pylearn2`` from the date of the release (and tag) but will use any globally installed version if available.
+This will install a copy of `Lasagne` too as a dependency. We recommend you use a virtual environment for Python.
 
 B) Pulling Repositories (Optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You'll need to first install some dependencies manually.  Unfortunately, ``pylearn2`` isn't yet installable via PyPI and recommends an editable (``pip -e``) installation::
+You'll need to first install some dependencies manually
 
-    > pip install numpy scipy theano
-    > pip install -e git+https://github.com/lisa-lab/pylearn2.git#egg=Package
+    > pip install numpy scipy theano lasagne
 
 Once that's done, you can grab this repository and install from ``setup.py`` in the exact same way::
 
@@ -132,11 +131,10 @@ The `generated documentation <http://scikit-neuralnetwork.readthedocs.org/>`_ as
 Links & References
 ------------------
 
-* `PyLearn2 <https://github.com/lisa-lab/pylearn2>`_ by LISA Lab — The amazing neural network library that powers ``sknn``.
+* `Lasagne <https://github.com/Lasagne/Lasagne>`_ by benanne — The amazing neural network library that powers ``sknn``.
 * `Theano <https://github.com/Theano/Theano>`_ by LISA Lab — Underlying array/math library for efficient computation.
 * `scikit-learn <http://scikit-learn.org/>`_ by INRIA — Machine learning library with an elegant Pythonic interface.
 * `nolearn <https://github.com/dnouri/nolearn>`_ by dnouri — Similar wrapper library for Lasagne compatible with ``scikit-learn``.
-* `Lasagne <https://github.com/Lasagne/Lasagne>`_ by benanne — Alternative deep learning implementation using ``Theano`` too.
 
 ----
 
