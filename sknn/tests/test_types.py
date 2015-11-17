@@ -120,7 +120,7 @@ class TestFormatDeterminism(unittest.TestCase):
 
             assert_true(numpy.all(nn1._predict(X_s) == nn1._predict(X_s)))
 
-    def __test_TrainConstantOneEpoch(self):
+    def test_TrainConstantOneEpoch(self):
         for t in ['csr_matrix', 'csc_matrix']:
             sparse_matrix = getattr(scipy.sparse, t)
             X_s, y_s = sparse_matrix((8, 16), dtype=numpy.float32), sparse_matrix((8, 16), dtype=numpy.float32)
