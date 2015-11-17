@@ -123,7 +123,8 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
             "Neither n_iter nor valid_set were specified; training would loop forever."
 
         best_train_error, best_valid_error = float("inf"), float("inf")
-        stable = 0
+        best_params = [] 
+        n_stable = 0
 
         for i in itertools.count(1):
             start = time.time()
@@ -159,11 +160,12 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
                       ))
 
             if best_valid:
-                stable = 0
+                best_params = self._backend._mlp_to_array()
+                n_stable = 0
             else:
-                stable += 1
+                n_stable += 1
 
-            if stable >= self.n_stable:
+            if n_stable >= self.n_stable:
                 log.debug("")
                 log.info("Early termination condition fired at %i iterations.", i)
                 break
@@ -171,6 +173,8 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
                 log.debug("")
                 log.info("Terminating after specified %i total iterations.", i)
                 break
+                
+        self._backend._array_to_mlp(best_params, self._backend.mlp)
 
     def _fit(self, X, y):
         assert X.shape[0] == y.shape[0],\
