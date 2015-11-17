@@ -1,5 +1,5 @@
 import unittest
-from nose.tools import (assert_in, assert_raises, assert_equals)
+from nose.tools import (assert_in, assert_raises, assert_equals, assert_true)
 
 import logging
 
@@ -33,3 +33,19 @@ class TestDataAugmentation(unittest.TestCase):
         self.value = float("nan")
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
         assert_raises(RuntimeError, self.nn._fit, a_in, a_out)
+
+
+class TestNetworkParameters(unittest.TestCase):
+    
+    def test_GetLayerParams(self):
+        nn = MLPR(layers=[L("Linear")], n_iter=1)
+        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
+        nn._initialize(a_in, a_out)
+        
+        p = nn.get_parameters()
+        assert_equals(type(p), list)
+        assert_true(isinstance(p[0], tuple))
+        
+        assert_equals(p[0].layer, 'output')
+        assert_equals(p[0].weights.shape, (16, 4))
+        assert_equals(p[0].biases.shape, (4,))

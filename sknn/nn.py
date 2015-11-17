@@ -8,6 +8,7 @@ import sys
 import time
 import logging
 import itertools
+import collections
 
 log = logging.getLogger('sknn')
 
@@ -477,3 +478,21 @@ class NeuralNetwork(object):
         hnd.setLevel(lvl)
         log.addHandler(hnd)
         log.setLevel(lvl)
+
+    def get_parameters(self):
+        """Extract the neural networks weights and biases layer by layer.  Only valid
+        once the neural network has been initialized, for example via `fit()` function.
+        
+        Returns
+        -------
+        params : list of tuples
+            For each layer in the order they are passed to the constructor, a named-tuple
+            of three items `name` (string), `weights` and `biases` (both numpy arrays) in
+            that order.      
+        """
+
+        assert self._backend is not None,\
+            "Backend was not initialized; could not retrieve network parameters."
+
+        P = collections.namedtuple('Parameters', 'layer weights biases')
+        return [P(s.name, w, b) for s, (w, b) in zip(self.layers, self._backend._mlp_to_array())]

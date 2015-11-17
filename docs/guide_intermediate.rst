@@ -43,6 +43,19 @@ In this case, you can use the reloaded multi-layer perceptron as if it had just 
 NOTE: You can serialize complex pipelines (for example from this section :ref:`example-pipeline`) using this exact same approach.
 
 
+Extracting Parameters
+---------------------
+
+To access the weights and biases from the neural network layers, you can call the following function on any initialized neural network:
+
+.. code:: python
+
+    > nn.get_parameters()
+    [Parameters(layer='hidden0', weights=array([[...]]), biases=array([[...]])),
+     Parameters(layer='output', weights=array(...), biases=array(...))]
+
+The list is ordered in the same way as the ``layers`` parameter passed to the constructor. Each item in the list is a named-tuple with ``names`` (string), ``weights`` and ``biases`` (both numpy.array).  
+
 Keyboard Interrupt
 ------------------
 
@@ -88,6 +101,6 @@ As of version 0.3, ``scikit-neuralnetwork`` supports multiple neural network imp
 
 .. code:: python
 
-    from sknn.backend import pylearn2
+    from sknn.backend import lasagne
 
-As long as you call this before creating a neural network, this will register the PyLearn2 implementation as the one that's used.  Supported backends are currently ``pylearn2`` (default) and ``deepy`` (incomplete).
+As long as you call this before creating a neural network, this will register the PyLearn2 implementation as the one that's used.  Supported backends are currently ``lasagne`` (default) and ``pylearn2`` (obsolete).
