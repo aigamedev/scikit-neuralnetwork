@@ -101,7 +101,7 @@ class TestClassifierInterface(unittest.TestCase):
     def check_defaults(self, params):
         assert_equal(params['learning_rate'], 0.01)
         assert_equal(params['n_iter'], None)
-        assert_equal(params['n_stable'], 50)
+        assert_equal(params['n_stable'], 10)
         assert_equal(params['regularize'], None)
         assert_equal(params['valid_size'], 0.0)
 
