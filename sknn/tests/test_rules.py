@@ -105,6 +105,7 @@ class TestRegularization(LoggingTestCase):
         self._run(nn)
         assert_in('Using `dropout` for regularization.', self.output.getvalue())
 
+    @unittest.skipIf(sknn.backend.name != 'pylearn2', 'only pylearn2')
     def test_AutomaticDropout(self):
         nn = MLPR(layers=[L("Tanh", units=8, dropout=0.25), L("Linear")], n_iter=1)
         self._run(nn)

@@ -28,12 +28,18 @@ class TestLossTypes(unittest.TestCase):
     def test_UnknownLossType(self):
         assert_raises(AssertionError, MLPR, layers=[], loss_type='unknown')
 
+    @unittest.skipIf(sknn.backend.name != 'pylearn2', 'only pylearn2')
     def test_MeanAverageErrorLinear(self):
         nn = MLPR(layers=[L("Linear")], loss_type='mae', n_iter=1)
         self._run(nn)
 
     def test_MeanSquaredErrorLinear(self):
         nn = MLPR(layers=[L("Linear")], loss_type='mse', n_iter=1)
+        self._run(nn)
+    
+    @unittest.skipIf(sknn.backend.name != 'lasagne', 'only lasagne')
+    def test_MeanSquaredErrorLinear(self):
+        nn = MLPR(layers=[L("Softmax")], loss_type='mcc', n_iter=1)
         self._run(nn)
 
     @unittest.skipIf(sknn.backend.name != 'pylearn2', 'only pylearn2')

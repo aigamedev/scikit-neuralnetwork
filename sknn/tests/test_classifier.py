@@ -12,7 +12,7 @@ from sknn.mlp import Layer as L, Convolution as C
 class TestClassifierFunctionality(unittest.TestCase):
 
     def setUp(self):
-        self.nn = MLPC(layers=[L("Linear")], n_iter=1)
+        self.nn = MLPC(layers=[L("Softmax")], n_iter=1)
 
     def test_FitAutoInitialize(self):
         a_in, a_out = numpy.zeros((8,16)), numpy.random.randint(0, 5, (8,))
@@ -69,7 +69,7 @@ class TestClassifierFunctionality(unittest.TestCase):
 class TestClassifierClone(TestClassifierFunctionality):
 
     def setUp(self):
-        cc = MLPC(layers=[L("Linear")], n_iter=1)
+        cc = MLPC(layers=[L("Sigmoid")], n_iter=1)
         self.nn = clone(cc)
 
     # This runs the same tests on the clone as for the original above.

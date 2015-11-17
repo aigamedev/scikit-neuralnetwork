@@ -51,30 +51,22 @@ class MultiLayerPerceptronBackend(BaseBackend):
         assert len(layer_decay) == 0 or self.regularize in ('L1', 'L2', None)
 
         if len(layer_decay) > 0:
-            mlp_default_cost = self.mlp.get_default_cost()
-            if self.regularize == 'L1':
-                raise NotImplementedError
-                """
-                l1 = mlp_cost.L1WeightDecay(layer_decay)
-                self.cost = cost.SumOfCosts([mlp_default_cost,l1])
-                """
-            else: # Default is 'L2'.
-                raise NotImplementedError
-                """
-                if self.regularize is None:
-                    self.regularize = 'L2'
-
-                l2 =  mlp_cost.WeightDecay(layer_decay)
-                self.cost = cost.SumOfCosts([mlp_default_cost,l2])
-                """
+            if self.regularize is None:
+                self.regularize = 'L2'
+            penalty = getattr(lasagne.regularization, self.regularize.lower())
+            regularize = lasagne.regularization.apply_penalty
+            self.cost = sum(layer_decay[s.name] * regularize(l.get_params(tags={'regularizable': True}), penalty)
+                                for s, l in zip(self.layers, self.mlp))
 
         cost_functions = {'mse': 'squared_error', 'mcc': 'categorical_crossentropy'}
         loss_type = self.loss_type or ('mcc' if self.is_classifier else 'mse')
         assert loss_type in cost_functions,\
                     "Loss type `%s` not supported by Lasagne backend." % loss_type
         cost_fn = getattr(lasagne.objectives, cost_functions[loss_type])
-        self.cost = cost_fn(self.symbol_output, self.tensor_output).mean()
-        return self._create_trainer(params, self.cost)
+        cost_eval = cost_fn(self.symbol_output, self.tensor_output).mean()
+        if self.cost is not None:
+            cost_eval = cost_eval * self.cost
+        return self._create_trainer(params, cost_eval)
 
     def _create_trainer(self, params, cost):
         if self.learning_rule in ('sgd', 'adagrad', 'adadelta', 'rmsprop', 'adam'):

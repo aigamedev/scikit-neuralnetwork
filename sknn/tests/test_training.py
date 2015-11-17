@@ -20,7 +20,7 @@ class TestTrainingProcedure(unittest.TestCase):
         activation = "Gaussian" if sknn.backend.name == "pylearn2" else "Linear"
         self.nn = MLP(
                     layers=[L(activation)], learning_rate=0.001,
-                    n_iter=None, n_stable=1, f_stable=0.1,
+                    n_iter=None, n_stable=1, f_stable=0.01,
                     valid_set=(a_in, a_out))
 
         self.nn._fit(a_in, a_out)
@@ -79,7 +79,7 @@ class TestTrainingOutput(unittest.TestCase):
         assert_in("    N/A     ", self.buf.getvalue())
 
     def test_VerboseClassifier(self):
-        nn = MLPC(layers=[L("Linear")], verbose=1, n_iter=1)
+        nn = MLPC(layers=[L("Softmax")], verbose=1, n_iter=1)
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,1), dtype=numpy.int32)
         nn.fit(a_in, a_out)
         assert_in("Epoch       Training Error       Validation Error       Time", self.buf.getvalue())
