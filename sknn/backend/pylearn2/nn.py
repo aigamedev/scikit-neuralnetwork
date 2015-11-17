@@ -80,37 +80,17 @@ class NeuralNetworkBackend(BaseBackend):
     def _train_layer(self, trainer, layer, dataset):
         # Bug in PyLearn2 that has some unicode channels, can't sort.
         layer.monitor.channels = {str(k): v for k, v in layer.monitor.channels.items()}
-        best_valid_error = float("inf")
-
-        for i in itertools.count(1):
-            start = time.time()
-            trainer.train(dataset=dataset)
-
-            layer.monitor.report_epoch()
-            layer.monitor()
-            
-            objective = layer.monitor.channels.get('objective', None)
-            if objective:
-                avg_valid_error = objective.val_shared.get_value()
-                best_valid_error = min(best_valid_error, avg_valid_error)
-            else:
-                # 'objective' channel is only defined with validation set.
-                avg_valid_error = None
-
-            best_valid = bool(best_valid_error == avg_valid_error)
-            log.debug("{:>5}      {}{}{}        {:>5.1f}s".format(
-                      i,
-                      ansi.GREEN if best_valid else "",
-                      "{:>10.6f}".format(float(avg_valid_error)) if (avg_valid_error is not None) else "     N/A  ",
-                      ansi.ENDC if best_valid else "",
-                      time.time() - start
-                      ))
-
-            if not trainer.continue_learning(layer):
-                log.debug("")
-                log.info("Early termination condition fired at %i iterations.", i)
-                break
-            if self.n_iter is not None and i >= self.n_iter:
-                log.debug("")
-                log.info("Terminating after specified %i total iterations.", i)
-                break
+        
+        trainer.train(dataset=dataset)
+        return None
+        
+    def _valid_layer(self, layer):
+        layer.monitor.report_epoch()
+        layer.monitor()
+        
+        objective = layer.monitor.channels.get('objective', None)
+        if objective:
+            return objective.val_shared.get_value()
+        else:
+            # 'objective' channel is only defined with validation set.
+            return None

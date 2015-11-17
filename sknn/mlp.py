@@ -125,20 +125,22 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         for i in itertools.count(1):
             start = time.time()
 
+            best_train = False
             avg_train_error = self._backend._train_impl(X, y)
-            best_train_error = min(best_train_error, avg_train_error)
-            best_train = bool(avg_train_error / best_train_error < (1.0 + self.f_stable))
+            if avg_train_error is not None:
+                if math.isnan(avg_train_error):
+                    raise RuntimeError("Training diverged and returned NaN at batch %i." % batches)
+                
+                best_train_error = min(best_train_error, avg_train_error)
+                best_train = bool(avg_train_error / best_train_error < (1.0 + self.f_stable))
 
-            if math.isnan(avg_train_error):
-                raise RuntimeError("Training diverged and returned NaN at batch %i." % batches)
-
+            best_valid = True
+            avg_valid_error = None
             if self.valid_set is not None:
                 avg_valid_error = self._backend._valid_impl(*self.valid_set)
-                best_valid_error = min(best_valid_error, avg_valid_error)
-                best_valid = bool(avg_valid_error / best_valid_error < (1.0 + self.f_stable))
-            else:
-                avg_valid_error = None
-                best_valid = True
+                if avg_valid_error is not None:
+                    best_valid_error = min(best_valid_error, avg_valid_error)
+                    best_valid = bool(avg_valid_error / best_valid_error < (1.0 + self.f_stable))
 
             log.debug("\r{:>5}         {}{}{}            {}{}{}        {:>5.1f}s".format(
                       i,

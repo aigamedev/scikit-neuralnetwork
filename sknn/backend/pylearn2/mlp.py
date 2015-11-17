@@ -272,6 +272,9 @@ class MultiLayerPerceptronBackend(NeuralNetworkBackend):
 
         self._train_layer(self.trainer, self.mlp, self.ds)
 
+    def _valid_impl(self, X, y):
+        self._valid_layer(self.mlp)
+
     @property
     def is_initialized(self):
         """Check if the neural network was setup already.
