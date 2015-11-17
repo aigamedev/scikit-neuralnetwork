@@ -98,12 +98,6 @@ class TestActivations(unittest.TestCase):
         assert_equal('', self.buf.getvalue())
         sknn.mlp.log.removeHandler(self.hnd)
 
-    @unittest.skipIf(sknn.backend.name != 'pylearn2', 'only pylearn2')
-    def test_MissingParameterException(self):
-        nn = MLPR(layers=[L("Maxout", units=32), L("Linear")])
-        a_in = numpy.zeros((8,16))
-        assert_raises(ValueError, nn._initialize, a_in, a_in)
-
     def test_UnusedParameterWarning(self):
         nn = MLPR(layers=[L("Linear", pieces=2)], n_iter=1)
         a_in = numpy.zeros((8,16))
