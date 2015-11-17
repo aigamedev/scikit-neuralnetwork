@@ -15,8 +15,7 @@ install:
   - conda create --yes -q -n pyenv python=$TRAVIS_PYTHON_VERSION pip numpy scipy cython matplotlib scikit-learn nose pyyaml
   - source activate pyenv
   - pip install -q git+https://github.com/Theano/Theano.git@rel-0.7
-  - pip install -q argparse coveralls
-  - pip install -e git+https://github.com/lisa-lab/pylearn2.git#egg=pylearn2
+  - pip install -q argparse coveralls lasagne
 
 script:
   - echo -e "[run]\nomit=\n    sknn/backend/pylearn2/pywrap2.py\n    sknn/backend/deepy/*\n    sknn/backend/__init__.py*\n" > .coveragerc
