@@ -314,9 +314,11 @@ class NeuralNetwork(object):
 
             * ``mse`` — Use mean squared error, for learning to predict the mean of the data.
             * ``mae`` — Use mean average error, for learning to predict the median of the data.
+            * ``mcc`` — Use mean categorical cross-entropy, particularly for classifiers.
 
-        The default option is ``mse``, and ``mae`` can only be applied to layers of type
-        ``Linear`` or ``Gaussian`` and they must be used as the output layer.
+        The default option is ``mse`` for regressors and ``mcc`` for classifiers, but ``mae`` can
+        only be applied to layers of type ``Linear`` or ``Gaussian`` and they must be used as
+        the output layer (PyLearn2 only).
 
     mutator: callable, optional
         A function that takes a single training sample input at each epoch and modifies
@@ -357,7 +359,7 @@ class NeuralNetwork(object):
             f_stable=0.001,
             valid_set=None,
             valid_size=0.0,
-            loss_type='mse',
+            loss_type=None,
             mutator=None,
             debug=False,
             verbose=None,
@@ -387,7 +389,7 @@ class NeuralNetwork(object):
         # Basic checking of the freeform string options.
         assert regularize in (None, 'L1', 'L2', 'dropout'),\
             "Unknown type of regularization specified: %s." % regularize
-        assert loss_type in ('mse', 'mae'),\
+        assert loss_type in ('mse', 'mae', 'mcc', None),\
             "Unknown loss function type specified: %s." % loss_type
 
         self.random_state = random_state
@@ -429,6 +431,11 @@ class NeuralNetwork(object):
         """Check whether this neural network includes convolution layers.
         """
         return isinstance(self.layers[0], Convolution)
+
+    @property
+    def is_classifier(self):
+        """Is this neural network instanced as a classifier or regressor?""" 
+        return False
 
     def _create_logger(self):
         # If users have configured logging already, assume they know best.

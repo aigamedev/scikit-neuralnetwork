@@ -236,6 +236,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
 
     def _train_impl(self, X, y):
         best_valid_error = float("inf")
+        stable = 0
 
         for i in itertools.count(1):
             start = time.time()
@@ -258,8 +259,12 @@ class MultiLayerPerceptronBackend(BaseBackend):
                       ansi.ENDC if best_valid else "",
                       time.time() - start
                       ))
+            if best_valid:
+                stable = 0
+            else:
+                stable += 1
 
-            if False: # TODO: Monitor n_stable
+            if stable >= self.n_stable:
                 log.debug("")
                 log.info("Early termination condition fired at %i iterations.", i)
                 break
@@ -274,16 +279,19 @@ class MultiLayerPerceptronBackend(BaseBackend):
         """
         return not (self.f is None)
 
-    def check(self):
-        for l in self.mlp:
-            assert not numpy.isnan(numpy.sum(l.W.get_value()))
-            assert not numpy.isnan(numpy.sum(l.b.get_value()))
+    def _mlp_get_params(self, layer):
+        while not hasattr(layer, 'W') and not hasattr(layer, 'b'):
+            layer = layer.input_layer
+        return (layer.W.get_value(), layer.b.get_value())
 
     def _mlp_to_array(self):
-        return [(l.W.get_value(), l.b.get_value()) for l in self.mlp]
+        return [self._mlp_get_params(l) for l in self.mlp]
 
     def _array_to_mlp(self, array, nn):
         for layer, (weights, biases) in zip(nn, array):
+            while not hasattr(layer, 'W') and not hasattr(layer, 'b'):
+                layer = layer.input_layer
+
             ws = tuple(layer.W.shape.eval())
             assert ws == weights.shape, "Layer weights shape mismatch: %r != %r" %\
                                         (ws, weights.shape)

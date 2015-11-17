@@ -90,6 +90,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         # this object to communicate between multiple processes.
         if self._backend is not None:
             d['weights'] = self._backend._mlp_to_array()
+        d['valid_set'] = None
 
         for k in [k for k in d.keys() if k.startswith('_')]:
             del d[k]
@@ -220,6 +221,10 @@ class Regressor(MultiLayerPerceptron, sklearn.base.RegressorMixin):
         """
         return super(Regressor, self)._predict(X)
 
+    @property
+    def is_classifier(self):
+        return False
+
 
 class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
     # Classifier compatible with sklearn that wraps various NN implementations.
@@ -346,3 +351,7 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
             index += sz
         y = numpy.concatenate(ys, axis=1)
         return y
+
+    @property
+    def is_classifier(self):
+        return True
