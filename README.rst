@@ -14,11 +14,9 @@ Features
 
 Thanks to the underlying ``Lasagne`` implementation, this library supports the following neural network features, which are exposed in an intuitive and `well documented <http://scikit-neuralnetwork.readthedocs.org/>`_ API:
 
-* **Activation Functions —**
-    * Nonlinear: ``Sigmoid``, ``Tanh``, ``Rectifier``, ``Maxout``.
-    * Linear: ``Linear``, ``Gaussian``, ``Softmax``.
+* **Activation Functions —** ``Sigmoid``, ``Tanh``, ``Rectifier``, ``Softmax``, ``Linear``.
 * **Layer Types —** ``Convolution`` (greyscale and color, 2D), ``Dense`` (standard, 1D).
-* **Learning Rules —** ``sgd``, ``momentum``, ``nesterov``, ``adadelta``, ``adagrad``, ``rmsprop``.
+* **Learning Rules —** ``sgd``, ``momentum``, ``nesterov``, ``adadelta``, ``adagrad``, ``rmsprop``, ``adam``.
 * **Regularization —** ``L1``, ``L2`` and ``dropout``.
 * **Dataset Formats —** ``numpy.ndarray``, ``scipy.sparse``, coming soon: iterators.
 
@@ -28,7 +26,7 @@ If a feature you need is missing, consider opening a `GitHub Issue <https://gith
 Installation & Testing
 ----------------------
 
-A) Download Latest Release (Recommended)
+A) Download Latest Release [Recommended]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you want to use the latest official release, you can do so from PYPI directly::
@@ -37,7 +35,7 @@ If you want to use the latest official release, you can do so from PYPI directly
 
 This will install a copy of `Lasagne` too as a dependency. We recommend you use a virtual environment for Python.
 
-B) Pulling Repositories (Optional)
+B) Pulling Repositories [Optional]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You'll need to first install some dependencies manually
@@ -61,7 +59,7 @@ Then, you can run the samples and benchmarks available in the ``examples/`` fold
 
 .. image:: docs/console_tests.png
 
-We strive to maintain 100% test coverage for all code-paths, to ensure that rapid changes in the underlying ``pylearn2`` library are caught automatically.
+We strive to maintain 100% test coverage for all code-paths, to ensure that rapid changes in the underlying backend libraries are caught automatically.
 
 
 Demonstration
