@@ -62,11 +62,11 @@ class MultiLayerPerceptronBackend(BaseBackend):
         loss_type = self.loss_type or ('mcc' if self.is_classifier else 'mse')
         assert loss_type in cost_functions,\
                     "Loss type `%s` not supported by Lasagne backend." % loss_type
-        cost_fn = getattr(lasagne.objectives, cost_functions[loss_type])
-        cost_eval = cost_fn(self.symbol_output, self.tensor_output).mean()
+        self.cost_function = getattr(lasagne.objectives, cost_functions[loss_type])
+        cost_symbol = self.cost_function(self.symbol_output, self.tensor_output).mean()
         if self.cost is not None:
-            cost_eval = cost_eval * self.cost
-        return self._create_trainer(params, cost_eval)
+            cost_symbol = cost_symbol + self.cost
+        return self._create_trainer(params, cost_symbol)
 
     def _create_trainer(self, params, cost):
         if self.learning_rule in ('sgd', 'adagrad', 'adadelta', 'rmsprop', 'adam'):
@@ -243,7 +243,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
         loss, batches = 0.0, 0
         for Xb, yb in self._iterate_data(X, y, self.batch_size, shuffle=True):
             ys = self.f(Xb)
-            loss += ((ys - yb) ** 2.0).mean()
+            loss += self.cost_function(ys, yb).mean().eval()
             batches += 1
         return loss / batches
 

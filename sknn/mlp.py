@@ -165,7 +165,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
             else:
                 n_stable += 1
 
-            if n_stable >= self.n_stable:
+            if self.valid_set is not None and n_stable >= self.n_stable:
                 log.debug("")
                 log.info("Early termination condition fired at %i iterations.", i)
                 break
@@ -240,6 +240,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
 
 class Regressor(MultiLayerPerceptron, sklearn.base.RegressorMixin):
     # Regressor compatible with sklearn that wraps various NN implementations.
+    # The constructor and bulk of documentation is inherited from MultiLayerPerceptron.
 
     def fit(self, X, y):
         """Fit the neural network to the given continuous data as a regression problem.
@@ -329,7 +330,7 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
             log.warning('{}WARNING: Expecting `Softmax` type for the last layer '
                         'in classifier.{}\n'.format(ansi.YELLOW, ansi.ENDC))
         if y.shape[1] > 1 and self.layers[-1].type != 'Sigmoid':
-            log.warning('{}WARNING: Expecting `Sigmoid` for last layer in '
+            log.warning('{}WARNING: Expecting `Sigmoid` as last layer in '
                         'multi-output classifier.{}\n'.format(ansi.YELLOW, ansi.ENDC))
 
         # Deal deal with single- and multi-output classification problems.
