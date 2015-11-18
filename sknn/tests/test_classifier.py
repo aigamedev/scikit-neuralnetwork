@@ -49,12 +49,20 @@ class TestClassifierFunctionality(unittest.TestCase):
         assert_equal(type(a_out), type(a_test))
         assert_equal(a_out.shape[0], a_test.shape[0])
 
+        c_out = numpy.unique(a_out)
+        assert_equal(len(self.nn.classes_), 1)
+        assert_true((self.nn.classes_[0] == c_out).all())
+
     def test_PredictMultiClass(self):
-        a_in, a_out = numpy.zeros((8,16)), numpy.random.randint(0, 3, (8,2))
+        a_in, a_out = numpy.zeros((32,16)), numpy.random.randint(0, 3, (32,2))
         self.nn.fit(a_in, a_out)
         a_test = self.nn.predict(a_in)
         assert_equal(type(a_out), type(a_test))
         assert_equal(a_out.shape, a_test.shape)
+        
+        assert_equal(len(self.nn.classes_), 2)
+        assert_equal(self.nn.classes_[0].shape[0], 3)
+        assert_equal(self.nn.classes_[1].shape[0], 3)
 
     def test_EstimateProbalities(self):
         a_in, a_out = numpy.zeros((8,16)), numpy.random.randint(0, 5, (8,))

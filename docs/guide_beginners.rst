@@ -58,7 +58,7 @@ If you want to do multi-label classification, simply fit using a ``y`` array of 
 
     y_example = nn.predict(X_example)
 
-This code will run the classification with the neural network, and return a list of labels predicted for each of the example inputs.
+This code will run the classification with the neural network, and return a list of labels predicted for each of the example inputs.  If you need to access the probabilities for the predictions, use ``predict_proba()`` and see the content of the ``classes_`` property that provides the labels for each features, which you can use to compute the probability indices.
 
 
 .. _example-convolution:

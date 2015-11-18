@@ -333,7 +333,8 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
                         'multi-output classifier.{}\n'.format(ansi.YELLOW, ansi.ENDC))
 
         # Deal deal with single- and multi-output classification problems.
-        self.label_binarizers = [sklearn.preprocessing.LabelBinarizer() for _ in range(y.shape[1])]
+        LB = sklearn.preprocessing.LabelBinarizer
+        self.label_binarizers = [LB() for _ in range(y.shape[1])]
         ys = [lb.fit_transform(y[:,i]) for i, lb in enumerate(self.label_binarizers)]
         yp = numpy.concatenate(ys, axis=1)
 
@@ -356,7 +357,8 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
         if classes is not None:
             if isinstance(classes[0], int):
                 classes = [classes]
-            self.label_binarizers = [sklearn.preprocessing.LabelBinarizer() for _ in range(y.shape[1])]
+            LB = sklearn.preprocessing.LabelBinarizer
+            self.label_binarizers = [LB() for _ in range(y.shape[1])]
             for lb, cls in zip(self.label_binarizers, classes):
                 lb.fit(cls)
         return self.fit(X, y)
@@ -413,3 +415,25 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
     @property
     def is_classifier(self):
         return True
+    
+    @property
+    def classes_(self):
+        """Return a list of class labels used for each feature. For single feature
+        classification, the index of the label in the array is the same as returned
+        by `predict_proba()` (e.g. labels `[-1, 0, +1]` mean indices `[0, 1, 2]`).
+        
+        In the case of multiple feature classification, the index of the label must
+        be offset by the number of labels for previous features.   For example, 
+        if the second feature also has labels `[-1, 0, +1]` its indicies will be
+        `[3, 4, 5]` resuming from the first feature in the array returned by
+        `predict_proba()`. 
+        
+        Returns
+        -------
+        c : list of array, shape (n_classes, n_labels)
+            List of the labels as integers used for each feature.
+        """ 
+        assert self.label_binarizers != [],\
+            "There are no output classes because classifier isn't fitted."
+        
+        return [lb.classes_ for lb in self.label_binarizers]
