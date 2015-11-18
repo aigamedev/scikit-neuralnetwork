@@ -243,7 +243,8 @@ class MultiLayerPerceptronBackend(BaseBackend):
         loss, batches = 0.0, 0
         for Xb, yb in self._iterate_data(X, y, self.batch_size, shuffle=True):
             ys = self.f(Xb)
-            loss += self.cost_function(ys, yb).mean().eval()
+            cost_fn = self.cost_function(ys, yb).mean()
+            loss += cost_fn.eval() if hasattr(cost_fn, 'eval') else cost_fn
             batches += 1
         return loss / batches
 
