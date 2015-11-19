@@ -33,12 +33,12 @@ If you want to use the latest official release, you can do so from PYPI directly
 
     > pip install scikit-neuralnetwork
 
-This will install a copy of `Lasagne` too as a dependency. We recommend you use a virtual environment for Python.
+This will install a copy of ``Lasagne`` and other minor packages too as a dependency. We highly recommend you use a virtual environment for Python.
 
 B) Pulling Repositories [Optional]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You'll need to first install some dependencies manually
+You'll need some dependencies, which you can install manually as follows::
 
     > pip install numpy scipy theano lasagne
 

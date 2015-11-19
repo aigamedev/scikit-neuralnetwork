@@ -36,7 +36,7 @@ class TestTrainingProcedure(unittest.TestCase):
         
     def test_TrainingInfinite(self):
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
-        self.nn = MLP(layers=[L("Linear")])
+        self.nn = MLP(layers=[L("Linear")], n_iter=None, n_stable=None)
         assert_raises(AssertionError, self.nn._fit, a_in, a_out)
 
 

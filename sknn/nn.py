@@ -293,12 +293,16 @@ class NeuralNetwork(object):
 
     n_stable: int, optional
         Number of interations after which training should return when the validation
-        error remains constant.  This is a sign that the data has been fitted, or that
-        optimization may have stalled. Default is ``10``.
+        error remains (near) constant.  This is usually a sign that the data has been
+        fitted, or that optimization may have stalled.  If no validation set is specified,
+        then stability is judged based on the training error.  Default is ``10``.
 
     f_stable: float, optional
         Threshold under which the validation error change is assumed to be stable, to
-        be used in combination with `n_stable`. Default is ``0.001`.
+        be used in combination with `n_stable`. This is calculated as a relative ratio
+        of improvement, so if the results are only 0.1% better training is considered
+        stable. The training set is used as fallback if there's no validation set. Default
+        is ``0.001`.
 
     valid_set: tuple of array-like, optional
         Validation set (X_v, y_v) to be used explicitly while training.  Both

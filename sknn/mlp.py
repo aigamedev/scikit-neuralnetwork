@@ -119,8 +119,8 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         return X, y
         
     def _train(self, X, y):
-        assert self.n_iter or self.valid_set,\
-            "Neither n_iter nor valid_set were specified; training would loop forever."
+        assert self.n_iter or self.n_stable,\
+            "Neither n_iter nor n_stable were specified; training would loop forever."
 
         best_train_error, best_valid_error = float("inf"), float("inf")
         best_params = [] 
@@ -159,7 +159,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
                       time.time() - start
                       ))
 
-            if best_valid:
+            if best_valid or (self.valid_set is None and best_train):
                 best_params = self._backend._mlp_to_array()
                 n_stable = 0
             else:
