@@ -57,6 +57,8 @@ class TestNetworkParameters(unittest.TestCase):
         
         weights = numpy.random.uniform(-1.0, +1.0, (16,4))
         biases = numpy.random.uniform(-1.0, +1.0, (4,))
+        weights = weights.astype(numpy.float32)
+        biases = biases.astype(numpy.float32)
         nn.set_parameters([(weights, biases)])
         
         p = nn.get_parameters()
@@ -70,6 +72,8 @@ class TestNetworkParameters(unittest.TestCase):
         
         weights = numpy.random.uniform(-1.0, +1.0, (32,4))
         biases = numpy.random.uniform(-1.0, +1.0, (4,))
+        weights = weights.astype(numpy.float32)
+        biases = biases.astype(numpy.float32)
         nn.set_parameters([None, (weights, biases)])
         
         p = nn.get_parameters()
@@ -83,6 +87,8 @@ class TestNetworkParameters(unittest.TestCase):
         
         weights = numpy.random.uniform(-1.0, +1.0, (32,4))
         biases = numpy.random.uniform(-1.0, +1.0, (4,))
+        weights = weights.astype(numpy.float32)
+        biases = biases.astype(numpy.float32)
         nn.set_parameters({'abcd': (weights, biases)})
         
         p = nn.get_parameters()
