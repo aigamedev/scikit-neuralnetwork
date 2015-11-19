@@ -39,6 +39,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
         self.mlp = None
         self.f = None
         self.trainer = None
+        self.validator = None
         self.cost = None
 
     def _create_mlp_trainer(self, params):
@@ -63,7 +64,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
         assert loss_type in cost_functions,\
                     "Loss type `%s` not supported by Lasagne backend." % loss_type
         self.cost_function = getattr(lasagne.objectives, cost_functions[loss_type])
-        cost_symbol = self.cost_function(self.symbol_output, self.tensor_output).mean()
+        cost_symbol = self.cost_function(self.network_output, self.data_output).mean()
         if self.cost is not None:
             cost_symbol = cost_symbol + self.cost
         return self._create_trainer(params, cost_symbol)
@@ -80,9 +81,14 @@ class MultiLayerPerceptronBackend(BaseBackend):
             raise NotImplementedError(
                 "Learning rule type `%s` is not supported." % self.learning_rule)
 
-        return theano.function([self.tensor_input, self.tensor_output], cost,
-                               updates=self._learning_rule,
-                               allow_input_downcast=True)
+        trainer = theano.function([self.data_input, self.data_output], cost,
+                                   updates=self._learning_rule,
+                                   allow_input_downcast=True)
+
+        compare = self.cost_function(self.network_output, self.data_correct).mean()
+        validator = theano.function([self.data_input, self.data_correct], compare,
+                                    allow_input_downcast=True)
+        return trainer, validator
 
     def _get_activation(self, l):        
         nonlinearities = {'Rectifier': nl.rectify,
@@ -130,13 +136,14 @@ class MultiLayerPerceptronBackend(BaseBackend):
                                          nonlinearity=self._get_activation(layer))
 
     def _create_mlp(self, X):
-        self.tensor_input = T.tensor4('X') if self.is_convolution else T.matrix('X')
-        self.tensor_output = T.matrix('y')
+        self.data_input = T.tensor4('X') if self.is_convolution else T.matrix('X')
+        self.data_output = T.matrix('y')
+        self.data_correct = T.matrix('yp')
         
         lasagne.random.get_rng().seed(self.random_state)
 
         shape = list(X.shape)
-        network = lasagne.layers.InputLayer([None]+shape[1:], self.tensor_input)
+        network = lasagne.layers.InputLayer([None]+shape[1:], self.data_input)
 
         # Create the layers one by one, connecting to previous.
         self.mlp = []
@@ -173,8 +180,8 @@ class MultiLayerPerceptronBackend(BaseBackend):
 
         log.debug("")
 
-        self.symbol_output = lasagne.layers.get_output(network, deterministic=True)
-        self.f = theano.function([self.tensor_input], self.symbol_output, allow_input_downcast=True)
+        self.network_output = lasagne.layers.get_output(network, deterministic=True)
+        self.f = theano.function([self.data_input], self.network_output, allow_input_downcast=True)
 
     def _initialize_impl(self, X, y=None):
         if self.is_convolution:
@@ -205,7 +212,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
             if spec.frozen: continue
             params.extend(mlp_layer.get_params())
 
-        self.trainer = self._create_mlp_trainer(params)
+        self.trainer, self.validator = self._create_mlp_trainer(params)
         return X, y
 
     def _predict_impl(self, X):
@@ -232,21 +239,24 @@ class MultiLayerPerceptronBackend(BaseBackend):
                     self.mutator(x)
             yield Xb, yb
 
+    def _batch_impl(self, X, y, processor, output, shuffle):
+        progress, batches = 0, X.shape[0] / self.batch_size
+        loss, count = 0.0, 0
+        for Xb, yb in self._iterate_data(X, y, self.batch_size, shuffle):
+            loss += processor(Xb, yb)
+            count += 1
+            while count / batches > progress / 60:
+                sys.stdout.write(output)
+                sys.stdout.flush()
+                progress += 1
+        sys.stdout.write('\r')
+        return loss / count
+        
     def _train_impl(self, X, y):
-        loss, batches = 0.0, 0
-        for Xb, yb in self._iterate_data(X, y, self.batch_size, shuffle=True):
-            loss += self.trainer(Xb, yb)
-            batches += 1
-        return loss / batches
+        return self._batch_impl(X, y, self.trainer, output='.', shuffle=True)
 
     def _valid_impl(self, X, y):
-        loss, batches = 0.0, 0
-        for Xb, yb in self._iterate_data(X, y, self.batch_size, shuffle=True):
-            ys = self.f(Xb)
-            cost_fn = self.cost_function(ys, yb).mean()
-            loss += cost_fn.eval() if hasattr(cost_fn, 'eval') else cost_fn
-            batches += 1
-        return loss / batches
+        return self._batch_impl(X, y, self.validator, output=' ', shuffle=False)
 
     @property
     def is_initialized(self):
