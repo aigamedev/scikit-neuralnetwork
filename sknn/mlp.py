@@ -125,7 +125,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         del variables['self']
         if isinstance(self.callback, dict):
             function = self.callback.get(event, None)
-            return function(**variables) if function else None
+            return function(**variables) if function else True
         else:
             return self.callback(event, **variables)
 
@@ -179,7 +179,10 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
             else:
                 n_stable += 1
 
-            self._do_callback('on_epoch_finish', locals())
+            if self._do_callback('on_epoch_finish', locals()) == False:
+                log.debug("")
+                log.info("User defined callback terminated at %i iterations.", i)
+                break
 
             if self.valid_set is not None and n_stable >= self.n_stable:
                 log.debug("")
