@@ -243,12 +243,14 @@ class MultiLayerPerceptronBackend(BaseBackend):
         progress, batches = 0, X.shape[0] / self.batch_size
         loss, count = 0.0, 0
         for Xb, yb in self._iterate_data(X, y, self.batch_size, shuffle):
+            self._do_callback('on_batch_start', locals())
             loss += processor(Xb, yb)
             count += 1
             while count / batches > progress / 60:
                 sys.stdout.write(output)
                 sys.stdout.flush()
                 progress += 1
+            self._do_callback('on_batch_finish', locals())
         sys.stdout.write('\r')
         return loss / count
         

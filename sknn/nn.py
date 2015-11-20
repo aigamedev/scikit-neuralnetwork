@@ -391,6 +391,7 @@ class NeuralNetwork(object):
             mutator=None,
             debug=False,
             verbose=None,
+            callback=None,
             **params):
 
         assert warning is None,\
@@ -442,6 +443,7 @@ class NeuralNetwork(object):
         self.mutator = mutator
         self.debug = debug
         self.verbose = verbose
+        self.callback = callback
         
         self._backend = None
         self._create_logger()
