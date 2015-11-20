@@ -118,6 +118,17 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
             X = X.reshape((X.shape[0], numpy.product(X.shape[1:])))
         return X, y
         
+    def _do_callback(self, event, variables):
+        if self.callback is None:
+            return
+
+        del variables['self']
+        if isinstance(self.callback, dict):
+            function = self.callback.get(event, None)
+            return function(**variables) if function else True
+        else:
+            return self.callback(event, **variables)
+
     def _train(self, X, y):
         assert self.n_iter or self.n_stable,\
             "Neither n_iter nor n_stable were specified; training would loop forever."
@@ -125,45 +136,53 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         best_train_error, best_valid_error = float("inf"), float("inf")
         best_params = [] 
         n_stable = 0
+        self._do_callback('on_train_start', locals())
 
         for i in itertools.count(1):
-            start = time.time()
+            start_time = time.time()
+            self._do_callback('on_epoch_start', locals())
 
-            best_train = False
+            is_best_train = False
             avg_train_error = self._backend._train_impl(X, y)
             if avg_train_error is not None:
                 if math.isnan(avg_train_error):
                     raise RuntimeError("Training diverged and returned NaN.")
                 
                 best_train_error = min(best_train_error, avg_train_error)
-                best_train = bool(avg_train_error < best_train_error * (1.0 + self.f_stable))
+                is_best_train = bool(avg_train_error < best_train_error * (1.0 + self.f_stable))
 
-            best_valid = False
+            is_best_valid = False
             avg_valid_error = None
             if self.valid_set is not None:
                 avg_valid_error = self._backend._valid_impl(*self.valid_set)
                 if avg_valid_error is not None:
                     best_valid_error = min(best_valid_error, avg_valid_error)
-                    best_valid = bool(avg_valid_error < best_valid_error * (1.0 + self.f_stable))
+                    is_best_valid = bool(avg_valid_error < best_valid_error * (1.0 + self.f_stable))
 
+            finish_time = time.time()
             log.debug("\r{:>5}         {}{}{}            {}{}{}        {:>5.1f}s".format(
                       i,
-                      ansi.BLUE if best_train else "",
+                      ansi.BLUE if is_best_train else "",
                       "{0:>10.3e}".format(float(avg_train_error)) if (avg_train_error is not None) else "     N/A  ",
-                      ansi.ENDC if best_train else "",
+                      ansi.ENDC if is_best_train else "",
 
-                      ansi.GREEN if best_valid else "",
+                      ansi.GREEN if is_best_valid else "",
                       "{:>10.3e}".format(float(avg_valid_error)) if (avg_valid_error is not None) else "     N/A  ",
-                      ansi.ENDC if best_valid else "",
+                      ansi.ENDC if is_best_valid else "",
 
-                      time.time() - start
+                      finish_time - start_time
                       ))
 
-            if best_valid or (self.valid_set is None and best_train):
+            if is_best_valid or (self.valid_set is None and is_best_train):
                 best_params = self._backend._mlp_to_array()
                 n_stable = 0
             else:
                 n_stable += 1
+
+            if self._do_callback('on_epoch_finish', locals()) == False:
+                log.debug("")
+                log.info("User defined callback terminated at %i iterations.", i)
+                break
 
             if self.valid_set is not None and n_stable >= self.n_stable:
                 log.debug("")
@@ -173,7 +192,8 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
                 log.debug("")
                 log.info("Terminating after specified %i total iterations.", i)
                 break
-                
+        
+        self._do_callback('on_train_finish', locals())
         self._backend._array_to_mlp(best_params, self._backend.mlp)
 
     def _fit(self, X, y):
@@ -362,6 +382,7 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
             self.label_binarizers = [LB() for _ in range(y.shape[1])]
             for lb, cls in zip(self.label_binarizers, classes):
                 lb.fit(cls)
+
         return self.fit(X, y)
 
     def predict_proba(self, X):

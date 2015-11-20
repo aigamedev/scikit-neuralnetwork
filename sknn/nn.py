@@ -342,10 +342,22 @@ class NeuralNetwork(object):
         only be applied to layers of type ``Linear`` or ``Gaussian`` and they must be used as
         the output layer (PyLearn2 only).
 
-    mutator: callable, optional
-        A function that takes a single training sample ``(X, y)`` at each epoch and returns
-        a modified version.  This is useful for dataset augmentation, e.g. mirroring input
-        images or jittering.
+    callback: callable or dict, optional
+        An observer mechanism that exposes information about the inner training loop. This is
+        either a single function that takes ``cbs(event, **variables)`` as a parameter, or a
+        dictionary of functions indexed by on `event` string that conforms to ``cb(**variables)``.
+        
+        There are multiple events sent from the inner training loop:
+        
+            * ``on_train_start`` — Called when the main training function is entered.
+            * ``on_epoch_start`` — Called the first thing when a new iteration starts.
+            * ``on_batch_start`` — Called before an individual batch is processed.
+            * ``on_batch_finish`` — Called after that individual batch is processed.
+            * ``on_epoch_finish`` — Called the first last when the iteration is done.
+            * ``on_train_finish`` — Called just before the training function exits.
+        
+        For each function, the ``variables`` dictionary passed contains all local variables within
+        the training implementation.
 
     debug: bool, optional
         Should the underlying training algorithms perform validation on the data
@@ -388,7 +400,7 @@ class NeuralNetwork(object):
             valid_set=None,
             valid_size=0.0,
             loss_type=None,
-            mutator=None,
+            callback=None,
             debug=False,
             verbose=None,
             **params):
@@ -439,9 +451,9 @@ class NeuralNetwork(object):
         self.valid_set = valid_set
         self.valid_size = valid_size
         self.loss_type = loss_type
-        self.mutator = mutator
         self.debug = debug
         self.verbose = verbose
+        self.callback = callback
         
         self._backend = None
         self._create_logger()

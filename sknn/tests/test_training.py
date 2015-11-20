@@ -39,6 +39,19 @@ class TestTrainingProcedure(unittest.TestCase):
         self.nn = MLP(layers=[L("Linear")], n_iter=None, n_stable=None)
         assert_raises(AssertionError, self.nn._fit, a_in, a_out)
 
+    def test_TrainingUserDefined(self):
+        self.counter = 0
+        
+        def terminate(**_):
+            self.counter += 1
+            return False
+
+        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
+        self.nn = MLP(layers=[L("Linear")], n_iter=100, n_stable=None, callback={'on_epoch_finish': terminate})
+        self.nn._fit(a_in, a_out)
+        
+        assert_equals(self.counter, 1)
+
 
 class TestCustomLogging(unittest.TestCase):
 
