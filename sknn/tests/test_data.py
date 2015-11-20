@@ -4,6 +4,7 @@ from nose.tools import (assert_in, assert_raises, assert_equals, assert_true)
 import logging
 
 import numpy
+import theano
 from sknn.mlp import Regressor as MLPR
 from sknn.mlp import Layer as L, Convolution as C
 
@@ -60,8 +61,8 @@ class TestNetworkParameters(unittest.TestCase):
         nn.set_parameters([(weights, biases)])
         
         p = nn.get_parameters()
-        assert_true((p[0].weights == weights.astype(numpy.float32)).all())
-        assert_true((p[0].biases == biases.astype(numpy.float32)).all())
+        assert_true((p[0].weights == weights.astype(theano.config.floatX)).all())
+        assert_true((p[0].biases == biases.astype(theano.config.floatX)).all())
 
     def test_LayerParamsSkipOneWithNone(self):
         nn = MLPR(layers=[L("Sigmoid", units=32), L("Linear", name='abcd')])
@@ -73,8 +74,8 @@ class TestNetworkParameters(unittest.TestCase):
         nn.set_parameters([None, (weights, biases)])
         
         p = nn.get_parameters()
-        assert_true((p[1].weights == weights.astype(numpy.float32)).all())
-        assert_true((p[1].biases == biases.astype(numpy.float32)).all())
+        assert_true((p[1].weights == weights.astype(theano.config.floatX)).all())
+        assert_true((p[1].biases == biases.astype(theano.config.floatX)).all())
 
     def test_SetLayerParamsDict(self):
         nn = MLPR(layers=[L("Sigmoid", units=32), L("Linear", name='abcd')])
@@ -86,5 +87,5 @@ class TestNetworkParameters(unittest.TestCase):
         nn.set_parameters({'abcd': (weights, biases)})
         
         p = nn.get_parameters()
-        assert_true((p[1].weights == weights.astype(numpy.float32)).all())
-        assert_true((p[1].biases == biases.astype(numpy.float32)).all())
+        assert_true((p[1].weights == weights.astype(theano.config.floatX)).all())
+        assert_true((p[1].biases == biases.astype(theano.config.floatX)).all())
