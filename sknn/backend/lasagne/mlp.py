@@ -276,6 +276,10 @@ class MultiLayerPerceptronBackend(BaseBackend):
         for layer, data in zip(nn, array):
             if data is None: continue
             weights, biases = data
+            if weights.dtype == numpy.float64:
+                weights = weights.astype(numpy.float32)
+            if biases.dtype == numpy.float64:
+                biases = biases.astype(numpy.float32)
 
             while not hasattr(layer, 'W') and not hasattr(layer, 'b'):
                 layer = layer.input_layer
