@@ -283,9 +283,9 @@ class MultiLayerPerceptronBackend(BaseBackend):
             ws = tuple(layer.W.shape.eval())
             assert ws == weights.shape, "Layer weights shape mismatch: %r != %r" %\
                                         (ws, weights.shape)
-            layer.W.set_value(weights)
+            layer.W.set_value(weights.astype(theano.config.floatX))
 
             bs = tuple(layer.b.shape.eval())
             assert bs == biases.shape, "Layer biases shape mismatch: %r != %r" %\
                                        (bs, biases.shape)
-            layer.b.set_value(biases)
+            layer.b.set_value(biases.astype(theano.config.floatX))

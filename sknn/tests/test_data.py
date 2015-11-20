@@ -60,8 +60,8 @@ class TestNetworkParameters(unittest.TestCase):
         nn.set_parameters([(weights, biases)])
         
         p = nn.get_parameters()
-        assert_true((p[0].weights == weights).all())
-        assert_true((p[0].biases == biases).all())
+        assert_true((p[0].weights.astype('float32') == weights.astype('float32')).all())
+        assert_true((p[0].biases.astype('float32') == biases.astype('float32')).all())
 
     def test_LayerParamsSkipOneWithNone(self):
         nn = MLPR(layers=[L("Sigmoid", units=32), L("Linear", name='abcd')])
@@ -73,8 +73,8 @@ class TestNetworkParameters(unittest.TestCase):
         nn.set_parameters([None, (weights, biases)])
         
         p = nn.get_parameters()
-        assert_true((p[1].weights == weights).all())
-        assert_true((p[1].biases == biases).all())
+        assert_true((p[1].weights.astype('float32') == weights.astype('float32')).all())
+        assert_true((p[1].biases.astype('float32') == biases.astype('float32')).all())
 
     def test_SetLayerParamsDict(self):
         nn = MLPR(layers=[L("Sigmoid", units=32), L("Linear", name='abcd')])
@@ -86,5 +86,5 @@ class TestNetworkParameters(unittest.TestCase):
         nn.set_parameters({'abcd': (weights, biases)})
         
         p = nn.get_parameters()
-        assert_true((p[1].weights == weights).all())
-        assert_true((p[1].biases == biases).all())
+        assert_true((p[1].weights.astype('float32') == weights.astype('float32')).all())
+        assert_true((p[1].biases.astype('float32') == biases.astype('float32')).all())
