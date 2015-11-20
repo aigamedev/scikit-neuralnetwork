@@ -173,7 +173,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
                       finish_time - start_time
                       ))
 
-            if is_best_valid or (self.valid_set is None and best_train):
+            if is_best_valid or (self.valid_set is None and is_best_train):
                 best_params = self._backend._mlp_to_array()
                 n_stable = 0
             else:
