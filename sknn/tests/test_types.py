@@ -42,10 +42,10 @@ class TestScipySparseMatrix(unittest.TestCase):
             self.nn._fit(X, y)
 
     def test_FitMutator(self):
-        def mutate(x):
+        def mutate(Xb, **_):
             self.count += 1
-            return x - 0.5
-        self.nn.mutator = mutate
+            Xb -= 0.5
+        self.nn.callback = {'on_batch_start': mutate}
 
         for t in SPARSE_TYPES:
             sparse_matrix = getattr(scipy.sparse, t)

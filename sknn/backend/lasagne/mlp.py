@@ -234,12 +234,10 @@ class MultiLayerPerceptronBackend(BaseBackend):
         for start_idx in range(0, total_size - batch_size + 1, batch_size):
             excerpt = indices[start_idx:start_idx + batch_size]
             Xb, yb = cast(X[excerpt]), cast(y[excerpt])
-            if self.mutator is not None:
-                for x, _ in zip(Xb, yb):
-                    self.mutator(x)
+
             yield Xb, yb
 
-    def _batch_impl(self, X, y, processor, output, shuffle):
+    def _batch_impl(self, X, y, processor, mode, output, shuffle):
         progress, batches = 0, X.shape[0] / self.batch_size
         loss, count = 0.0, 0
         for Xb, yb in self._iterate_data(X, y, self.batch_size, shuffle):
@@ -255,10 +253,10 @@ class MultiLayerPerceptronBackend(BaseBackend):
         return loss / count
         
     def _train_impl(self, X, y):
-        return self._batch_impl(X, y, self.trainer, output='.', shuffle=True)
+        return self._batch_impl(X, y, self.trainer, mode='train', output='.', shuffle=True)
 
     def _valid_impl(self, X, y):
-        return self._batch_impl(X, y, self.validator, output=' ', shuffle=False)
+        return self._batch_impl(X, y, self.validator, mode='valid', output=' ', shuffle=False)
 
     @property
     def is_initialized(self):

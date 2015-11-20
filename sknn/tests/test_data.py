@@ -17,12 +17,12 @@ class TestDataAugmentation(unittest.TestCase):
         self.nn = MLPR(
                     layers=[L("Linear")],
                     n_iter=1,
-                    batch_size=2,
-                    mutator=self._mutate_fn)
+                    batch_size=1,
+                    callback={'on_batch_start': self._mutate_fn})
 
-    def _mutate_fn(self, sample):
+    def _mutate_fn(self, Xb, **_):
         self.called += 1
-        sample[sample == 0.0] = self.value
+        Xb[Xb == 0.0] = self.value
 
     def test_TestCalledOK(self):
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
