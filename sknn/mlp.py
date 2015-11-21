@@ -184,7 +184,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
                 log.info("User defined callback terminated at %i iterations.", i)
                 break
 
-            if self.valid_set is not None and n_stable >= self.n_stable:
+            if self.n_stable is not None and n_stable >= self.n_stable:
                 log.debug("")
                 log.info("Early termination condition fired at %i iterations.", i)
                 break
