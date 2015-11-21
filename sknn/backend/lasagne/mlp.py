@@ -239,7 +239,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
 
     def _print(self, text):
         if self.verbose:
-            sys.stdout.write(output)
+            sys.stdout.write(text)
             sys.stdout.flush()
 
     def _batch_impl(self, X, y, processor, mode, output, shuffle):
