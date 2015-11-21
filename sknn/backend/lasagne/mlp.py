@@ -237,19 +237,27 @@ class MultiLayerPerceptronBackend(BaseBackend):
 
             yield Xb, yb
 
+    def _print(self, text):
+        if self.verbose:
+            sys.stdout.write(output)
+            sys.stdout.flush()
+
     def _batch_impl(self, X, y, processor, mode, output, shuffle):
         progress, batches = 0, X.shape[0] / self.batch_size
         loss, count = 0.0, 0
         for Xb, yb in self._iterate_data(X, y, self.batch_size, shuffle):
             self._do_callback('on_batch_start', locals())
+
             loss += processor(Xb, yb)
             count += 1
+
             while count / batches > progress / 60:
-                sys.stdout.write(output)
-                sys.stdout.flush()
+                self._print(output)
                 progress += 1
+
             self._do_callback('on_batch_finish', locals())
-        sys.stdout.write('\r')
+
+        self._print('\r')
         return loss / count
         
     def _train_impl(self, X, y):
