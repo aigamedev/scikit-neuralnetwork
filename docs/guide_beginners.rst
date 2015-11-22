@@ -81,3 +81,19 @@ Working with images as inputs in 2D (as greyscale) or 3D (as RGB) images stored 
     nn.fit(X_train, y_train)
 
 The neural network here is trained with eight kernels of shared weights in a ``3x3`` matrix, each outputting to its own channel.  The rest of the code remains the same, but see the :class:`sknn.mlp.Layer` documentation for supported convolution layer types and parameters.
+
+
+Per-Sample Weighting
+--------------------
+
+When training a classifier with data that has unbalanced labels, it's useful to adjust the weight of the different training samples to prevent bias.  This is achieved via a feature called masking.  You can specify the weights of each training sample when calling the ``fit()`` function.
+
+.. code:: python
+
+    w_train = numpy.array((X_train.shape[0],))
+    w_train[y_train == 0] = 1.2
+    w_train[y_train == 1] = 0.8
+
+    nn.fit(X_train, y_train, w_train)
+
+In this case, there are two classes ``0`` given weight ``1.2``, and ``1`` with weighting ``0.8``.  This feature also works for regressors as well.

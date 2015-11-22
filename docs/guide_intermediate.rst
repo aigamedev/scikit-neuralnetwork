@@ -1,5 +1,5 @@
-Misc. Additions
-===============
+Extra Features
+==============
 
 Verbose Mode
 ------------

@@ -274,6 +274,10 @@ class Regressor(MultiLayerPerceptron, sklearn.base.RegressorMixin):
         y : array-like, shape (n_samples, n_outputs)
             Target values are real numbers used as regression targets.
 
+        w : array-like (optional), shape (n_samples) 
+            Floating point weights for each of the training samples, used as mask to
+            modify the cost function during optimization. 
+
         Returns
         -------
         self : object
@@ -334,6 +338,10 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
         y : array-like, shape (n_samples, n_classes)
             Target values as integer symbols, for either single- or multi-output
             classification problems.
+
+        w : array-like (optional), shape (n_samples) 
+            Floating point weights for each of the training samples, used as mask to
+            modify the cost function during optimization.
 
         Returns
         -------
