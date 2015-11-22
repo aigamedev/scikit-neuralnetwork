@@ -65,10 +65,8 @@ class MultiLayerPerceptronBackend(BaseBackend):
                     "Loss type `%s` not supported by Lasagne backend." % loss_type
         self.cost_function = getattr(lasagne.objectives, cost_functions[loss_type])
         cost_symbol = self.cost_function(self.network_output, self.data_output)
-        if True:
-            cost_symbol = self.data_weight.T * cost_symbol
+        cost_symbol = lasagne.objectives.aggregate(cost_symbol.T, self.data_mask, mode='mean')
 
-        cost_symbol = cost_symbol.mean()
         if self.regularizer is not None:
             cost_symbol = cost_symbol + self.regularizer
         return self._create_trainer(params, cost_symbol)
@@ -85,7 +83,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
             raise NotImplementedError(
                 "Learning rule type `%s` is not supported." % self.learning_rule)
 
-        trainer = theano.function([self.data_input, self.data_output, self.data_weight], cost,
+        trainer = theano.function([self.data_input, self.data_output, self.data_mask], cost,
                                    updates=self._learning_rule,
                                    on_unused_input='ignore',
                                    allow_input_downcast=True)
@@ -143,7 +141,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
     def _create_mlp(self, X):
         self.data_input = T.tensor4('X') if self.is_convolution else T.matrix('X')
         self.data_output = T.matrix('y')
-        self.data_weight = T.matrix('s')
+        self.data_mask = T.vector('m')
         self.data_correct = T.matrix('yp')
         
         lasagne.random.get_rng().seed(self.random_state)

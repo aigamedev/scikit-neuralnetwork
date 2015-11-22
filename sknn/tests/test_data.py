@@ -1,3 +1,4 @@
+import random
 import unittest
 from nose.tools import (assert_in, assert_raises, assert_equals, assert_true)
 
@@ -88,3 +89,63 @@ class TestNetworkParameters(unittest.TestCase):
         p = nn.get_parameters()
         assert_true((p[1].weights.astype('float32') == weights.astype('float32')).all())
         assert_true((p[1].biases.astype('float32') == biases.astype('float32')).all())
+
+
+class TestMaskedDataset(unittest.TestCase):
+
+    def test_SingleOutputOne(self):
+        nn = MLPR(layers=[L("Linear")], learning_rule='adam', n_iter=50)
+        a_in, a_out, a_mask = numpy.random.uniform(-1.0, +1.0, (8,16)), numpy.zeros((8,1)), numpy.ones((8,))
+        for i in range(8):
+            if random.choice([True, False]):
+                a_out[i] = 1.0
+                a_mask[i] = 1.0
+            else:
+                a_out[i] = 0.0
+                a_mask[i] = 0.0
+
+        nn.fit(a_in, a_out, a_mask)
+        v_out = nn.predict(a_in)
+        
+        # Make sure the examples weighted 1.0 have low error, 0.0 high error.
+        print(abs(a_out - v_out).T[0] * (1.0 - a_mask))
+        assert_true((abs(a_out - v_out).T[0] * a_mask < 5E-2).all())
+        assert_true((abs(a_out - v_out).T[0] * (1.0 - a_mask) > 5E-1).any())
+
+    def test_SingleOutputZero(self):
+        nn = MLPR(layers=[L("Linear")], learning_rule='adam', n_iter=50)
+        a_in, a_out, a_mask = numpy.random.uniform(-1.0, +1.0, (8,16)), numpy.zeros((8,1)), numpy.ones((8,))
+        for i in range(8):
+            if random.choice([True, False]):
+                a_out[i] = 1.0
+                a_mask[i] = 0.0
+            else:
+                a_out[i] = 0.0
+                a_mask[i] = 1.0
+
+        nn.fit(a_in, a_out, a_mask)
+        v_out = nn.predict(a_in)
+        
+        # Make sure the examples weighted 1.0 have low error, 0.0 high error.
+        print(abs(a_out - v_out).T[0] * (1.0 - a_mask))
+        assert_true((abs(a_out - v_out).T[0] * a_mask < 5E-2).all())
+        assert_true((abs(a_out - v_out).T[0] * (1.0 - a_mask) > 5E-1).any())
+
+    def test_SingleOutputNegative(self):
+        nn = MLPR(layers=[L("Linear")], learning_rule='adam', n_iter=50)
+        a_in, a_out, a_mask = numpy.random.uniform(-1.0, +1.0, (8,16)), numpy.zeros((8,1)), numpy.ones((8,))
+        for i in range(8):
+            if random.choice([True, False]):
+                a_out[i] = -1.0
+                a_mask[i] = 1.0
+            else:
+                a_out[i] = 0.0
+                a_mask[i] = 0.0
+
+        nn.fit(a_in, a_out, a_mask)
+        v_out = nn.predict(a_in)
+        
+        # Make sure the examples weighted 1.0 have low error, 0.0 high error.
+        print(abs(a_out - v_out).T[0] * (1.0 - a_mask))
+        assert_true((abs(a_out - v_out).T[0] * (1.0 - a_mask) > 5E-1).any())
+        assert_true((abs(a_out - v_out).T[0] * a_mask < 5E-2).all())
