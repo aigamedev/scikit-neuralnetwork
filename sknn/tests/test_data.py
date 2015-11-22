@@ -1,11 +1,11 @@
 import random
 import unittest
-from nose.tools import (assert_in, assert_raises, assert_equals, assert_true)
+from nose.tools import (assert_greater, assert_less, assert_raises, assert_equals, assert_true)
 
 import logging
 
 import numpy
-from sknn.mlp import Regressor as MLPR
+from sknn.mlp import Regressor as MLPR, Classifier as MLPC
 from sknn.mlp import Layer as L, Convolution as C
 
 
@@ -91,7 +91,7 @@ class TestNetworkParameters(unittest.TestCase):
         assert_true((p[1].biases.astype('float32') == biases.astype('float32')).all())
 
 
-class TestMaskedDataset(unittest.TestCase):
+class TestMaskedDataRegression(unittest.TestCase):
 
     def check(self, a_in, a_out, a_mask):
         nn = MLPR(layers=[L("Linear")], learning_rule='adam', n_iter=50)
@@ -131,3 +131,45 @@ class TestMaskedDataset(unittest.TestCase):
         a_mask = numpy.random.randint(2, size=(8,)).astype(numpy.float32)
 
         self.check(a_in, a_out, a_mask)
+
+
+class TestMaskedDataClassification(unittest.TestCase):
+
+    def check(self, a_in, a_out, a_mask, act='Softmax'):
+        nn = MLPC(layers=[L(act)], learning_rule='rmsprop', n_iter=100)
+        nn.fit(a_in, a_out, a_mask)
+        print(nn.classes_)
+        return nn.predict_proba(a_in)
+
+    def test_TwoLabelsOne(self):
+        # Only one sample has the value 1 with weight 1.0, but all 0s are weighted 0.0.
+        a_in = numpy.random.uniform(-1.0, +1.0, (16,4))
+        a_out = numpy.zeros((16,1), dtype=numpy.int32)
+        a_out[0] = 1
+        a_mask = (0.0 + a_out).flatten()
+        
+        a_test = self.check(a_in, a_out, a_mask).mean(axis=0)
+        assert_greater(a_test[1], a_test[0] * 2.0)
+
+    def test_TwoLabelsZero(self):
+        # Only one sample has the value 0 with weight 1.0, but all 1s are weighted 0.0. 
+        a_in = numpy.random.uniform(-1.0, +1.0, (16,4))
+        a_out = numpy.ones((16,1), dtype=numpy.int32)
+        a_out[-1] = 0
+        a_mask = (1.0 - a_out).flatten()
+        
+        a_test = self.check(a_in, a_out, a_mask).mean(axis=0)
+        assert_greater(a_test[0], a_test[1] * 2.0)
+
+    def test_FourLabels(self):
+        # Only multi-label sample has weight 1.0, the others have weight 0.0. Check probabilities!
+        chosen = random.randint(0,16)
+        a_in = numpy.random.uniform(-1.0, +1.0, (16,4))
+        a_out = numpy.random.randint(2, size=(16,4))
+        a_mask = numpy.zeros((16,), dtype=numpy.int32)
+        a_mask[chosen] = 1.0
+
+        a_test = self.check(a_in, a_out, a_mask, act="Sigmoid").mean(axis=0)
+        for i in range(a_out.shape[1]):
+            compare = assert_greater if a_out[chosen][i]==0 else assert_less
+            compare(a_test[i*2], a_test[i*2+1])
