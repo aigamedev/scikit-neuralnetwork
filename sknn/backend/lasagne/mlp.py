@@ -138,10 +138,10 @@ class MultiLayerPerceptronBackend(BaseBackend):
                                          num_units=layer.units,
                                          nonlinearity=self._get_activation(layer))
 
-    def _create_mlp(self, X):
+    def _create_mlp(self, X, w=None):
         self.data_input = T.tensor4('X') if self.is_convolution else T.matrix('X')
         self.data_output = T.matrix('y')
-        self.data_mask = T.vector('m')
+        self.data_mask = T.vector('m') if w is not None else T.scalar('m')
         self.data_correct = T.matrix('yp')
         
         lasagne.random.get_rng().seed(self.random_state)
@@ -187,12 +187,12 @@ class MultiLayerPerceptronBackend(BaseBackend):
         self.network_output = lasagne.layers.get_output(network, deterministic=True)
         self.f = theano.function([self.data_input], self.network_output, allow_input_downcast=True)
 
-    def _initialize_impl(self, X, y=None):
+    def _initialize_impl(self, X, y=None, w=None):
         if self.is_convolution:
             X = numpy.transpose(X, (0, 3, 1, 2))
 
         if self.mlp is None:            
-            self._create_mlp(X)
+            self._create_mlp(X, w)
 
         # Can do partial initialization when predicting, no trainer needed.
         if y is None:
@@ -254,7 +254,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
             self._do_callback('on_batch_start', locals())
             
             if mode == 'train':
-                loss += processor(Xb, yb, wb)
+                loss += processor(Xb, yb, wb if wb is not None else 1.0)
             else:
                 loss += processor(Xb, yb)
             count += 1

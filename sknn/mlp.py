@@ -31,14 +31,14 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
     def _setup(self):
         pass
 
-    def _initialize(self, X, y=None):
+    def _initialize(self, X, y=None, w=None):
         assert not self.is_initialized,\
             "This neural network has already been initialized."
         self._create_specs(X, y)
 
         backend.setup()
         self._backend = backend.MultiLayerPerceptronBackend(self)
-        return self._backend._initialize_impl(X, y)
+        return self._backend._initialize_impl(X, y, w)
 
     def _check_layer(self, layer, required, optional=[]):
         required.extend(['name', 'type'])
@@ -203,7 +203,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         X, y = self._reshape(X, y)
 
         if not self.is_initialized:
-            X, y = self._initialize(X, y)
+            X, y = self._initialize(X, y, w)
 
         log.info("Training on dataset of {:,} samples with {:,} total size.".format(data_shape[0], data_size))
         if data_shape[1:] != X.shape[1:]:
