@@ -40,7 +40,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
         self.f = None
         self.trainer = None
         self.validator = None
-        self.cost = None
+        self.regularizer = None
 
     def _create_mlp_trainer(self, params):
         # Aggregate all regularization parameters into common dictionaries.
@@ -56,17 +56,19 @@ class MultiLayerPerceptronBackend(BaseBackend):
                 self.regularize = 'L2'
             penalty = getattr(lasagne.regularization, self.regularize.lower())
             regularize = lasagne.regularization.apply_penalty
-            self.cost = sum(layer_decay[s.name] * regularize(l.get_params(tags={'regularizable': True}), penalty)
-                                for s, l in zip(self.layers, self.mlp))
+            self.regularizer = sum(layer_decay[s.name] * regularize(l.get_params(tags={'regularizable': True}), penalty)
+                                   for s, l in zip(self.layers, self.mlp))
 
         cost_functions = {'mse': 'squared_error', 'mcc': 'categorical_crossentropy'}
         loss_type = self.loss_type or ('mcc' if self.is_classifier else 'mse')
         assert loss_type in cost_functions,\
                     "Loss type `%s` not supported by Lasagne backend." % loss_type
         self.cost_function = getattr(lasagne.objectives, cost_functions[loss_type])
-        cost_symbol = self.cost_function(self.network_output, self.data_output).mean()
-        if self.cost is not None:
-            cost_symbol = cost_symbol + self.cost
+        cost_symbol = self.cost_function(self.network_output, self.data_output)
+        cost_symbol = lasagne.objectives.aggregate(cost_symbol.T, self.data_mask, mode='mean')
+
+        if self.regularizer is not None:
+            cost_symbol = cost_symbol + self.regularizer
         return self._create_trainer(params, cost_symbol)
 
     def _create_trainer(self, params, cost):
@@ -81,8 +83,9 @@ class MultiLayerPerceptronBackend(BaseBackend):
             raise NotImplementedError(
                 "Learning rule type `%s` is not supported." % self.learning_rule)
 
-        trainer = theano.function([self.data_input, self.data_output], cost,
+        trainer = theano.function([self.data_input, self.data_output, self.data_mask], cost,
                                    updates=self._learning_rule,
+                                   on_unused_input='ignore',
                                    allow_input_downcast=True)
 
         compare = self.cost_function(self.network_output, self.data_correct).mean()
@@ -135,9 +138,10 @@ class MultiLayerPerceptronBackend(BaseBackend):
                                          num_units=layer.units,
                                          nonlinearity=self._get_activation(layer))
 
-    def _create_mlp(self, X):
+    def _create_mlp(self, X, w=None):
         self.data_input = T.tensor4('X') if self.is_convolution else T.matrix('X')
         self.data_output = T.matrix('y')
+        self.data_mask = T.vector('m') if w is not None else T.scalar('m')
         self.data_correct = T.matrix('yp')
         
         lasagne.random.get_rng().seed(self.random_state)
@@ -183,12 +187,12 @@ class MultiLayerPerceptronBackend(BaseBackend):
         self.network_output = lasagne.layers.get_output(network, deterministic=True)
         self.f = theano.function([self.data_input], self.network_output, allow_input_downcast=True)
 
-    def _initialize_impl(self, X, y=None):
+    def _initialize_impl(self, X, y=None, w=None):
         if self.is_convolution:
             X = numpy.transpose(X, (0, 3, 1, 2))
 
         if self.mlp is None:            
-            self._create_mlp(X)
+            self._create_mlp(X, w)
 
         # Can do partial initialization when predicting, no trainer needed.
         if y is None:
@@ -220,7 +224,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
             X = numpy.transpose(X, (0, 3, 1, 2))
         return self.f(X)
     
-    def _iterate_data(self, X, y, batch_size, shuffle=False):
+    def _iterate_data(self, batch_size, X, y, w, shuffle=False):
         def cast(array):
             if type(array) != numpy.ndarray:
                 array = array.todense()
@@ -233,22 +237,26 @@ class MultiLayerPerceptronBackend(BaseBackend):
 
         for start_idx in range(0, total_size - batch_size + 1, batch_size):
             excerpt = indices[start_idx:start_idx + batch_size]
-            Xb, yb = cast(X[excerpt]), cast(y[excerpt])
-
-            yield Xb, yb
+            Xb, yb, wb = cast(X[excerpt]), cast(y[excerpt]), None
+            if w is not None:
+                wb = cast(w[excerpt])
+            yield Xb, yb, wb
 
     def _print(self, text):
         if self.verbose:
             sys.stdout.write(text)
             sys.stdout.flush()
 
-    def _batch_impl(self, X, y, processor, mode, output, shuffle):
+    def _batch_impl(self, X, y, w, processor, mode, output, shuffle):
         progress, batches = 0, X.shape[0] / self.batch_size
         loss, count = 0.0, 0
-        for Xb, yb in self._iterate_data(X, y, self.batch_size, shuffle):
+        for Xb, yb, wb in self._iterate_data(self.batch_size, X, y, w, shuffle):
             self._do_callback('on_batch_start', locals())
-
-            loss += processor(Xb, yb)
+            
+            if mode == 'train':
+                loss += processor(Xb, yb, wb if wb is not None else 1.0)
+            else:
+                loss += processor(Xb, yb)
             count += 1
 
             while count / batches > progress / 60:
@@ -260,11 +268,11 @@ class MultiLayerPerceptronBackend(BaseBackend):
         self._print('\r')
         return loss / count
         
-    def _train_impl(self, X, y):
-        return self._batch_impl(X, y, self.trainer, mode='train', output='.', shuffle=True)
+    def _train_impl(self, X, y, w=None):
+        return self._batch_impl(X, y, w, self.trainer, mode='train', output='.', shuffle=True)
 
-    def _valid_impl(self, X, y):
-        return self._batch_impl(X, y, self.validator, mode='valid', output=' ', shuffle=False)
+    def _valid_impl(self, X, y, w=None):
+        return self._batch_impl(X, y, w, self.validator, mode='valid', output=' ', shuffle=False)
 
     @property
     def is_initialized(self):

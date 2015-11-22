@@ -31,14 +31,14 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
     def _setup(self):
         pass
 
-    def _initialize(self, X, y=None):
+    def _initialize(self, X, y=None, w=None):
         assert not self.is_initialized,\
             "This neural network has already been initialized."
         self._create_specs(X, y)
 
         backend.setup()
         self._backend = backend.MultiLayerPerceptronBackend(self)
-        return self._backend._initialize_impl(X, y)
+        return self._backend._initialize_impl(X, y, w)
 
     def _check_layer(self, layer, required, optional=[]):
         required.extend(['name', 'type'])
@@ -129,7 +129,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         else:
             return self.callback(event, **variables)
 
-    def _train(self, X, y):
+    def _train(self, X, y, w=None):
         assert self.n_iter or self.n_stable,\
             "Neither n_iter nor n_stable were specified; training would loop forever."
 
@@ -143,7 +143,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
             self._do_callback('on_epoch_start', locals())
 
             is_best_train = False
-            avg_train_error = self._backend._train_impl(X, y)
+            avg_train_error = self._backend._train_impl(X, y, w)
             if avg_train_error is not None:
                 if math.isnan(avg_train_error):
                     raise RuntimeError("Training diverged and returned NaN.")
@@ -196,14 +196,14 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         self._do_callback('on_train_finish', locals())
         self._backend._array_to_mlp(best_params, self._backend.mlp)
 
-    def _fit(self, X, y):
+    def _fit(self, X, y, w=None):
         assert X.shape[0] == y.shape[0],\
             "Expecting same number of input and output samples."
         data_shape, data_size = X.shape, X.size+y.size
         X, y = self._reshape(X, y)
 
         if not self.is_initialized:
-            X, y = self._initialize(X, y)
+            X, y = self._initialize(X, y, w)
 
         log.info("Training on dataset of {:,} samples with {:,} total size.".format(data_shape[0], data_size))
         if data_shape[1:] != X.shape[1:]:
@@ -224,7 +224,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
                       "\n------------------------------------------------------------")
 
         try:
-            self._train(X, y)
+            self._train(X, y, w)
         except RuntimeError as e:
             log.error("\n{}{}{}\n\n{}\n".format(
                 ansi.RED,
@@ -262,7 +262,7 @@ class Regressor(MultiLayerPerceptron, sklearn.base.RegressorMixin):
     # Regressor compatible with sklearn that wraps various NN implementations.
     # The constructor and bulk of documentation is inherited from MultiLayerPerceptron.
 
-    def fit(self, X, y):
+    def fit(self, X, y, w=None):
         """Fit the neural network to the given continuous data as a regression problem.
 
         Parameters
@@ -283,7 +283,7 @@ class Regressor(MultiLayerPerceptron, sklearn.base.RegressorMixin):
         if self.valid_set is not None:
             self.valid_set = self._reshape(*self.valid_set)
 
-        return super(Regressor, self)._fit(X, y)
+        return super(Regressor, self)._fit(X, y, w)
 
     def predict(self, X):
         """Calculate predictions for specified inputs.
@@ -322,7 +322,7 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
         import sklearn.preprocessing.label as spl
         spl.type_of_target = lambda _: "multiclass"
 
-    def fit(self, X, y):
+    def fit(self, X, y, w=None):
         """Fit the neural network to symbolic labels as a classification problem.
 
         Parameters
@@ -369,7 +369,7 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
             self.valid_set = (X_v, y_vp)
  
         # Now train based on a problem transformed into regression.
-        return super(Classifier, self)._fit(X, yp)
+        return super(Classifier, self)._fit(X, yp, w)
 
     def partial_fit(self, X, y, classes=None):
         if y.ndim == 1:
