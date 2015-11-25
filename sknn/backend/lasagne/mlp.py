@@ -93,7 +93,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
                                     allow_input_downcast=True)
         return trainer, validator
 
-    def _get_activation(self, l):        
+    def _get_activation(self, l):
         nonlinearities = {'Rectifier': nl.rectify,
                           'Sigmoid': nl.sigmoid,
                           'Tanh': nl.tanh,
@@ -119,9 +119,14 @@ class MultiLayerPerceptronBackend(BaseBackend):
 
         if layer.pool_shape != (1, 1):
             network = lasagne.layers.Pool2DLayer(
-                        network,
-                        pool_size=layer.pool_shape,
-                        stride=layer.pool_shape)
+                            network,
+                            pool_size=layer.pool_shape,
+                            stride=layer.pool_shape)
+                            
+        if layer.scale_factor != (1, 1):
+            network = lasagne.layers.Upscale2DLayer(
+                            network,
+                            scale_factor=layer.scale_factor)
 
         return network
 

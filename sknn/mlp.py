@@ -77,6 +77,10 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
                 if l.border_mode == 'full':
                     res = (int((res[0] + l.kernel_shape[0]) / l.pool_shape[0]) - 1,
                            int((res[1] + l.kernel_shape[1]) / l.pool_shape[1]) - 1)
+                           
+                if l.scale_factor != (1, 1):
+                    res = (int(l.scale_factor[0] * res[0]), int(l.scale_factor[1] * res[1]))
+ 
                 unit_count = numpy.prod(res) * l.channels
             else:
                 unit_count = l.units

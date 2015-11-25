@@ -170,14 +170,23 @@ class Convolution(Layer):
         but for `valid` (default) it will be smaller or equal.
 
     pool_shape: tuple of ints, optional
-        A two-dimensional tuple of integers corresponding to the pool size.  This should be
-        square, for example `(2,2)` to reduce the size by half, or `(4,4)` to make the output
-        a quarter of the original.
+        A two-dimensional tuple of integers corresponding to the pool size for downsampling.
+        This should be square, for example `(2,2)` to reduce the size by half, or `(4,4)` to make
+        the output a quarter of the original.
+        
+        Pooling is applied after the convolution and calculation of its activation.
 
     pool_type: str, optional
         Type of the pooling to be used; can be either `max` or `mean`.  If a `pool_shape` is
         specified the default is to take the maximum value of all inputs that fall into this
         pool. Otherwise, the default is None and no pooling is used for performance.
+
+    scale_factor: tuple of ints, optional
+        A two-dimensional tuple of integers corresponding to upscaling ration.  This should be
+        square, for example `(2,2)` to increase the size by double, or `(4,4)` to make the
+        output four times the original.
+        
+        Upscaling is applied after the convolution and calculation of its activation.
 
     weight_decay: float, optional
         The coefficient for L1 or L2 regularization of the weights.  For example, a value of
@@ -208,6 +217,7 @@ class Convolution(Layer):
             border_mode='valid',
             pool_shape=None,
             pool_type=None,
+            scale_factor=None,
             weight_decay=None,
             dropout=None,
             frozen=False):
@@ -229,11 +239,12 @@ class Convolution(Layer):
                 frozen=frozen)
 
         self.channels = channels
-        self.pool_shape = pool_shape or (1,1)
-        self.pool_type = pool_type or ('max' if pool_shape else None)
         self.kernel_shape = kernel_shape
         self.kernel_stride = kernel_stride or (1,1)
         self.border_mode = border_mode
+        self.pool_shape = pool_shape or (1,1)
+        self.pool_type = pool_type or ('max' if pool_shape else None)
+        self.scale_factor = scale_factor or (1,1)
 
 
 class NeuralNetwork(object):

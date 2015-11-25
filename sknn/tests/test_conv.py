@@ -110,6 +110,16 @@ class TestConvolution(unittest.TestCase):
             n_iter=1))
 
 
+class TestUpscaling(unittest.TestCase):
+
+    def test_Upscaling(self):
+        TestConvolution._run(self, MLPR(
+            layers=[
+                C("Rectifier", channels=4, kernel_shape=(2,2), scale_factor=(2,2)),
+                L("Linear")],
+            n_iter=1))
+
+
 class TestConvolutionSpecs(unittest.TestCase):
 
     def test_SmallSquareKernel(self):
@@ -179,6 +189,15 @@ class TestConvolutionSpecs(unittest.TestCase):
         a_in, a_out = numpy.zeros((8,32,32,1)), numpy.zeros((8,16))
         nn._initialize(a_in, a_out)
         assert_equal(nn.unit_counts, [1024, 900, 196, 16])
+
+    def test_Upscaling(self):
+        nn = MLPR(layers=[
+                    C("Rectifier", channels=4, kernel_shape=(1,1), scale_factor=(2,2), border_mode='same'),
+                    L("Linear", units=5)])
+
+        a_in = numpy.zeros((8,32,32,1))
+        nn._create_specs(a_in)
+        assert_equal(nn.unit_counts, [1024, 64 * 64 * 4, 5])
 
 
 class TestActivationTypes(unittest.TestCase):
