@@ -109,6 +109,11 @@ class MultiLayerPerceptronBackend(BaseBackend):
                           required=['channels', 'kernel_shape'],
                           optional=['kernel_stride', 'border_mode', 'pool_shape', 'pool_type'])
  
+        if layer.scale_factor != (1, 1):
+            network = lasagne.layers.Upscale2DLayer(
+                            network,
+                            scale_factor=layer.scale_factor)
+ 
         network = lasagne.layers.Conv2DLayer(
                         network,
                         num_filters=layer.channels,
@@ -122,11 +127,6 @@ class MultiLayerPerceptronBackend(BaseBackend):
                             network,
                             pool_size=layer.pool_shape,
                             stride=layer.pool_shape)
-                            
-        if layer.scale_factor != (1, 1):
-            network = lasagne.layers.Upscale2DLayer(
-                            network,
-                            scale_factor=layer.scale_factor)
 
         return network
 

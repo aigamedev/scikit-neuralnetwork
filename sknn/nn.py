@@ -186,7 +186,7 @@ class Convolution(Layer):
         square, for example `(2,2)` to increase the size by double, or `(4,4)` to make the
         output four times the original.
         
-        Upscaling is applied after the convolution and calculation of its activation.
+        Upscaling is applied before the convolution and calculation of its activation.
 
     weight_decay: float, optional
         The coefficient for L1 or L2 regularization of the weights.  For example, a value of

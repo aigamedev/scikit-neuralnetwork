@@ -113,7 +113,7 @@ class TestConvolution(unittest.TestCase):
 class TestUpscaling(unittest.TestCase):
 
     def test_Upscaling(self):
-        TestConvolution._run(self, MLPR(
+        TestConvolution.__dict__['_run'](self, MLPR(
             layers=[
                 C("Rectifier", channels=4, kernel_shape=(2,2), scale_factor=(2,2)),
                 L("Linear")],
