@@ -145,8 +145,8 @@ class MultiLayerPerceptronBackend(BaseBackend):
                                          nonlinearity=self._get_activation(layer))
 
     def _create_mlp(self, X, w=None):
-        self.data_input = T.tensor4('X') if self.is_convolution else T.matrix('X')
-        self.data_output = T.matrix('y')
+        self.data_input = T.tensor4('X') if self.is_convolution(input=True) else T.matrix('X')
+        self.data_output = T.tensor4('y') if self.is_convolution(output=True) else T.matrix('y')
         self.data_mask = T.vector('m') if w is not None else T.scalar('m')
         self.data_correct = T.matrix('yp')
         
@@ -193,11 +193,17 @@ class MultiLayerPerceptronBackend(BaseBackend):
         self.network_output = lasagne.layers.get_output(network, deterministic=True)
         self.f = theano.function([self.data_input], self.network_output, allow_input_downcast=True)
 
-    def _initialize_impl(self, X, y=None, w=None):
-        if self.is_convolution:
-            X = numpy.transpose(X, (0, 3, 1, 2))
+    def _conv_transpose(self, arr):
+        ok = arr.shape[-1] not in (1,3) and arr.shape[1] in (1,3)
+        return arr if ok else numpy.transpose(arr, (0, 3, 1, 2))
 
-        if self.mlp is None:            
+    def _initialize_impl(self, X, y=None, w=None):
+        if self.is_convolution(input=True):
+            X = self._conv_transpose(X)
+        if y is not None and self.is_convolution(output=True):
+            y = self._conv_transpose(y)
+
+        if self.mlp is None:
             self._create_mlp(X, w)
 
         # Can do partial initialization when predicting, no trainer needed.
@@ -212,7 +218,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
                                 random_state=self.random_state)
             self.valid_set = X_v, y_v
             
-        if self.valid_set and self.is_convolution:
+        if self.valid_set and self.is_convolution():
             X_v, y_v = self.valid_set
             if X_v.shape[-2:] != X.shape[-2:]:
                 self.valid_set = numpy.transpose(X_v, (0, 3, 1, 2)), y_v
@@ -226,7 +232,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
         return X, y
 
     def _predict_impl(self, X):
-        if self.is_convolution:
+        if self.is_convolution():
             X = numpy.transpose(X, (0, 3, 1, 2))
         return self.f(X)
     

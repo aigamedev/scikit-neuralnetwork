@@ -100,8 +100,8 @@ class TestMaskedDataRegression(unittest.TestCase):
 
         # Make sure the examples weighted 1.0 have low error, 0.0 high error.
         print(abs(a_out - v_out).T * a_mask)
-        assert_true((abs(a_out - v_out).T * a_mask < 5E-2).all())
-        assert_true((abs(a_out - v_out).T * (1.0 - a_mask) > 5E-1).any())
+        assert_true((abs(a_out - v_out).T * a_mask < 1E-1).all())
+        assert_true((abs(a_out - v_out).T * (1.0 - a_mask) > 2.5E-1).any())
 
     def test_SingleOutputOne(self):
         a_in = numpy.random.uniform(-1.0, +1.0, (8,16))
@@ -149,7 +149,7 @@ class TestMaskedDataClassification(unittest.TestCase):
         a_mask = (0.0 + a_out).flatten()
         
         a_test = self.check(a_in, a_out, a_mask).mean(axis=0)
-        assert_greater(a_test[1], a_test[0] * 1.5)
+        assert_greater(a_test[1], a_test[0] * 1.25)
 
     def test_TwoLabelsZero(self):
         # Only one sample has the value 0 with weight 1.0, but all 1s are weighted 0.0. 
@@ -159,11 +159,11 @@ class TestMaskedDataClassification(unittest.TestCase):
         a_mask = (1.0 - a_out).flatten()
         
         a_test = self.check(a_in, a_out, a_mask).mean(axis=0)
-        assert_greater(a_test[0], a_test[1] * 1.5)
+        assert_greater(a_test[0], a_test[1] * 1.25)
 
     def test_FourLabels(self):
         # Only multi-label sample has weight 1.0, the others have weight 0.0. Check probabilities!
-        chosen = random.randint(0,16)
+        chosen = random.randint(0,15)
         a_in = numpy.random.uniform(-1.0, +1.0, (16,4))
         a_out = numpy.random.randint(2, size=(16,4))
         a_mask = numpy.zeros((16,), dtype=numpy.int32)

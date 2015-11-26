@@ -64,8 +64,8 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
                 "Mismatch between dataset size and units in output layer."
 
         # Then compute the number of units in each layer for initialization.
-        self.unit_counts = [numpy.product(X.shape[1:]) if self.is_convolution else X.shape[1]]
-        res = X.shape[1:3] if self.is_convolution else None
+        self.unit_counts = [numpy.product(X.shape[1:]) if self.is_convolution() else X.shape[1]]
+        res = X.shape[1:3] if self.is_convolution() else None
 
         for l in self.layers:
             if isinstance(l, Convolution):
@@ -111,14 +111,14 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
     def _reshape(self, X, y=None):
         if y is not None and y.ndim == 1:
             y = y.reshape((y.shape[0], 1))
-        if self.is_convolution and X.ndim == 3:
+        if self.is_convolution() and X.ndim == 3:
             X = X.reshape((X.shape[0], X.shape[1], X.shape[2], 1))
-        if self.is_convolution and X.ndim == 2:
+        if self.is_convolution() and X.ndim == 2:
             size = math.sqrt(X.shape[1])
             assert size.is_integer(),\
                 "Input array is not in image shape, and could not assume a square."
             X = X.reshape((X.shape[0], int(size), int(size), 1))
-        if not self.is_convolution and X.ndim > 2:
+        if not self.is_convolution() and X.ndim > 2:
             X = X.reshape((X.shape[0], numpy.product(X.shape[1:])))
         return X, y
         
