@@ -149,7 +149,7 @@ class TestMaskedDataClassification(unittest.TestCase):
         a_mask = (0.0 + a_out).flatten()
         
         a_test = self.check(a_in, a_out, a_mask).mean(axis=0)
-        assert_greater(a_test[1], a_test[0] * 1.5)
+        assert_greater(a_test[1], a_test[0] * 1.25)
 
     def test_TwoLabelsZero(self):
         # Only one sample has the value 0 with weight 1.0, but all 1s are weighted 0.0. 
@@ -159,7 +159,7 @@ class TestMaskedDataClassification(unittest.TestCase):
         a_mask = (1.0 - a_out).flatten()
         
         a_test = self.check(a_in, a_out, a_mask).mean(axis=0)
-        assert_greater(a_test[0], a_test[1] * 1.5)
+        assert_greater(a_test[0], a_test[1] * 1.25)
 
     def test_FourLabels(self):
         # Only multi-label sample has weight 1.0, the others have weight 0.0. Check probabilities!
