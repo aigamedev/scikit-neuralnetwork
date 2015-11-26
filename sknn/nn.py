@@ -37,7 +37,7 @@ class Layer(object):
 
     type: str
         Select which activation function this layer should use, as a string.  Specifically,
-        options are ``Rectifier``, ``Sigmoid``, ``Tanh``, and ``Maxout`` for non-linear layers
+        options are ``Rectifier``, ``Sigmoid``, ``Tanh``, and ``ExpLin`` for non-linear layers
         and ``Linear``, ``Softmax`` or ``Gaussian`` for linear layers.
 
     name: str, optional
@@ -130,7 +130,7 @@ class Convolution(Layer):
     type: str
         Select which activation function this convolution layer should use, as a string.
         For hidden layers, you can use the following convolution types ``Rectifier``,
-        ``Sigmoid``, ``Tanh`` or ``Linear``.
+        ``ExpLin``, ``Sigmoid``, ``Tanh`` or ``Linear``.
 
     name: str, optional
         You optionally can specify a name for this layer, and its parameters
@@ -261,7 +261,7 @@ class NeuralNetwork(object):
         contains its type, optional name, and any paramaters required.
 
             * For hidden layers, you can use the following layer types:
-              ``Rectifier``, ``Sigmoid``, ``Tanh``, or ``Convolution``.
+              ``Rectifier``, ``ExpLin``, ``Sigmoid``, ``Tanh``, or ``Convolution``.
             * For output layers, you can use the following layer types:
               ``Linear`` or ``Softmax``.
 
