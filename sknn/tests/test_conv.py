@@ -132,7 +132,7 @@ class TestUpscaling(unittest.TestCase):
     def test_DownscaleUpscale(self):
         self._run(MLPR(
                     layers=[
-                        C("Rectifier", channels=6, kernel_shape=(3,3), pool_shape=(2,2), border_mode='same'),
+                        C("ExpLin", channels=6, kernel_shape=(3,3), pool_shape=(2,2), border_mode='same'),
                         C("Rectifier", channels=3, kernel_shape=(3,3), scale_factor=(2,2), border_mode='same')],
                     n_iter=1),
                   scale=1)
@@ -151,7 +151,7 @@ class TestConvolutionSpecs(unittest.TestCase):
 
     def test_SquareKernelFull(self):
         nn = MLPR(layers=[
-                    C("Rectifier", channels=4, kernel_shape=(3,3), border_mode='full'),
+                    C("ExpLin", channels=4, kernel_shape=(3,3), border_mode='full'),
                     L("Linear", units=5)])
 
         a_in = numpy.zeros((8,32,32,1))
@@ -178,7 +178,7 @@ class TestConvolutionSpecs(unittest.TestCase):
 
     def test_SquareKernelPool(self):
         nn = MLPR(layers=[
-                    C("Rectifier", channels=4, kernel_shape=(3,3), pool_shape=(2,2), border_mode='valid'),
+                    C("ExpLin", channels=4, kernel_shape=(3,3), pool_shape=(2,2), border_mode='valid'),
                     L("Linear", units=5)])
 
         a_in = numpy.zeros((8,32,32,1))
@@ -201,7 +201,7 @@ class TestConvolutionSpecs(unittest.TestCase):
     def test_MultiLayerPooling(self):
         nn = MLPR(layers=[
                     C("Rectifier", channels=4, kernel_shape=(3,3), pool_shape=(2,2)),
-                    C("Rectifier", channels=4, kernel_shape=(3,3), pool_shape=(2,2)),
+                    C("ExpLin", channels=4, kernel_shape=(3,3), pool_shape=(2,2)),
                     L("Linear")])
 
         a_in, a_out = numpy.zeros((8,32,32,1)), numpy.zeros((8,16))
@@ -234,6 +234,9 @@ class TestActivationTypes(unittest.TestCase):
 
     def test_RectifierConv(self):
         self._run("Rectifier")
+
+    def test_RectifierConv(self):
+        self._run("ExpLin")
 
     def test_SigmoidConv(self):
         self._run("Sigmoid")

@@ -225,7 +225,7 @@ class Convolution(Layer):
         assert warning is None,\
             "Specify layer parameters as keyword arguments, not positional arguments."
 
-        if type not in ['Rectifier', 'Sigmoid', 'Tanh', 'Linear']:
+        if type not in ['Rectifier', 'Sigmoid', 'Tanh', 'Linear', 'ExpLin']:
             raise NotImplementedError("Convolution type `%s` is not implemented." % (type,))
         if border_mode not in ['valid', 'full', 'same']:
             raise NotImplementedError("Convolution border_mode `%s` is not implemented." % (border_mode,))
