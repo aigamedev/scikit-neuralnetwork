@@ -135,10 +135,9 @@ class TestMaskedDataRegression(unittest.TestCase):
 
 class TestMaskedDataClassification(unittest.TestCase):
 
-    def check(self, a_in, a_out, a_mask, act='Softmax'):
-        nn = MLPC(layers=[L(act)], learning_rule='rmsprop', n_iter=100)
+    def check(self, a_in, a_out, a_mask, act='Softmax', n_iter=100):
+        nn = MLPC(layers=[L(act)], learning_rule='rmsprop', n_iter=n_iter)
         nn.fit(a_in, a_out, a_mask)
-        print(nn.classes_)
         return nn.predict_proba(a_in)
 
     def test_TwoLabelsOne(self):
@@ -169,7 +168,7 @@ class TestMaskedDataClassification(unittest.TestCase):
         a_mask = numpy.zeros((16,), dtype=numpy.int32)
         a_mask[chosen] = 1.0
 
-        a_test = self.check(a_in, a_out, a_mask, act="Sigmoid").mean(axis=0)
+        a_test = self.check(a_in, a_out, a_mask, act="Sigmoid", n_iter=250).mean(axis=0)
         for i in range(a_out.shape[1]):
             compare = assert_greater if a_out[chosen][i]==0 else assert_less
             compare(a_test[i*2], a_test[i*2+1])

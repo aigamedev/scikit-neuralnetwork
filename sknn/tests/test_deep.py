@@ -23,6 +23,7 @@ class TestDeepNetwork(test_linear.TestLinearNetwork):
             layers=[
                 L("Rectifier", units=16),
                 L("Sigmoid", units=12),
+                L("ExpLin", units=8),
                 L("Tanh", units=4),
                 L("Linear")],
             n_iter=1)
@@ -45,7 +46,7 @@ class TestDeepDeterminism(unittest.TestCase):
     def run_EqualityTest(self, copier, asserter):
         # Only PyLearn2 supports Maxout.
         extra =  ["Maxout"] if sknn.backend.name == 'pylearn2' else []
-        for activation in ["Rectifier", "Sigmoid", "Tanh"] + extra:
+        for activation in ["Rectifier", "Sigmoid", "Tanh", "ExpLin"] + extra:
             nn1 = MLPR(layers=[L(activation, units=16, pieces=2), L("Linear", units=1)], random_state=1234)
             nn1._initialize(self.a_in, self.a_out)
 
@@ -105,4 +106,3 @@ class TestActivations(unittest.TestCase):
 
         assert_in('Parameter `pieces` is unused', self.buf.getvalue())
         self.buf = io.StringIO() # clear
-
