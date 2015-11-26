@@ -480,11 +480,29 @@ class NeuralNetwork(object):
         """
         return self._backend is not None and self._backend.is_initialized
 
-    @property
-    def is_convolution(self):
-        """Check whether this neural network includes convolution layers.
+    def is_convolution(self, input=None, output=False):
+        """Check whether this neural network includes convolution layers in the first
+        or last position.
+    
+        Parameters
+        ----------
+
+        input : boolean, optional
+            Whether the first layer should be checked for convolution. Default True.
+
+        output : boolean, optional
+            Whether the last layer should be checked for convolution. Default False.
+            
+        Returns
+        -------
+        is_conv : boolean
+            True if either of the specified layers are indeed convolution, False otherwise. 
         """
-        return isinstance(self.layers[0], Convolution)
+        check_output = output 
+        check_input = False if check_output and input is None else True
+        i = check_input and isinstance(self.layers[0], Convolution)
+        o = check_output and isinstance(self.layers[-1], Convolution)
+        return i or o
 
     @property
     def is_classifier(self):

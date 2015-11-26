@@ -12,7 +12,7 @@ from sknn.mlp import Layer as L, Convolution as C
 class TestConvolution(unittest.TestCase):
 
     def _run(self, nn, a_in=None, fit=True):
-        assert_true(nn.is_convolution)
+        assert_true(nn.is_convolution())
         if a_in is None:
             a_in = numpy.zeros((8,32,16,1))
         a_out = numpy.zeros((8,4))
@@ -110,14 +110,32 @@ class TestConvolution(unittest.TestCase):
             n_iter=1))
 
 
+
 class TestUpscaling(unittest.TestCase):
 
-    def test_Upscaling(self):
-        TestConvolution.__dict__['_run'](self, MLPR(
-            layers=[
-                C("Rectifier", channels=4, kernel_shape=(2,2), scale_factor=(2,2)),
-                L("Linear")],
-            n_iter=1))
+    def _run(self, nn, scale):
+        assert_true(nn.is_convolution())
+        a_in = numpy.zeros((8,16,16,1))
+        a_out = numpy.zeros((8,16*scale,16*scale,3))
+        nn.fit(a_in, a_out)
+        a_test = nn.predict(a_in)
+        assert_equal(type(a_out), type(a_in))
+        return a_test
+
+    def test_UpscalingFactorFour(self):
+        self._run(MLPR(
+                    layers=[
+                        C("Rectifier", channels=3, kernel_shape=(3,3), scale_factor=(4,4), border_mode='same')],
+                    n_iter=1),
+                  scale=4) 
+    
+    def test_DownscaleUpscale(self):
+        self._run(MLPR(
+                    layers=[
+                        C("Rectifier", channels=6, kernel_shape=(3,3), pool_shape=(2,2), border_mode='same'),
+                        C("Rectifier", channels=3, kernel_shape=(3,3), scale_factor=(2,2), border_mode='same')],
+                    n_iter=1),
+                  scale=1)
 
 
 class TestConvolutionSpecs(unittest.TestCase):
