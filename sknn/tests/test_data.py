@@ -100,7 +100,7 @@ class TestMaskedDataRegression(unittest.TestCase):
 
         # Make sure the examples weighted 1.0 have low error, 0.0 high error.
         print(abs(a_out - v_out).T * a_mask)
-        assert_true((abs(a_out - v_out).T * a_mask < 5E-2).all())
+        assert_true((abs(a_out - v_out).T * a_mask < 1E-1).all())
         assert_true((abs(a_out - v_out).T * (1.0 - a_mask) > 2.5E-1).any())
 
     def test_SingleOutputOne(self):

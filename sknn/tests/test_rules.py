@@ -53,7 +53,7 @@ class TestLearningRules(LoggingTestCase):
                         n_iter=1))
 
     def test_AdaDelta(self):
-        self._run(MLPR(layers=[L("Linear")],
+        self._run(MLPR(layers=[L("Softmax")],
                        learning_rule='adadelta',
                        n_iter=1))
 
