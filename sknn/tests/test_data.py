@@ -163,7 +163,7 @@ class TestMaskedDataClassification(unittest.TestCase):
 
     def test_FourLabels(self):
         # Only multi-label sample has weight 1.0, the others have weight 0.0. Check probabilities!
-        chosen = random.randint(0,16)
+        chosen = random.randint(0,15)
         a_in = numpy.random.uniform(-1.0, +1.0, (16,4))
         a_out = numpy.random.randint(2, size=(16,4))
         a_mask = numpy.zeros((16,), dtype=numpy.int32)
