@@ -28,6 +28,10 @@ from ..base import BaseBackend
 from ...nn import Layer, Convolution, ansi
 
 
+def explin(x):
+    return x * (x>=0) + (x<0) * (T.exp(x) - 1)
+
+
 class MultiLayerPerceptronBackend(BaseBackend):
     """
     Abstract base class for wrapping the multi-layer perceptron functionality
@@ -98,7 +102,8 @@ class MultiLayerPerceptronBackend(BaseBackend):
                           'Sigmoid': nl.sigmoid,
                           'Tanh': nl.tanh,
                           'Softmax': nl.softmax,
-                          'Linear': nl.linear}
+                          'Linear': nl.linear,
+                          'ExpLin': explin}
 
         assert l.type in nonlinearities,\
             "Layer type `%s` is not supported for `%s`." % (l.type, l.name)

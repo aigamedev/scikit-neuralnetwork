@@ -89,7 +89,7 @@ class Layer(object):
         assert warning is None,\
             "Specify layer parameters as keyword arguments, not positional arguments."
 
-        if type not in ['Rectifier', 'Sigmoid', 'Tanh', 'Linear', 'Softmax', 'Gaussian']:
+        if type not in ['Rectifier', 'Sigmoid', 'Tanh', 'Linear', 'Softmax', 'Gaussian', 'ExpLin']:
             raise NotImplementedError("Layer type `%s` is not implemented." % type)
 
         self.name = name
