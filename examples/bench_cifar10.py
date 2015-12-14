@@ -56,6 +56,7 @@ nn = mlp.Classifier(
             mlp.Layer("Softmax", units=n_targets)],
         n_iter=50,
         n_stable=10,
+        batch_size=25,
         learning_rate=0.002,
         learning_rule="momentum",
         valid_size=0.1,
