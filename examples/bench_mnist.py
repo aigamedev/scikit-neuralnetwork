@@ -6,7 +6,7 @@ import time
 import numpy as np
 
 if len(sys.argv) == 1:
-    print("ERROR: Please specify implementation to benchmark, 'sknn' 'dbn' or 'lasagne'.")
+    print("ERROR: Please specify implementation to benchmark, 'sknn' or 'lasagne'.")
     sys.exit(-1)
 
 np.set_printoptions(precision=4)
@@ -26,16 +26,6 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 
 classifiers = []
-
-if 'dbn' in sys.argv:
-    from nolearn.dbn import DBN
-    clf = DBN(
-        [X_train.shape[1], 300, 10],
-        learn_rates=0.3,
-        learn_rate_decays=0.9,
-        epochs=10,
-        verbose=1)
-    classifiers.append(('nolearn.dbn', clf))
 
 if 'sknn' in sys.argv:
     from sknn.mlp import Classifier, Layer, Convolution
