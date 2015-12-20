@@ -37,14 +37,14 @@ If you want to use the latest official release, you can do so from PYPI directly
 
     > pip install scikit-neuralnetwork
 
-This will install a copy of ``Lasagne`` and other minor packages too as a dependency. We strongly suggest you use a `virtualenv <https://virtualenv.pypa.io/en/latest/>`_ for Python.
+This will install the latest official ``Lasagne`` and ``Theano`` as well as other minor packages too as a dependency.  We strongly suggest you use a `virtualenv <https://virtualenv.pypa.io/en/latest/>`_ for Python.
 
 B) Pulling Repositories [Optional]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You'll need some dependencies, which you can install manually as follows::
+If you want to use the more advanced features like convolution, pooling or upscaling, these depend on the latest code from ``Lasagne`` and ``Theano`` master branches.  You can install them manually as follows::
 
-    > pip install numpy scipy theano lasagne
+    > pip install -r https://raw.githubusercontent.com/aigamedev/scikit-neuralnetwork/master/requirements.txt
 
 Once that's done, you can grab this repository and install from ``setup.py`` in the exact same way::
 
