@@ -19,10 +19,10 @@ except ImportError:
 
 
 install_requires = [
-    'scikit-learn',
-    'theano',
+    'scikit-learn>=0.17',
+    'Theano>=0.8-dev',
+    'Lasagne>=0.2-dev',
     'colorama' if sys.platform == 'win32' else '',
-    'lasagne',
 ]
 
 tests_require = [
