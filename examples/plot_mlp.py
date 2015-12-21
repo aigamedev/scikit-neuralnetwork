@@ -27,13 +27,12 @@ import logging
 logging.basicConfig(format="%(message)s", level=logging.WARNING, stream=sys.stdout)
 
 from sknn.platform import gpu32
-from sknn.backend import pylearn2
 from sknn import mlp
 
 
 # All possible parameter options that can be plotted, separately or combined.
 PARAMETERS = {
-    'activation': ['Rectifier', 'Tanh', 'Sigmoid', 'Maxout'],
+    'activation': ['Rectifier', 'Tanh', 'Sigmoid'],
     'alpha': [0.001, 0.005, 0.01, 0.05, 0.1, 0.2],
     'dropout': [None, 0.25, 0.5, 0.75],
     'iterations': [100, 200, 500, 1000],
@@ -64,7 +63,7 @@ for p in sorted(PARAMETERS):
 names = []
 classifiers = []
 for (activation, alpha, dropout, iterations, output, regularize, rule, units) in itertools.product(*params):
-    params = {'pieces': 2} if activation == "Maxout" else {}
+    params = {}
     classifiers.append(mlp.Classifier(
         layers=[mlp.Layer(activation, units=units, **params), mlp.Layer(output)], random_state=1,
         n_iter=iterations, n_stable=iterations, regularize=regularize,
