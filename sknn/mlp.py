@@ -328,6 +328,8 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
         # customized without a providing a complete rewrite, so here we patch
         # the `type_of_target` function for this to work correctly,
         import sklearn.preprocessing.label as spl
+        assert 'type_of_target' in dir(spl),\
+               "Could not setup sklearn.preprocessing.label.LabelBinarizer functionality."
         spl.type_of_target = lambda _: "multiclass"
 
     def fit(self, X, y, w=None):

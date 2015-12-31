@@ -42,6 +42,16 @@ class TestClassifierFunctionality(unittest.TestCase):
         a_in = numpy.zeros((8,16))
         assert_raises(AssertionError, self.nn.predict, a_in)
 
+    def test_PredictBinaryProbability(self):
+        a_in = numpy.random.uniform(-1.0, 1.0, size=(8,16))
+        a_out = numpy.array((a_in.sum(axis=1) >= 0.0), dtype=numpy.int32)
+        self.nn.fit(a_in, a_out)
+
+        a_proba = self.nn.predict_proba(a_in)
+        c_out = numpy.unique(a_out)
+        assert_equal(2, c_out.shape[0])
+        assert_equal(2, a_proba.shape[1])
+
     def test_PredictClasses(self):
         a_in, a_out = numpy.zeros((8,16)), numpy.random.randint(0, 5, (8,))
         self.nn.fit(a_in, a_out)
