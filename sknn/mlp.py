@@ -251,8 +251,6 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
                 log.warning("WARNING: Computing estimates with an untrained network.")
             self._initialize(X)
 
-        if not isinstance(X, numpy.ndarray):
-            X = X.toarray()
         return self._backend._predict_impl(X)
 
     def get_params(self, deep=True):

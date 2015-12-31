@@ -239,10 +239,19 @@ class MultiLayerPerceptronBackend(BaseBackend):
     def _predict_impl(self, X):
         if self.is_convolution():
             X = numpy.transpose(X, (0, 3, 1, 2))
-        return self.f(X)
+
+        loss, count = 0.0, 0
+        for Xb, _, _ in self._iterate_data(self.batch_size, X, shuffle=False):
+            loss += self.f(Xb)
+            count += 1
+        return loss / count
     
-    def _iterate_data(self, batch_size, X, y, w, shuffle=False):
-        def cast(array):
+    def _iterate_data(self, batch_size, X, y=None, w=None, shuffle=False):
+        def cast(array, indices):
+            if array is None:
+                return None
+
+            A = array[indices]
             if type(array) != numpy.ndarray:
                 array = array.todense()
             return array.astype(theano.config.floatX)
@@ -254,9 +263,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
 
         for start_idx in range(0, total_size - batch_size + 1, batch_size):
             excerpt = indices[start_idx:start_idx + batch_size]
-            Xb, yb, wb = cast(X[excerpt]), cast(y[excerpt]), None
-            if w is not None:
-                wb = cast(w[excerpt])
+            Xb, yb, wb = cast(X, excerpt), cast(y, excerpt), cast(w, excerpt)
             yield Xb, yb, wb
 
     def _print(self, text):
