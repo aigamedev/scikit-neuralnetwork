@@ -94,7 +94,7 @@ class TestNetworkParameters(unittest.TestCase):
 class TestMaskedDataRegression(unittest.TestCase):
 
     def check(self, a_in, a_out, a_mask):
-        nn = MLPR(layers=[L("Linear")], learning_rule='adam', n_iter=50)
+        nn = MLPR(layers=[L("Linear")], learning_rule='adam', learning_rate=0.1, n_iter=50)
         nn.fit(a_in, a_out, a_mask)
         v_out = nn.predict(a_in)
 

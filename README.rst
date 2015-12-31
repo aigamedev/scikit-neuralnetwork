@@ -12,7 +12,7 @@ Deep neural network implementation without the learning cliff!  This library imp
 Features
 --------
 
-By importing the ``sknn`` package provided by this library, you can easily train deep neural networks as regressors (to estimate continuous outputs from inputs) and classifiers (to predict labels from features).
+By importing the ``sknn`` package provided by this library, you can easily train deep neural networks as regressors (to estimate continuous outputs from inputs) and classifiers (to predict discrete labels from features).
 
 .. image:: docs/plot_activation.png
 
@@ -68,7 +68,7 @@ We strive to maintain 100% test coverage for all code-paths, to ensure that rapi
 Getting Started
 ---------------
 
-The library supports both regressors (to estimate continuous outputs from inputs) and classifiers (to predict labels from features).  This is the ``sklearn``-compatible API:
+The library supports both regressors (to estimate continuous outputs from inputs) and classifiers (to predict discrete labels from features).  This is the ``sklearn``-compatible API:
 
 .. code:: python
 
@@ -77,7 +77,7 @@ The library supports both regressors (to estimate continuous outputs from inputs
     nn = Classifier(
         layers=[
             Layer("Rectifier", units=100),
-            Layer("Linear")],
+            Layer("Softmax")],
         learning_rate=0.02,
         n_iter=10)
     nn.fit(X_train, y_train)
@@ -103,7 +103,6 @@ Links & References
 * `Lasagne <https://github.com/Lasagne/Lasagne>`_ by benanne — The amazing neural network library that powers ``sknn``.
 * `Theano <https://github.com/Theano/Theano>`_ by LISA Lab — Underlying array/math library for efficient computation.
 * `scikit-learn <http://scikit-learn.org/>`_ by INRIA — Machine learning library with an elegant Pythonic interface.
-* `nolearn <https://github.com/dnouri/nolearn>`_ by dnouri — Similar wrapper library for Lasagne compatible with ``scikit-learn``.
 
 ----
 
