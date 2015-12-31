@@ -6,7 +6,8 @@ from scipy.stats import randint, uniform
 
 from sklearn.grid_search import GridSearchCV, RandomizedSearchCV
 from sklearn.cross_validation import cross_val_score
-
+from sklearn.ensemble import VotingClassifier
+    
 from sknn.mlp import Regressor as MLPR, Classifier as MLPC
 from sknn.mlp import Layer as L
 
@@ -77,3 +78,12 @@ class TestCrossValidation(unittest.TestCase):
         a_out = numpy.random.randint(0, 4, (64,))
 
         cross_val_score(MLPC(layers=[L("Softmax")], n_iter=1), a_in, a_out, cv=5)
+
+
+class TestVotingEnsemble(unittest.TestCase):
+    
+    def test_SingleVote(self):
+        a_in, a_out = numpy.random.uniform(0.0, 1.0, (64,16)), numpy.zeros((64,))
+        vc = VotingClassifier([('nn1', MLPC(layers=[L("Softmax")], n_iter=1))])
+        vc.fit(a_in, a_out)
+        vc.predict(a_in)
