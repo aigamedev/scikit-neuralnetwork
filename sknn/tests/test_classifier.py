@@ -54,7 +54,6 @@ class TestClassifierFunctionality(unittest.TestCase):
         
         assert_equal(2, c_out.shape[0])
         assert_equal(2, a_proba.shape[1])
-        assert_equal(1, a_test.ndim)
 
     def test_PredictClasses(self):
         a_in, a_out = numpy.zeros((8,16)), numpy.random.randint(0, 5, (8,))
