@@ -6,6 +6,7 @@ __version__ = '0.5'
 
 
 import os
+import re
 import sys
 import logging
 
@@ -48,6 +49,17 @@ class TheanoConfigurator(object):
             return self.configure('device=cpu'+flags)
         if name.startswith('gpu'):
             return self.configure('device=gpu'+flags)
+        
+        if name.startswith('thread'):
+            try:
+                count = int(re.sub('\D', '', name))
+            except ValueError:
+                import multiprocessing
+                count = multiprocessing.cpu_count()
+
+            os.environ.setdefault('THEANO_FLAGS', ','.join(['openmp=True', os.environ.get('THEANO_FLAGS', '')]))
+            os.environ.setdefault('OMP_NUM_THREADS', str(count))
+            return
 
         return getattr(sys.modules['sknn'], name)
 
