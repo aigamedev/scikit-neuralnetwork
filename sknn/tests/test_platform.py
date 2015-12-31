@@ -1,5 +1,5 @@
 import unittest
-from nose.tools import (assert_in, assert_equal)
+from nose.tools import (assert_in, assert_equal, assert_true)
 
 import io
 import os
@@ -61,3 +61,13 @@ class TestPlatformPseudoModule(unittest.TestCase):
     def test_FlagsCPU64(self):
         from sknn.platform import cpu64
         self._check(['floatX=float64','device=cpu'])
+
+    def test_ThreadingDefault(self):
+        from sknn.platform import threading
+        self._check(['openmp=True'])
+        assert_true(int(os.environ['OMP_NUM_THREADS']) > 1)
+        
+    def test_ThreadsEight(self):
+        from sknn.platform import threads8
+        self._check(['openmp=True'])
+        assert_equal('8', os.environ['OMP_NUM_THREADS'])
