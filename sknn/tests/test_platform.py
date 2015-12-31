@@ -14,6 +14,8 @@ class TestPlatformPseudoModule(unittest.TestCase):
     def setUp(self):
         if 'THEANO_FLAGS' in os.environ:
             del os.environ['THEANO_FLAGS']
+        if 'OMP_NUM_THREADS' in os.environ:
+            del os.environ['OMP_NUM_THREADS']
         
         import theano
 
@@ -68,6 +70,6 @@ class TestPlatformPseudoModule(unittest.TestCase):
         assert_true(int(os.environ['OMP_NUM_THREADS']) > 1)
         
     def test_ThreadsEight(self):
-        from sknn.platform import threads8
+        from sknn.platform import threads7
         self._check(['openmp=True'])
-        assert_equal('8', os.environ['OMP_NUM_THREADS'])
+        assert_equal('7', os.environ['OMP_NUM_THREADS'])
