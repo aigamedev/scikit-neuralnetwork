@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import (absolute_import, unicode_literals, print_function)
+from __future__ import (absolute_import, division, unicode_literals, print_function)
 
 __all__ = ['MultiLayerPerceptronBackend']
 
@@ -261,7 +261,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
         if shuffle:
             numpy.random.shuffle(indices)
 
-        for start_idx in range(0, total_size - batch_size + 1, batch_size):
+        for start_idx in range(0, total_size, batch_size):
             excerpt = indices[start_idx:start_idx + batch_size]
             Xb, yb, wb = cast(X, excerpt), cast(y, excerpt), cast(w, excerpt)
             yield Xb, yb, wb
