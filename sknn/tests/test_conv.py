@@ -235,7 +235,7 @@ class TestActivationTypes(unittest.TestCase):
     def test_RectifierConv(self):
         self._run("Rectifier")
 
-    def test_RectifierConv(self):
+    def test_ExponentialLinear(self):
         self._run("ExpLin")
 
     def test_SigmoidConv(self):
