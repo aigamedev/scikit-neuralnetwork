@@ -123,5 +123,5 @@ Links & References
 .. |Project Stars| image:: https://img.shields.io/github/stars/aigamedev/scikit-neuralnetwork.svg
     :target: https://github.com/aigamedev/scikit-neuralnetwork/stargazers    
 
-.. |Python Version| image:: https://raw.githubusercontent.com/aigamedev/scikit-neuralnetwork/master/docs/badge_python.svg
+.. |Python Version| image:: http://aigamedev.github.io/scikit-neuralnetwork/badge_python.svg
     :target: https://www.python.org/
