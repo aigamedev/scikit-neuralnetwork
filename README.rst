@@ -5,7 +5,7 @@ Deep neural network implementation without the learning cliff!  This library imp
 
 **NOTE**: This project is possible thanks to the `nucl.ai Conference <http://nucl.ai/>`_ on **July 18-20**. Join us in **Vienna**!
 
-|Build Status| |Documentation Status| |Code Coverage| |License Type| |Project Stars|
+|Build Status| |Documentation Status| |Code Coverage| |License Type| |Project Stars| |Python Version|
 
 ----
 
@@ -106,7 +106,7 @@ Links & References
 
 ----
 
-|Build Status| |Documentation Status| |Code Coverage| |License Type| |Project Stars|
+|Build Status| |Documentation Status| |Code Coverage| |License Type| |Project Stars| |Python Version|
 
 .. |Build Status| image:: https://travis-ci.org/aigamedev/scikit-neuralnetwork.svg?branch=master
    :target: https://travis-ci.org/aigamedev/scikit-neuralnetwork
@@ -122,3 +122,6 @@ Links & References
 
 .. |Project Stars| image:: https://img.shields.io/github/stars/aigamedev/scikit-neuralnetwork.svg
     :target: https://github.com/aigamedev/scikit-neuralnetwork/stargazers    
+
+.. |Python Version| image:: https://raw.githubusercontent.com/aigamedev/scikit-neuralnetwork/master/docs/badge_python.svg
+    :target: https://www.python.org/
