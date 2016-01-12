@@ -418,10 +418,11 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
             model, in the same order as the classes.
         """
         proba = super(Classifier, self)._predict(X)
+        print('predict_proba', X.shape, proba.shape)
         index = 0
         for lb in self.label_binarizers:
             sz = len(lb.classes_)
-            proba[:,index:index+sz] /= proba[:,index:index+sz].sum(1, keepdims=True) 
+            proba[:,index:index+sz] /= proba[:,index:index+sz].sum(1, keepdims=True)
             index += sz
         return proba
 

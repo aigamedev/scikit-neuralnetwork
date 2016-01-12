@@ -243,12 +243,14 @@ class MultiLayerPerceptronBackend(BaseBackend):
         y = None
         for Xb, _, _, idx  in self._iterate_data(self.batch_size, X, y, shuffle=False):
             yb = self.f(Xb)
-            if y is None and X.shape[0] > self.batch_size:
-                y = numpy.zeros(X.shape[:1] + yb.shape[1:], dtype=theano.config.floatX)
-            else:
-                y = yb
-                break
+            if y is None:
+                if X.shape[0] <= self.batch_size:
+                    y = yb
+                    break
+                else:
+                    y = numpy.zeros(X.shape[:1] + yb.shape[1:], dtype=theano.config.floatX)
             y[idx] = yb
+        print('_predict_impl', X.shape, y.shape)
         return y
 
     def _iterate_data(self, batch_size, X, y=None, w=None, shuffle=False):
