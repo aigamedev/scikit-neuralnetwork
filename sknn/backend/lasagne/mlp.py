@@ -114,12 +114,12 @@ class MultiLayerPerceptronBackend(BaseBackend):
                           required=['channels', 'kernel_shape'],
                           optional=['kernel_stride', 'border_mode',
                                     'pool_shape', 'pool_type', 'scale_factor'])
- 
+
         if layer.scale_factor != (1, 1):
             network = lasagne.layers.Upscale2DLayer(
                             network,
                             scale_factor=layer.scale_factor)
- 
+
         network = lasagne.layers.Conv2DLayer(
                         network,
                         num_filters=layer.channels,
@@ -240,9 +240,15 @@ class MultiLayerPerceptronBackend(BaseBackend):
         if self.is_convolution():
             X = numpy.transpose(X, (0, 3, 1, 2))
 
-        y = numpy.zeros((X.shape[0], self.unit_counts[-1]), dtype=theano.config.floatX)
+        y = None
         for Xb, _, _, idx  in self._iterate_data(self.batch_size, X, y, shuffle=False):
-            y[idx] = self.f(Xb)
+            yb = self.f(Xb)
+            if y is None and X.shape[0] > self.batch_size:
+                y = numpy.zeros(X.shape[:1] + yb.shape[1:], dtype=theano.config.floatX)
+            else:
+                y = yb
+                break
+            y[idx] = yb
         return y
 
     def _iterate_data(self, batch_size, X, y=None, w=None, shuffle=False):
