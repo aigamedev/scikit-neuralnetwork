@@ -68,14 +68,14 @@ class MultiLayerPerceptronBackend(BaseBackend):
         assert loss_type in cost_functions,\
                     "Loss type `%s` not supported by Lasagne backend." % loss_type
         self.cost_function = getattr(lasagne.objectives, cost_functions[loss_type])
-        cost_symbol = self.cost_function(self.network_output, self.data_output)
+        cost_symbol = self.cost_function(self.trainer_output, self.data_output)
         cost_symbol = lasagne.objectives.aggregate(cost_symbol.T, self.data_mask, mode='mean')
 
         if self.regularizer is not None:
             cost_symbol = cost_symbol + self.regularizer
-        return self._create_trainer(params, cost_symbol)
+        return self._create_trainer_function(params, cost_symbol)
 
-    def _create_trainer(self, params, cost):
+    def _create_trainer_function(self, params, cost):
         if self.learning_rule in ('sgd', 'adagrad', 'adadelta', 'rmsprop', 'adam'):
             lr = getattr(lasagne.updates, self.learning_rule)
             self._learning_rule = lr(cost, params, learning_rate=self.learning_rate)
@@ -196,6 +196,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
         log.debug("")
 
         self.network_output = lasagne.layers.get_output(network, deterministic=True)
+        self.trainer_output = lasagne.layers.get_output(network, deterministic=False)
         self.f = theano.function([self.data_input], self.network_output, allow_input_downcast=True)
 
     def _conv_transpose(self, arr):
