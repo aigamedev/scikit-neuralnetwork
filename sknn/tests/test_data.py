@@ -94,13 +94,14 @@ class TestNetworkParameters(unittest.TestCase):
 class TestMaskedDataRegression(unittest.TestCase):
 
     def check(self, a_in, a_out, a_mask):
-        nn = MLPR(layers=[L("Linear")], learning_rule='adam', learning_rate=0.1, n_iter=50)
+        nn = MLPR(layers=[L("Linear")], learning_rule='adam', learning_rate=0.05, n_iter=500)
         nn.fit(a_in, a_out, a_mask)
         v_out = nn.predict(a_in)
 
         # Make sure the examples weighted 1.0 have low error, 0.0 high error.
-        print(abs(a_out - v_out).T * a_mask)
-        assert_true((abs(a_out - v_out).T * a_mask < 1E-1).all())
+        print('a_mask', abs(a_out - v_out).T * a_mask)
+        assert_true((abs(a_out - v_out).T * a_mask < 2E-1).all())
+        print('1.0 - a_mask', abs(a_out - v_out).T * (1.0 - a_mask))
         assert_true((abs(a_out - v_out).T * (1.0 - a_mask) > 2.5E-1).any())
 
     def test_SingleOutputOne(self):
