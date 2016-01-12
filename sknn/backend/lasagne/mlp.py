@@ -114,12 +114,12 @@ class MultiLayerPerceptronBackend(BaseBackend):
                           required=['channels', 'kernel_shape'],
                           optional=['kernel_stride', 'border_mode',
                                     'pool_shape', 'pool_type', 'scale_factor'])
- 
+
         if layer.scale_factor != (1, 1):
             network = lasagne.layers.Upscale2DLayer(
                             network,
                             scale_factor=layer.scale_factor)
- 
+
         network = lasagne.layers.Conv2DLayer(
                         network,
                         num_filters=layer.channels,
@@ -154,7 +154,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
         self.data_output = T.tensor4('y') if self.is_convolution(output=True) else T.matrix('y')
         self.data_mask = T.vector('m') if w is not None else T.scalar('m')
         self.data_correct = T.matrix('yp')
-        
+
         lasagne.random.get_rng().seed(self.random_state)
 
         shape = list(X.shape)
@@ -222,7 +222,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
                                 test_size=self.valid_size,
                                 random_state=self.random_state)
             self.valid_set = X_v, y_v
-            
+
         if self.valid_set and self.is_convolution():
             X_v, y_v = self.valid_set
             if X_v.shape[-2:] != X.shape[-2:]:
@@ -240,31 +240,39 @@ class MultiLayerPerceptronBackend(BaseBackend):
         if self.is_convolution():
             X = numpy.transpose(X, (0, 3, 1, 2))
 
-        loss, count = 0.0, 0
-        for Xb, _, _ in self._iterate_data(self.batch_size, X, shuffle=False):
-            loss += self.f(Xb)
-            count += 1
-        return loss / count
-    
+        y = None
+        for Xb, _, _, idx  in self._iterate_data(self.batch_size, X, y, shuffle=False):
+            yb = self.f(Xb)
+            if y is None:
+                if X.shape[0] <= self.batch_size:
+                    y = yb
+                    break
+                else:
+                    y = numpy.zeros(X.shape[:1] + yb.shape[1:], dtype=theano.config.floatX)
+            y[idx] = yb
+        return y
+
     def _iterate_data(self, batch_size, X, y=None, w=None, shuffle=False):
         def cast(array, indices):
             if array is None:
                 return None
 
-            A = array[indices]
+            array = array[indices]
             if type(array) != numpy.ndarray:
                 array = array.todense()
-            return array.astype(theano.config.floatX)
+            if array.dtype != theano.config.floatX:
+                array = array.astype(theano.config.floatX)
+            return array
 
         total_size = X.shape[0]
         indices = numpy.arange(total_size)
         if shuffle:
             numpy.random.shuffle(indices)
 
-        for start_idx in range(0, total_size, batch_size):
-            excerpt = indices[start_idx:start_idx + batch_size]
+        for index in range(0, total_size, batch_size):
+            excerpt = indices[index:index + batch_size]
             Xb, yb, wb = cast(X, excerpt), cast(y, excerpt), cast(w, excerpt)
-            yield Xb, yb, wb
+            yield Xb, yb, wb, excerpt
 
     def _print(self, text):
         if self.verbose:
@@ -274,9 +282,9 @@ class MultiLayerPerceptronBackend(BaseBackend):
     def _batch_impl(self, X, y, w, processor, mode, output, shuffle):
         progress, batches = 0, X.shape[0] / self.batch_size
         loss, count = 0.0, 0
-        for Xb, yb, wb in self._iterate_data(self.batch_size, X, y, w, shuffle):
+        for Xb, yb, wb, _ in self._iterate_data(self.batch_size, X, y, w, shuffle):
             self._do_callback('on_batch_start', locals())
-            
+
             if mode == 'train':
                 loss += processor(Xb, yb, wb if wb is not None else 1.0)
             else:
@@ -291,7 +299,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
 
         self._print('\r')
         return loss / count
-        
+
     def _train_impl(self, X, y, w=None):
         return self._batch_impl(X, y, w, self.trainer, mode='train', output='.', shuffle=True)
 

@@ -6,7 +6,7 @@ import time
 import numpy as np
 
 if len(sys.argv) == 1:
-    print("ERROR: Please specify implementation to benchmark, 'sknn' or 'lasagne'.")
+    print("ERROR: Please specify implementation to benchmark, 'sknn' or 'nolearn'.")
     sys.exit(-1)
 
 np.set_printoptions(precision=4)
@@ -28,6 +28,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 classifiers = []
 
 if 'sknn' in sys.argv:
+    from sknn.platform import gpu32
     from sknn.mlp import Classifier, Layer, Convolution
 
     clf = Classifier(
@@ -36,17 +37,17 @@ if 'sknn' in sys.argv:
             Layer('Rectifier', units=200),
             Layer('Softmax')],
         learning_rate=0.01,
-        learning_rule='momentum',
+        learning_rule='nesterov',
         learning_momentum=0.9,
-        batch_size=25,
-        valid_size=0.1,
-        # valid_set=(X_test, y_test),
+        batch_size=300,
+        valid_size=0.0,
         n_stable=10,
         n_iter=10,
         verbose=True)
     classifiers.append(('sknn.mlp', clf))
 
-if 'lasagne' in sys.argv:
+if 'nolearn' in sys.argv:
+    from sknn.platform import gpu32
     from nolearn.lasagne import NeuralNet, BatchIterator
     from lasagne.layers import InputLayer, DenseLayer
     from lasagne.nonlinearities import softmax
@@ -64,20 +65,20 @@ if 'lasagne' in sys.argv:
         eval_size=0.0,
 
         more_params=dict(
-            hidden1_num_units=300,
+            hidden1_num_units=200,
         ),
 
         update=nesterov_momentum,
         update_learning_rate=0.02,
         update_momentum=0.9,
-        batch_iterator_train=BatchIterator(batch_size=25),
+        batch_iterator_train=BatchIterator(batch_size=300),
 
         max_epochs=10,
         verbose=1)
     classifiers.append(('nolearn.lasagne', clf))
 
 
-RUNS = 1
+RUNS = 10
 
 for name, orig in classifiers:
     times = []

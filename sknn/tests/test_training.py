@@ -49,7 +49,7 @@ class TestTrainingProcedure(unittest.TestCase):
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
         self.nn = MLP(layers=[L("Linear")], n_iter=100, n_stable=None, callback={'on_epoch_finish': terminate})
         self.nn._fit(a_in, a_out)
-        
+
         assert_equals(self.counter, 1)
 
 
@@ -57,31 +57,37 @@ class TestBatchSize(unittest.TestCase):
 
     def setUp(self):
         self.batch_count = 0
+        self.batch_items = 0
         self.nn = MLP(
                     layers=[L("Rectifier")],
                     learning_rate=0.001, n_iter=1,
                     callback={'on_batch_start': self.on_batch_start})
 
-    def on_batch_start(self, **args):
+    def on_batch_start(self, Xb, **args):
         self.batch_count += 1
+        self.batch_items += Xb.shape[0]
+        assert Xb.shape[0] <= self.nn.batch_size
 
     def test_BatchSizeLargerThanInput(self):
         self.nn.batch_size = 32
         a_in, a_out = numpy.zeros((8,16)), numpy.ones((8,4))
         self.nn._fit(a_in, a_out)
         assert_equals(1, self.batch_count)
+        assert_equals(8, self.batch_items)
 
     def test_BatchSizeSmallerThanInput(self):
         self.nn.batch_size = 4
         a_in, a_out = numpy.ones((8,16)), numpy.zeros((8,4))
         self.nn._fit(a_in, a_out)
         assert_equals(2, self.batch_count)
+        assert_equals(8, self.batch_items)
 
     def test_BatchSizeNonMultiple(self):
         self.nn.batch_size = 4
         a_in, a_out = numpy.zeros((9,16)), numpy.ones((9,4))
         self.nn._fit(a_in, a_out)
         assert_equals(3, self.batch_count)
+        assert_equals(9, self.batch_items)
 
 
 class TestCustomLogging(unittest.TestCase):
