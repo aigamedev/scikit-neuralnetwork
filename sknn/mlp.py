@@ -122,7 +122,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         if not self.is_convolution() and X.ndim > 2:
             X = X.reshape((X.shape[0], numpy.product(X.shape[1:])))
         return X, y
-        
+
     def _do_callback(self, event, variables):
         if self.callback is None:
             return
@@ -197,7 +197,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
                 log.debug("")
                 log.info("Terminating after specified %i total iterations.", i)
                 break
-        
+
         self._do_callback('on_train_finish', locals())
         self._backend._array_to_mlp(best_params, self._backend.mlp)
 
@@ -374,7 +374,7 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
         self.label_binarizers = [LB() for _ in range(y.shape[1])]
         with self._patch_sklearn():
             ys = [lb.fit_transform(y[:,i]) for i, lb in enumerate(self.label_binarizers)]
-        yp = numpy.concatenate(ys, axis=1)
+        yp = numpy.concatenate(ys, axis=1).astype(theano.config.floatX)
 
         # Also transform the validation set if it was explicitly specified.
         if self.valid_set is not None:
@@ -385,7 +385,7 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
                 ys = [lb.transform(y_v[:,i]) for i, lb in enumerate(self.label_binarizers)]
             y_vp = numpy.concatenate(ys, axis=1)
             self.valid_set = (X_v, y_vp)
- 
+
         # Now train based on a problem transformed into regression.
         return super(Classifier, self)._fit(X, yp, w)
 
