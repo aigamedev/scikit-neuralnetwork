@@ -2,7 +2,7 @@
 from __future__ import (absolute_import, unicode_literals, print_function)
 
 __author__ = 'alexjc, ssamot'
-__version__ = '0.6'
+__version__ = '0.6.1'
 
 
 import os
