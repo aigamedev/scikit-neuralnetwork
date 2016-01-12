@@ -58,6 +58,7 @@ class TestClassifierFunctionality(unittest.TestCase):
     def test_PredictClasses(self):
         a_in, a_out = numpy.zeros((8,16)), numpy.random.randint(0, 5, (8,))
         self.nn.fit(a_in, a_out)
+        self.nn.batch_size = 4
         a_test = self.nn.predict(a_in)
         assert_equal(type(a_out), type(a_test))
         assert_equal(a_out.shape[0], a_test.shape[0])
@@ -65,6 +66,15 @@ class TestClassifierFunctionality(unittest.TestCase):
         c_out = numpy.unique(a_out)
         assert_equal(len(self.nn.classes_), 1)
         assert_true((self.nn.classes_[0] == c_out).all())
+        assert_equal(a_test.shape[1], c_out.shape[0])
+
+    def test_PredictLargerBatchSize(self):
+        a_in, a_out = numpy.zeros((8,16)), numpy.random.randint(0, 5, (8,))
+        self.nn.batch_size = 32
+
+        a_test = self.nn.predict(a_in)
+        assert_equal(type(a_out), type(a_test))
+        assert_equal(a_out.shape[0], a_test.shape[0])
 
     def test_PredictMultiClass(self):
         a_in, a_out = numpy.zeros((32,16)), numpy.random.randint(0, 3, (32,2))

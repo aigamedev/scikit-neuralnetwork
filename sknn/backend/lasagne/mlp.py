@@ -250,7 +250,6 @@ class MultiLayerPerceptronBackend(BaseBackend):
                 else:
                     y = numpy.zeros(X.shape[:1] + yb.shape[1:], dtype=theano.config.floatX)
             y[idx] = yb
-        print('_predict_impl', X.shape, y.shape)
         return y
 
     def _iterate_data(self, batch_size, X, y=None, w=None, shuffle=False):
