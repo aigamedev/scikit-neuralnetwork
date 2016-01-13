@@ -116,6 +116,7 @@ class TestMaskedDataRegression(unittest.TestCase):
     def test_SingleOutputZero(self):
         a_in = numpy.random.uniform(-1.0, +1.0, (8,16))
         a_out = numpy.random.randint(2, size=(8,1)).astype(numpy.float32)
+        a_out[0], a_out[-1] = 0, 1
         a_mask = (1.0 - a_out).flatten()
 
         self.check(a_in, a_out, a_mask)
@@ -123,6 +124,7 @@ class TestMaskedDataRegression(unittest.TestCase):
     def test_SingleOutputNegative(self):
         a_in = numpy.random.uniform(-1.0, +1.0, (8,16))
         a_out = numpy.random.randint(2, size=(8,1)).astype(numpy.float32)
+        a_out[0], a_out[-1] = 0, 1
         a_mask = (0.0 + a_out).flatten()
         a_out = -1.0 + 2.0 * a_out
         
@@ -131,6 +133,7 @@ class TestMaskedDataRegression(unittest.TestCase):
     def test_MultipleOutputRandom(self):
         a_in = numpy.random.uniform(-1.0, +1.0, (8,16))
         a_out = numpy.random.randint(2, size=(8,4)).astype(numpy.float32)
+        a_out[0], a_out[-1] = 0, 1
         a_mask = (a_out.mean(axis=1) > 0.5).astype(numpy.float32)
 
         self.check(a_in, a_out, a_mask)
