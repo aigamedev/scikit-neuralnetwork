@@ -94,19 +94,21 @@ class TestNetworkParameters(unittest.TestCase):
 class TestMaskedDataRegression(unittest.TestCase):
 
     def check(self, a_in, a_out, a_mask):
-        nn = MLPR(layers=[L("Linear")], learning_rule='adam', learning_rate=0.05, n_iter=500)
+        nn = MLPR(layers=[L("Linear")], learning_rule='adam', learning_rate=0.05, n_iter=250, n_stable=25)
         nn.fit(a_in, a_out, a_mask)
         v_out = nn.predict(a_in)
 
         # Make sure the examples weighted 1.0 have low error, 0.0 high error.
-        print('a_mask', abs(a_out - v_out).T * a_mask)
-        assert_true((abs(a_out - v_out).T * a_mask < 2E-1).all())
-        print('1.0 - a_mask', abs(a_out - v_out).T * (1.0 - a_mask))
-        assert_true((abs(a_out - v_out).T * (1.0 - a_mask) > 2.5E-1).any())
+        masked = abs(a_out - v_out).T * a_mask
+        print('masked', masked)
+        assert_true((masked < 4.0E-1).all())
+        inversed = abs(a_out - v_out).T * (1.0 - a_mask)
+        print('inversed', inversed)
+        assert_greater(inversed.mean(), masked.mean())
 
     def test_SingleOutputOne(self):
-        a_in = numpy.random.uniform(-1.0, +1.0, (8,16))
         a_out = numpy.random.randint(2, size=(8,1)).astype(numpy.float32)
+        a_in = numpy.random.uniform(-1.0, +1.0, (8,16))
         a_mask = (0.0 + a_out).flatten()
         
         self.check(a_in, a_out, a_mask)
@@ -122,22 +124,22 @@ class TestMaskedDataRegression(unittest.TestCase):
         a_in = numpy.random.uniform(-1.0, +1.0, (8,16))
         a_out = numpy.random.randint(2, size=(8,1)).astype(numpy.float32)
         a_mask = (0.0 + a_out).flatten()
-        a_out = -1.0 * 2.0 + a_out
+        a_out = -1.0 + 2.0 * a_out
         
         self.check(a_in, a_out, a_mask)
         
     def test_MultipleOutputRandom(self):
         a_in = numpy.random.uniform(-1.0, +1.0, (8,16))
         a_out = numpy.random.randint(2, size=(8,4)).astype(numpy.float32)
-        a_mask = numpy.random.randint(2, size=(8,)).astype(numpy.float32)
+        a_mask = (a_out.mean(axis=1) > 0.5).astype(numpy.float32)
 
         self.check(a_in, a_out, a_mask)
 
 
 class TestMaskedDataClassification(unittest.TestCase):
 
-    def check(self, a_in, a_out, a_mask, act='Softmax', n_iter=100):
-        nn = MLPC(layers=[L(act)], learning_rule='rmsprop', n_iter=n_iter)
+    def check(self, a_in, a_out, a_mask, act='Softmax'):
+        nn = MLPC(layers=[L(act)], learning_rule='adam', learning_rate=0.05, n_iter=250, n_stable=25)
         nn.fit(a_in, a_out, a_mask)
         return nn.predict_proba(a_in)
 
@@ -146,9 +148,9 @@ class TestMaskedDataClassification(unittest.TestCase):
         a_in = numpy.random.uniform(-1.0, +1.0, (16,4))
         a_out = numpy.zeros((16,1), dtype=numpy.int32)
         a_out[0] = 1
-        a_mask = (0.0 + a_out).flatten()
+        a_mask = (0.0 + a_out).flatten().astype(numpy.float32)
         
-        a_test = self.check(a_in, a_out, a_mask).mean(axis=0)
+        a_test = (self.check(a_in, a_out, a_mask) * a_mask.reshape((-1,1))).mean(axis=0)
         assert_greater(a_test[1], a_test[0] * 1.25)
 
     def test_TwoLabelsZero(self):
@@ -158,18 +160,19 @@ class TestMaskedDataClassification(unittest.TestCase):
         a_out[-1] = 0
         a_mask = (1.0 - a_out).flatten()
         
-        a_test = self.check(a_in, a_out, a_mask).mean(axis=0)
+        a_test = (self.check(a_in, a_out, a_mask) * a_mask.reshape((-1,1))).mean(axis=0)
         assert_greater(a_test[0], a_test[1] * 1.25)
 
     def test_FourLabels(self):
-        # Only multi-label sample has weight 1.0, the others have weight 0.0. Check probabilities!
+        # Only one sample has weight 1.0, the others have weight 0.0. Check probabilities!
         chosen = random.randint(0,15)
         a_in = numpy.random.uniform(-1.0, +1.0, (16,4))
         a_out = numpy.random.randint(2, size=(16,4))
-        a_mask = numpy.zeros((16,), dtype=numpy.int32)
+        a_mask = numpy.zeros((16,), dtype=numpy.float32)
         a_mask[chosen] = 1.0
 
-        a_test = self.check(a_in, a_out, a_mask, act="Sigmoid", n_iter=250).mean(axis=0)
+        a_test = self.check(a_in, a_out, a_mask, act="Sigmoid")
+        a_test = a_test[chosen]
         for i in range(a_out.shape[1]):
             compare = assert_greater if a_out[chosen][i]==0 else assert_less
             compare(a_test[i*2], a_test[i*2+1])
