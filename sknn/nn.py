@@ -53,10 +53,6 @@ class Layer(object):
         The number of units (also known as neurons) in this layer.  This applies to all
         layer types except for convolution.
 
-    pieces: int, optional
-        The number of piecewise linear segments in the Maxout activation.  This is
-        optional and only applies when `Maxout` is selected as the layer type.
-
     weight_decay: float, optional
         The coefficient for L1 or L2 regularization of the weights.  For example, a value of
         0.0001 is multiplied by the L1 or L2 weight decay equation.
@@ -81,7 +77,6 @@ class Layer(object):
             warning=None,
             name=None,
             units=None,
-            pieces=None,
             weight_decay=None,
             dropout=None,
             frozen=False):
@@ -95,7 +90,6 @@ class Layer(object):
         self.name = name
         self.type = type
         self.units = units
-        self.pieces = pieces
         self.weight_decay = weight_decay
         self.dropout = dropout
         self.frozen = frozen
@@ -140,10 +134,6 @@ class Convolution(Layer):
 
         The name defaults to ``hiddenN`` where N is the integer index of that layer, and the
         final layer is always ``output`` without an index.
-
-    pieces: int, optional
-        The number of piecewise linear segments in the Maxout activation.  This is
-        optional and only applies when `Maxout` is selected as the layer type.
 
     channels: int
         Number of output channels for the convolution layers.  Each channel has its own
@@ -211,7 +201,6 @@ class Convolution(Layer):
             warning=None,
             name=None,
             channels=None,
-            pieces=None,
             kernel_shape=None,
             kernel_stride=None,
             border_mode='valid',
@@ -233,7 +222,6 @@ class Convolution(Layer):
         super(Convolution, self).__init__(
                 type,
                 name=name,
-                pieces=pieces,
                 weight_decay=weight_decay,
                 dropout=dropout,
                 frozen=frozen)
