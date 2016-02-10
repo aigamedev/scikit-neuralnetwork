@@ -60,7 +60,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
                 self.regularize = 'L2'
             penalty = getattr(lasagne.regularization, self.regularize.lower())
             regularize = lasagne.regularization.apply_penalty
-            self.regularizer = sum(layer_decay[s.name] * regularize(l.get_params(tags={'regularizable': True}), penalty)
+            self.regularizer = sum(layer_decay[s.name] * regularize(l.get_params(regularizable=True), penalty)
                                    for s, l in zip(self.layers, self.mlp))
 
         cost_functions = {'mse': 'squared_error', 'mcc': 'categorical_crossentropy'}
