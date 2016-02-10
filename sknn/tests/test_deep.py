@@ -87,6 +87,9 @@ class TestDeepDeterminism(unittest.TestCase):
         self.run_EqualityTest(serialize, assert_true)
 
 
+"""
+TODO: [alexjc] Reintroduce with LRELU support.
+
 class TestActivations(unittest.TestCase):
 
     def setUp(self):
@@ -99,9 +102,6 @@ class TestActivations(unittest.TestCase):
         assert_equal('', self.buf.getvalue())
         sknn.mlp.log.removeHandler(self.hnd)
 
-    """
-    TODO: [alexjc] Reintroduce with LRELU support.
-    
     def test_UnusedParameterWarning(self):
         nn = MLPR(layers=[L("Linear", alpha=1E-3)], n_iter=1)
         a_in = numpy.zeros((8,16))
@@ -109,4 +109,4 @@ class TestActivations(unittest.TestCase):
 
         assert_in('Parameter `alpha` is unused', self.buf.getvalue())
         self.buf = io.StringIO() # clear
-    """
+"""
