@@ -99,10 +99,14 @@ class TestActivations(unittest.TestCase):
         assert_equal('', self.buf.getvalue())
         sknn.mlp.log.removeHandler(self.hnd)
 
-    def __test_UnusedParameterWarning(self):
+    """
+    TODO: [alexjc] Reintroduce with LRELU support.
+    
+    def test_UnusedParameterWarning(self):
         nn = MLPR(layers=[L("Linear", alpha=1E-3)], n_iter=1)
         a_in = numpy.zeros((8,16))
         nn._initialize(a_in, a_in)
 
         assert_in('Parameter `alpha` is unused', self.buf.getvalue())
         self.buf = io.StringIO() # clear
+    """
