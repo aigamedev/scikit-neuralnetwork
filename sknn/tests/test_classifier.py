@@ -55,6 +55,10 @@ class TestClassifierFunctionality(unittest.TestCase):
         assert_equal(2, c_out.shape[0])
         assert_equal((8, 2), a_proba.shape)
 
+        assert_true((a_proba >= 0.0).all())
+        assert_true((a_proba <= 1.0).all())
+        assert_true((abs(a_proba.sum(axis=1) - 1.0) < 1E-9).all())
+
     def test_PredictClasses(self):
         a_in, a_out = numpy.zeros((8,16)), numpy.random.randint(0, 5, (8,))
         self.nn.fit(a_in, a_out)
@@ -90,9 +94,13 @@ class TestClassifierFunctionality(unittest.TestCase):
     def test_EstimateProbalities(self):
         a_in, a_out = numpy.zeros((8,16)), numpy.random.randint(0, 5, (8,))
         self.nn.fit(a_in, a_out)
-        a_test = self.nn.predict_proba(a_in)
-        assert_equal(type(a_out), type(a_test))
-        assert_equal(a_in.shape[0], a_test.shape[0])
+        a_proba = self.nn.predict_proba(a_in)
+        assert_equal(type(a_out), type(a_proba))
+        assert_equal(a_in.shape[0], a_proba.shape[0])
+
+        assert_true((a_proba >= 0.0).all())
+        assert_true((a_proba <= 1.0).all())
+        assert_true((abs(a_proba.sum(axis=1) - 1.0) < 1E-9).all())
 
     def test_CalculateScore(self):
         a_in, a_out = numpy.zeros((8,16)), numpy.random.randint(0, 5, (8,))
