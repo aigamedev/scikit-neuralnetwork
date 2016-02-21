@@ -91,7 +91,7 @@ To setup the library to use your GPU or CPU explicitly in 32-bit or 64-bit mode,
     # Use the CPU in 64-bit mode.
     from sknn.platform import cpu64
 
-WARNING: This will only work if your program has not yet imported the ``theano`` module, due to the way that library is designed.  If ``THEANO_FLAGS`` are set on the command-line, they are not overwridden.
+WARNING: This will only work if your program has not yet imported the ``theano`` module, due to the way that library is designed.  If ``THEANO_FLAGS`` are set on the command-line, they are not overridden.
 
 
 Multiple Threads
