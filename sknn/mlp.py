@@ -403,7 +403,7 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
 
         return self.fit(X, y)
 
-    def predict_proba(self, X):
+    def predict_proba(self, X, collapse=True):
         """Calculate probability estimates based on these input features.
 
         Parameters
@@ -413,17 +413,19 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
 
         Returns
         -------
-        y_prob : array-like of shape [n_samples, n_classes]
+        y_prob : list of arrays of shape [n_samples, n_features, n_classes]
             The predicted probability of the sample for each class in the
             model, in the same order as the classes.
         """
         proba = super(Classifier, self)._predict(X)
-        index = 0
+        index, yp = 0, []
         for lb in self.label_binarizers:
             sz = len(lb.classes_)
-            proba[:,index:index+sz] /= proba[:,index:index+sz].sum(1, keepdims=True)
+            p = proba[:,index:index+sz]
+            yp.append(p / p.sum(1, keepdims=True))
             index += sz
-        return proba
+        print([p.shape for p in yp])
+        return yp[0] if (len(yp) == 1 and collapse) else yp
 
     def predict(self, X):
         """Predict class by converting the problem to a regression problem.
@@ -441,16 +443,15 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
         assert self.label_binarizers != [],\
             "Can't predict without fitting: output classes are unknown."
 
-        yp = self.predict_proba(X)
+        yp = self.predict_proba(X, collapse=False)
         ys = []
         index = 0
-        for lb in self.label_binarizers:
-            sz = len(lb.classes_)
-            y = lb.inverse_transform(yp[:,index:index+sz], threshold=0.5)
-            ys.append(y.reshape((y.shape[0], 1)))
-            index += sz
-        y = numpy.concatenate(ys, axis=1)
-        return y
+        for lb, p in zip(self.label_binarizers, yp):
+             sz = len(lb.classes_)
+             y = lb.inverse_transform(p, threshold=0.5)
+             ys.append(y.reshape((-1, 1)))
+             index += sz
+        return numpy.concatenate(ys, axis=1)
 
     @property
     def is_classifier(self):

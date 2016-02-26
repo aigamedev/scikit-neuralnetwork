@@ -169,13 +169,13 @@ class TestMaskedDataClassification(unittest.TestCase):
     def test_FourLabels(self):
         # Only one sample has weight 1.0, the others have weight 0.0. Check probabilities!
         chosen = random.randint(0,15)
-        a_in = numpy.random.uniform(-1.0, +1.0, (16,4))
+        a_in = numpy.random.uniform(-1.0, +1.0, (16,8))
         a_out = numpy.random.randint(2, size=(16,4))
         a_mask = numpy.zeros((16,), dtype=numpy.float32)
         a_mask[chosen] = 1.0
 
         a_test = self.check(a_in, a_out, a_mask, act="Sigmoid")
-        a_test = a_test[chosen]
+        print(a_out[chosen])
+
         for i in range(a_out.shape[1]):
-            compare = assert_greater if a_out[chosen][i]==0 else assert_less
-            compare(a_test[i*2], a_test[i*2+1])
+            assert_equals(a_test[i][chosen,0] < a_test[i][chosen,1], a_out[chosen,i])
