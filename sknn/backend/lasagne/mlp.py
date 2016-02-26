@@ -259,7 +259,8 @@ class MultiLayerPerceptronBackend(BaseBackend):
                 return None
 
             array = array[indices]
-            if type(array) != numpy.ndarray:
+            if not isinstance(array, numpy.ndarray):
+                assert hasattr(array, 'todense'), "Unknown data format and cannot convert to numpy.ndarray."
                 array = array.todense()
             if array.dtype != theano.config.floatX:
                 array = array.astype(theano.config.floatX)

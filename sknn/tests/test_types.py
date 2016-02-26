@@ -1,7 +1,10 @@
 import unittest
 from nose.tools import (assert_is_not_none, assert_raises, assert_equal, assert_true)
 
+import os
 import random
+import shutil
+import tempfile
 
 import theano
 import numpy
@@ -72,6 +75,33 @@ class TestScipySparseMatrix(unittest.TestCase):
             X = sparse_matrix((8, 4), dtype=numpy.float32)
             yp = self.nn._predict(X)
             assert_equal(yp.dtype, numpy.float32)
+
+
+class TestMemoryMap(unittest.TestCase):
+
+    def setUp(self):
+        self.nn = MLP(layers=[L("Linear", units=3)], n_iter=1)
+        self.directory = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.directory)
+
+    def make(self, name, shape, dtype):
+        filename = os.path.join(self.directory, name)
+        return numpy.memmap(filename, dtype=dtype, mode='w+', shape=shape)
+
+    def test_FitAllTypes(self):
+        for t in ['float32', 'float64']:
+            theano.config.floatX = t
+            X = self.make('X', (12, 3), dtype=t)
+            y = self.make('y', (12, 3), dtype=t)
+            self.nn._fit(X, y)
+
+    def test_PredictAllTypes(self):
+        for t in ['float32', 'float64']:
+            theano.config.floatX = t
+            X = self.make('X', (12, 3), dtype=t)
+            yp = self.nn._predict(X)
 
 
 class TestConvolution(unittest.TestCase):
