@@ -258,13 +258,17 @@ class MultiLayerPerceptronBackend(BaseBackend):
             if array is None:
                 return None
 
-            array = array[indices]
-            if not isinstance(array, numpy.ndarray):
-                assert hasattr(array, 'todense'), "Unknown data format and cannot convert to numpy.ndarray."
-                array = array.todense()
-            if array.dtype != theano.config.floatX:
-                array = array.astype(theano.config.floatX)
-            return array
+            # Support for pandas.DataFrame, requires custom indexing.
+            if type(array).__name__ == 'DataFrame':
+                array = array.loc[indices]
+            else:
+                array = array[indices]
+
+                # Support for scipy.sparse; convert after slicing.
+                if hasattr(array, 'todense'):
+                    array = array.todense()
+
+            return array.astype(theano.config.floatX)
 
         total_size = X.shape[0]
         indices = numpy.arange(total_size)
