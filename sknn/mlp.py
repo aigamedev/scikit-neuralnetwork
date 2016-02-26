@@ -205,7 +205,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         assert X.shape[0] == y.shape[0],\
             "Expecting same number of input and output samples."
         data_shape = X.shape
-        data_size = X.size+y.size if (hasattr(X, 'size') and hasattr(Y, 'size')) else 'N/A'
+        data_size = X.size+y.size if (hasattr(X, 'size') and hasattr(y, 'size')) else 'N/A'
         X, y = self._reshape(X, y)
 
         if not self.is_initialized:
