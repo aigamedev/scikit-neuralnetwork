@@ -56,6 +56,7 @@ class TestGridSearchRegressor(unittest.TestCase):
 
 
 class TestGridSearchClassifier(TestGridSearchRegressor):
+    # NOTE: "multiclass-multioutput is not supported" by sklearn.
 
     __estimator__ = MLPC
     __output__ = "Softmax"

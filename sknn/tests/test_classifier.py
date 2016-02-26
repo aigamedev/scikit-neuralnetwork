@@ -1,6 +1,6 @@
 import unittest
 from nose.tools import (assert_is_not_none, assert_true, assert_raises,
-                        assert_in, assert_equal)
+                        assert_in, assert_equal, assert_less_equal)
 
 import numpy
 from sklearn.base import clone
@@ -101,6 +101,20 @@ class TestClassifierFunctionality(unittest.TestCase):
         assert_true((a_proba >= 0.0).all())
         assert_true((a_proba <= 1.0).all())
         assert_true((abs(a_proba.sum(axis=1) - 1.0) < 1E-9).all())
+
+    def test_MultipleProbalitiesAsList(self):
+        a_in, a_out = numpy.zeros((8,16)), numpy.random.randint(0, 5, (8,4))
+        self.nn.fit(a_in, a_out)
+        a_proba = self.nn.predict_proba(a_in)
+        assert_equal(list, type(a_proba))
+        assert_equal(4, len(a_proba))
+
+        for p in a_proba:
+            assert_equal(a_in.shape[0], p.shape[0])
+            assert_less_equal(p.shape[1], 5)
+            assert_true((p >= 0.0).all())
+            assert_true((p <= 1.0).all())
+            assert_true((abs(p.sum(axis=1) - 1.0) < 1E-9).all())
 
     def test_CalculateScore(self):
         a_in, a_out = numpy.zeros((8,16)), numpy.random.randint(0, 5, (8,))
