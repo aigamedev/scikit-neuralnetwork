@@ -101,7 +101,7 @@ class TestMaskedDataRegression(unittest.TestCase):
         # Make sure the examples weighted 1.0 have low error, 0.0 high error.
         masked = abs(a_out - v_out).T * a_mask
         print('masked', masked)
-        assert_true((masked < 4.0E-1).all())
+        assert_true((masked < 5.0E-1).all())
         inversed = abs(a_out - v_out).T * (1.0 - a_mask)
         print('inversed', inversed)
         assert_greater(inversed.mean(), masked.mean())
