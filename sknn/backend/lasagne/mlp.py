@@ -131,6 +131,10 @@ class MultiLayerPerceptronBackend(BaseBackend):
                         pad=layer.border_mode,
                         nonlinearity=self._get_activation(layer))
 
+        normalize = layer.normalize or self.normalize
+        if normalize == 'batch':
+            network = lasagne.layers.batch_norm(network)
+
         if layer.pool_shape != (1, 1):
             network = lasagne.layers.Pool2DLayer(
                             network,
@@ -145,17 +149,16 @@ class MultiLayerPerceptronBackend(BaseBackend):
             network = lasagne.layers.dropout(network, dropout)
 
         if isinstance(layer, Convolution):
-            network = self._create_convolution_layer(name, layer, network)
-        else:
-            self._check_layer(layer, required=['units'])
-            network = lasagne.layers.DenseLayer(network,
-                                                num_units=layer.units,
-                                                nonlinearity=self._get_activation(layer))
+            return self._create_convolution_layer(name, layer, network)
+
+        self._check_layer(layer, required=['units'])
+        network = lasagne.layers.DenseLayer(network,
+                                            num_units=layer.units,
+                                            nonlinearity=self._get_activation(layer))
 
         normalize = layer.normalize or self.normalize
         if normalize == 'batch':
             network = lasagne.layers.batch_norm(network)
-
         return network
 
     def _create_mlp(self, X, w=None):
@@ -330,7 +333,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
     def _mlp_get_params(self, layer):
         while not hasattr(layer, 'W') and not hasattr(layer, 'b'):
             layer = layer.input_layer
-        return (layer.W.get_value(), layer.b.get_value())
+        return (layer.W.get_value(), layer.b.get_value() if layer.b else None)
 
     def _mlp_to_array(self):
         return [self._mlp_get_params(l) for l in self.mlp]
@@ -348,6 +351,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
                                         (ws, weights.shape)
             layer.W.set_value(weights.astype(theano.config.floatX))
 
+            # if layer.b: continue
             bs = tuple(layer.b.shape.eval())
             assert bs == biases.shape, "Layer biases shape mismatch: %r != %r" %\
                                        (bs, biases.shape)
