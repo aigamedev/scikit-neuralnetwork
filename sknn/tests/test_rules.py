@@ -7,7 +7,7 @@ import logging
 
 import sknn
 from sknn.mlp import Regressor as MLPR
-from sknn.mlp import Layer as L
+from sknn.mlp import Layer as L, Convolution as C
 
 
 class LoggingTestCase(unittest.TestCase):
@@ -80,6 +80,29 @@ class TestRegularization(LoggingTestCase):
         super(TestRegularization, self).tearDown()
         sknn.mlp.log.removeHandler(self.hnd2)
 
+    def test_BatchNormExplicit(self):
+        nn = MLPR(layers=[C("Tanh", channels=2, kernel_shape=(3,3)),
+                          L("Sigmoid", units=8), L("Linear",)],
+                  normalize='batch',
+                  n_iter=1)
+        assert_equal(nn.normalize, 'batch')
+        self._run(nn)
+        assert_in('Using `batch` normalization.', self.output.getvalue())
+        
+        assert_in('Reshaping input array', self.buf.getvalue())
+        self.buf = io.StringIO()
+
+    def test_BatchNormPerLayer(self):
+        nn = MLPR(layers=[C("Sigmoid", normalize='batch', channels=2, kernel_shape=(3,3)),
+                          L("Rectifier", normalize='batch', units=8), L("Linear",)],
+                  n_iter=1)
+        self._run(nn)
+        assert_in('Using `batch` normalization, auto-enabled from layers.',
+                  self.output.getvalue())
+
+        assert_in('Reshaping input array', self.buf.getvalue())
+        self.buf = io.StringIO()
+
     def test_DropoutExplicit(self):
         nn = MLPR(layers=[L("Tanh", units=8), L("Linear",)],
                   regularize='dropout',
@@ -133,9 +156,11 @@ class TestRegularization(LoggingTestCase):
         nn = MLPR(layers=[L("Rectifier", units=8, weight_decay=0.01), L("Linear", weight_decay=0.001)],
                   n_iter=1)
         self._run(nn)
-        assert_in('Using `L2` for regularization.', self.output.getvalue())
+        assert_in('Using `L2` for regularization, auto-enabled from layers.',
+                  self.output.getvalue())
 
     def test_AutomaticRegularize(self):
         nn = MLPR(layers=[L("Tanh", units=8, weight_decay=0.0001), L("Linear")], n_iter=1)
         self._run(nn)
-        assert_in('Using `L2` for regularization.', self.output.getvalue())
+        assert_in('Using `L2` for regularization, auto-enabled from layers.',
+                  self.output.getvalue())

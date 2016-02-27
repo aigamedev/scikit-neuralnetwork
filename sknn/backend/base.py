@@ -3,6 +3,10 @@ from __future__ import (absolute_import, unicode_literals, print_function)
 
 
 class BaseBackend(object):
+    """Base class that all backends should inherit from.  This provides
+    helper functions to make it easy to access all configuration from
+    the user.
+    """
 
     def __init__(self, spec):
         self.spec = spec

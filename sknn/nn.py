@@ -62,6 +62,10 @@ class Layer(object):
         means that 25% of the inputs will be excluded for each training sample, with the
         remaining inputs being renormalized accordingly.
 
+    normalize: str, optional
+        Enable normalization of this layer. Can be either `batch` for batch normalization
+        or (soon) `weights` for weight normalization.  Default is no normalization.
+
     frozen: bool, optional
         Specify whether to freeze a layer's parameters so they are not adjusted during the
         training. This is useful when relying on pre-trained neural networks.
@@ -79,6 +83,7 @@ class Layer(object):
             units=None,
             weight_decay=None,
             dropout=None,
+            normalize=None,
             frozen=False):
 
         assert warning is None,\
@@ -92,6 +97,7 @@ class Layer(object):
         self.units = units
         self.weight_decay = weight_decay
         self.dropout = dropout
+        self.normalize = normalize
         self.frozen = frozen
 
     def set_params(self, **params):
@@ -187,6 +193,10 @@ class Convolution(Layer):
         means that 25% of the inputs will be excluded for each training sample, with the
         remaining inputs being renormalized accordingly.
 
+    normalize: str, optional
+        Enable normalization of this layer. Can be either `batch` for batch normalization
+        or (soon) `weights` for weight normalization.  Default is no normalization.
+
     frozen: bool, optional
         Specify whether to freeze a layer's parameters so they are not adjusted during the
         training. This is useful when relying on pre-trained neural networks.
@@ -209,6 +219,7 @@ class Convolution(Layer):
             scale_factor=None,
             weight_decay=None,
             dropout=None,
+            normalize=None,
             frozen=False):
 
         assert warning is None,\
@@ -224,6 +235,7 @@ class Convolution(Layer):
                 name=name,
                 weight_decay=weight_decay,
                 dropout=dropout,
+                normalize=normalize,
                 frozen=frozen)
 
         self.channels = channels
@@ -313,6 +325,10 @@ class NeuralNetwork(object):
         validation, and 1.0 would mean there's no training data!  Common values are
         0.1 or 0.25.
 
+    normalize: string, optional
+        Enable normalization for all layers. Can be either `batch` for batch normalization
+        or (soon) `weights` for weight normalization.  Default is no normalization.
+
     regularize: string, optional
         Which regularization technique to use on the weights, for example ``L2`` (most
         common) or ``L1`` (quite rare), as well as ``dropout``.  By default, there's no
@@ -389,6 +405,7 @@ class NeuralNetwork(object):
             learning_rule='sgd',
             learning_rate=0.01,
             learning_momentum=0.9,
+            normalize=None,
             regularize=None,
             weight_decay=None,
             dropout_rate=None,
@@ -439,6 +456,7 @@ class NeuralNetwork(object):
         self.learning_rule = learning_rule
         self.learning_rate = learning_rate
         self.learning_momentum = learning_momentum
+        self.normalize = normalize
         self.regularize = regularize or ('dropout' if dropout_rate else None)\
                                      or ('L2' if weight_decay else None)
         self.weight_decay = weight_decay
@@ -454,6 +472,7 @@ class NeuralNetwork(object):
         self.verbose = verbose
         self.callback = callback
         
+        self.auto_enabled = {}
         self._backend = None
         self._create_logger()
         self._setup()

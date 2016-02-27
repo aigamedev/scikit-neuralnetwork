@@ -48,7 +48,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
                 ValueError("Layer type `%s` requires parameter `%s`."\
                            % (layer.type, r))
 
-        optional.extend(['weight_decay', 'dropout', 'frozen'])
+        optional.extend(['weight_decay', 'dropout', 'normalize', 'frozen'])
         for a in layer.__dict__:
             if a in required+optional:
                 continue
@@ -205,21 +205,27 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         assert X.shape[0] == y.shape[0],\
             "Expecting same number of input and output samples."
         data_shape = X.shape
-        data_size = X.size+y.size if (hasattr(X, 'size') and hasattr(y, 'size')) else 'N/A'
+        known_size = hasattr(X, 'size') and hasattr(y, 'size')
+        data_size = '{:,}'.format(X.size+y.size) if known_size else 'N/A'
         X, y = self._reshape(X, y)
 
         if not self.is_initialized:
             X, y = self._initialize(X, y, w)
 
-        log.info("Training on dataset of {:,} samples with {:,} total size.".format(data_shape[0], data_size))
+        log.info("Training on dataset of {:,} samples with {} total size.".format(data_shape[0], data_size))
         if data_shape[1:] != X.shape[1:]:
             log.warning("  - Reshaping input array from {} to {}.".format(data_shape, X.shape))
         if self.valid_set is not None:
             X_v, _ = self.valid_set
             log.debug("  - Train: {: <9,}  Valid: {: <4,}".format(X.shape[0], X_v.shape[0]))
-        if self.regularize is not None:
-            comment = ", auto-enabled from layers" if self.regularize is None else ""
-            log.debug("  - Using `%s` for regularization%s." % (self.regularize, comment))
+        regularize = self.regularize or self.auto_enabled.get('regularize', None)
+        if regularize is not None:
+            comment = ", auto-enabled from layers" if 'regularize' in self.auto_enabled else "" 
+            log.debug("  - Using `%s` for regularization%s." % (regularize, comment))
+        normalize = self.normalize or self.auto_enabled.get('normalize', None)
+        if normalize is not None:
+            comment = ", auto-enabled from layers" if 'normalize' in self.auto_enabled else ""
+            log.debug("  - Using `%s` normalization%s." % (normalize, comment))
         if self.n_iter is not None:
             log.debug("  - Terminating loop after {} total iterations.".format(self.n_iter))
         if self.n_stable is not None and self.n_stable < (self.n_iter or sys.maxsize):
