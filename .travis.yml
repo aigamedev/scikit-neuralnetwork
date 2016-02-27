@@ -15,7 +15,7 @@ install:
   - conda create --yes -q -n pyenv python=$TRAVIS_PYTHON_VERSION pip numpy scipy pandas cython matplotlib scikit-learn nose pyyaml
   - source activate pyenv
   - pip install -q git+https://github.com/Theano/Theano.git@a85a44fc#egg=Theano==0.8-dev
-  - pip install -q git+https://github.com/Lasagne/Lasagne.git@ffed652#egg=Lasagne==0.4-dev
+  - pip install -q git+https://github.com/Lasagne/Lasagne.git@664b8a4#egg=Lasagne==0.2-dev
   - pip install -q argparse coveralls 
 
 script:
