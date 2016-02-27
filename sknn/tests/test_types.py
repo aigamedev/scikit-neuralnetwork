@@ -6,8 +6,9 @@ import random
 import shutil
 import tempfile
 
-import theano
 import numpy
+import pandas
+import theano
 import scipy.sparse
 
 from sknn.mlp import MultiLayerPerceptron as MLP
@@ -79,6 +80,8 @@ class TestScipySparseMatrix(unittest.TestCase):
 
 class TestMemoryMap(unittest.TestCase):
 
+    __types__ = ['float32', 'float64']
+
     def setUp(self):
         self.nn = MLP(layers=[L("Linear", units=3)], n_iter=1)
         self.directory = tempfile.mkdtemp()
@@ -91,17 +94,25 @@ class TestMemoryMap(unittest.TestCase):
         return numpy.memmap(filename, dtype=dtype, mode='w+', shape=shape)
 
     def test_FitAllTypes(self):
-        for t in ['float32', 'float64']:
+        for t in self.__types__:
             theano.config.floatX = t
             X = self.make('X', (12, 3), dtype=t)
             y = self.make('y', (12, 3), dtype=t)
             self.nn._fit(X, y)
 
     def test_PredictAllTypes(self):
-        for t in ['float32', 'float64']:
+        for t in self.__types__:
             theano.config.floatX = t
             X = self.make('X', (12, 3), dtype=t)
             yp = self.nn._predict(X)
+
+
+class TestPandasDataFrame(TestMemoryMap):
+    
+    __types__ = ['float32']
+
+    def make(self, _, shape, dtype):
+        return pandas.DataFrame(numpy.random.uniform(-1.0, 1.0, size=shape), dtype=dtype)
 
 
 class TestConvolution(unittest.TestCase):
