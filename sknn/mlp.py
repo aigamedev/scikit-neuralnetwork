@@ -218,12 +218,14 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         if self.valid_set is not None:
             X_v, _ = self.valid_set
             log.debug("  - Train: {: <9,}  Valid: {: <4,}".format(X.shape[0], X_v.shape[0]))
-        if self.regularize is not None:
-            comment = ", auto-enabled from layers" if hasattr(self.regularize, 'auto') else ""
-            log.debug("  - Using `%s` for regularization%s." % (self.regularize, comment))
-        if self.normalize is not None:
-            comment = ", auto-enabled from layers" if hasattr(self.normalize, 'auto') else ""
-            log.debug("  - Using `%s` normalization%s." % (self.normalize, comment))
+        regularize = self.regularize or self.auto_enabled.get('regularize', None)
+        if regularize is not None:
+            comment = ", auto-enabled from layers" if 'regularize' in self.auto_enabled else "" 
+            log.debug("  - Using `%s` for regularization%s." % (regularize, comment))
+        normalize = self.normalize or self.auto_enabled.get('normalize', None)
+        if normalize is not None:
+            comment = ", auto-enabled from layers" if 'normalize' in self.auto_enabled else ""
+            log.debug("  - Using `%s` normalization%s." % (normalize, comment))
         if self.n_iter is not None:
             log.debug("  - Terminating loop after {} total iterations.".format(self.n_iter))
         if self.n_stable is not None and self.n_stable < (self.n_iter or sys.maxsize):

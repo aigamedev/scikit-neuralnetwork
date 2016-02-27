@@ -19,13 +19,3 @@ class BaseBackend(object):
             self.spec.__setattr__(key, value)
         else:
             super(BaseBackend, self).__setattr__(key, value)
-
-
-class StringOption(str):
-    """Custom string to store additional information with options.
-    """
-
-    def __new__(cls, value):
-        obj = str.__new__(cls, value)
-        obj.auto = True
-        return obj

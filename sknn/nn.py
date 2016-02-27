@@ -472,6 +472,7 @@ class NeuralNetwork(object):
         self.verbose = verbose
         self.callback = callback
         
+        self.auto_enabled = {}
         self._backend = None
         self._create_logger()
         self._setup()

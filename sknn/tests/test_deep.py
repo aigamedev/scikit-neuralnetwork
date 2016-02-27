@@ -11,7 +11,7 @@ from sklearn.base import clone
 
 import sknn
 from sknn.mlp import Regressor as MLPR
-from sknn.mlp import Layer as L
+from sknn.mlp import Layer as L, Convolution as C
 
 from . import test_linear
 
@@ -22,9 +22,9 @@ class TestDeepNetwork(test_linear.TestLinearNetwork):
         self.nn = MLPR(
             layers=[
                 L("Rectifier", units=16),
-                L("Sigmoid", units=12),
-                L("ExpLin", units=8),
-                L("Tanh", units=4),
+                L("Sigmoid", dropout=0.2, units=12),
+                L("ExpLin", weight_decay=0.001, units=8),
+                L("Tanh", normalize='batch', units=4),
                 L("Linear")],
             n_iter=1)
 
@@ -43,13 +43,9 @@ class TestDeepDeterminism(unittest.TestCase):
         self.a_in = numpy.random.uniform(0.0, 1.0, (8,16))
         self.a_out = numpy.zeros((8,1))
 
-    def run_EqualityTest(self, copier, asserter):
-        # Only PyLearn2 supports Maxout.
-        extra =  ["Maxout"] if sknn.backend.name == 'pylearn2' else []
-        for activation in ["Rectifier", "Sigmoid", "Tanh", "ExpLin"] + extra:
-            nn1 = MLPR(layers=[L(activation, units=16), L("Linear", units=1)], random_state=1234)
-            nn1._initialize(self.a_in, self.a_out)
-
+    def run_EqualityTest(self, maker, copier, asserter):
+        for activation in ["Rectifier", "Sigmoid", "Tanh", "ExpLin"]:
+            nn1 = maker(activation)
             nn2 = copier(nn1, activation)
             print('activation', activation)
             a_out1 = nn1.predict(self.a_in)
@@ -57,34 +53,63 @@ class TestDeepDeterminism(unittest.TestCase):
             print(a_out1, a_out2)
             asserter(numpy.all(nn1.predict(self.a_in) - nn2.predict(self.a_in) < 1E-6))
 
-    def test_DifferentSeedPredictNotEquals(self):
-        def ctor(_, activation):
-            nn = MLPR(layers=[L(activation, units=16), L("Linear", units=1)], random_state=2345)
+    def make(self, activation, seed=1234, train=False, **keywords):
+        nn = MLPR(layers=[L(activation, units=16, **keywords),
+                          L("Linear", units=1)], random_state=seed, n_iter=1)
+        if train:
+            nn.fit(self.a_in, self.a_out)
+        else:
             nn._initialize(self.a_in, self.a_out)
-            return nn
-        self.run_EqualityTest(ctor, assert_false)
+        return nn 
+
+    def test_DifferentSeedPredictNotEquals(self):
+        for t in [True, False]:
+            self.run_EqualityTest(lambda a: self.make(a, train=t),
+                                lambda _, a: self.make(a, seed=2345, train=t), assert_false)
 
     def test_SameSeedPredictEquals(self):
-        def ctor(_, activation):
-            nn = MLPR(layers=[L(activation, units=16), L("Linear", units=1)], random_state=1234)
-            nn._initialize(self.a_in, self.a_out)
-            return nn
-        self.run_EqualityTest(ctor, assert_true)
+        for t in [True, False]:
+            self.run_EqualityTest(lambda a: self.make(a, train=t),
+                                  lambda _, a: self.make(a, train=t), assert_true)
+
+    def cloner(self, nn, _):
+        cc = clone(nn)
+        cc._initialize(self.a_in, self.a_out)
+        return cc
 
     def test_ClonePredictEquals(self):
-        def cloner(nn, _):
-            cc = clone(nn)
-            cc._initialize(self.a_in, self.a_out)
-            return cc
-        self.run_EqualityTest(cloner, assert_true)
+        self.run_EqualityTest(lambda a: self.make(a, train=False), self.cloner, assert_true)
+
+    def serialize(self, nn, _):
+        buf = io.BytesIO()
+        pickle.dump(nn, buf)
+        buf.seek(0)
+        return pickle.load(buf)
 
     def test_SerializedPredictEquals(self):
-        def serialize(nn, _):
-            buf = io.BytesIO()
-            pickle.dump(nn, buf)
-            buf.seek(0)
-            return pickle.load(buf)
-        self.run_EqualityTest(serialize, assert_true)
+        for t in [True, False]:
+            self.run_EqualityTest(lambda a: self.make(a, train=t), self.serialize, assert_true)
+
+    def test_BatchNormSerializePredictEquals(self):
+        self.run_EqualityTest(lambda a: self.make(a, train=True, normalize='batch'), self.serialize, assert_true)
+
+    def test_DropoutSerializePredictEquals(self):
+        self.run_EqualityTest(lambda a: self.make(a, train=True, dropout=0.5), self.serialize, assert_true)
+
+
+class TestConvolutionDeterminism(TestDeepDeterminism):
+
+    def setUp(self):
+        self.a_in = numpy.random.uniform(0.0, 1.0, size=(16,4,4,1))
+        self.a_out = numpy.zeros((16,1))
+
+    def make(self, activation, seed=1234, train=False, **keywords):
+        nn = MLPR(layers=[C(activation, channels=16, kernel_shape=(3,3), **keywords), L("Linear")], random_state=seed, n_iter=1)
+        if train:
+            nn.fit(self.a_in, self.a_out)
+        else:
+            nn._initialize(self.a_in, self.a_out)
+        return nn 
 
 
 """

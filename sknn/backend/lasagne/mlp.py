@@ -24,7 +24,7 @@ import theano.tensor as T
 import lasagne.layers
 import lasagne.nonlinearities as nl
 
-from ..base import BaseBackend, StringOption
+from ..base import BaseBackend
 from ...nn import Layer, Convolution, ansi
 
 
@@ -57,14 +57,15 @@ class MultiLayerPerceptronBackend(BaseBackend):
 
         if len(layer_decay) > 0:
             if self.regularize is None:
-                self.regularize = StringOption('L2')
-            penalty = getattr(lasagne.regularization, self.regularize.lower())
-            regularize = lasagne.regularization.apply_penalty
-            self.regularizer = sum(layer_decay[s.name] * regularize(l.get_params(regularizable=True), penalty)
+                self.auto_enabled['regularize'] = 'L2'
+            regularize = self.regularize or 'L2'
+            penalty = getattr(lasagne.regularization, regularize.lower())
+            apply_regularize = lasagne.regularization.apply_penalty
+            self.regularizer = sum(layer_decay[s.name] * apply_regularize(l.get_params(regularizable=True), penalty)
                                    for s, l in zip(self.layers, self.mlp))
 
-        if any([l.normalize != None for l in self.layers]):
-            self.normalize = StringOption('batch')
+        if self.normalize is None and any([l.normalize != None for l in self.layers]):
+            self.auto_enabled['normalize'] = 'batch'
 
         cost_functions = {'mse': 'squared_error', 'mcc': 'categorical_crossentropy'}
         loss_type = self.loss_type or ('mcc' if self.is_classifier else 'mse')
@@ -141,6 +142,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
                             pool_size=layer.pool_shape,
                             stride=layer.pool_shape)
 
+        network.name = layer.name
         return network
 
     def _create_layer(self, name, layer, network):
@@ -159,6 +161,8 @@ class MultiLayerPerceptronBackend(BaseBackend):
         normalize = layer.normalize or self.normalize
         if normalize == 'batch':
             network = lasagne.layers.batch_norm(network)
+            
+        network.name = layer.name
         return network
 
     def _create_mlp(self, X, w=None):
@@ -330,29 +334,34 @@ class MultiLayerPerceptronBackend(BaseBackend):
         """
         return not (self.f is None)
 
-    def _mlp_get_params(self, layer):
-        while not hasattr(layer, 'W') and not hasattr(layer, 'b'):
+    def _mlp_get_layer_params(self, layer):
+        """Traverse the Lasagne network accumulating parameters until
+        reaching the next "major" layer specified and named by the user.
+        """
+        assert layer.name is not None, "Expecting this layer to have a name."
+
+        params = []
+        while hasattr(layer, 'input_layer'):
+            params.extend(layer.get_params())
             layer = layer.input_layer
-        return (layer.W.get_value(), layer.b.get_value() if layer.b else None)
+            if layer.name is not None:
+                break
+        return params
 
     def _mlp_to_array(self):
-        return [self._mlp_get_params(l) for l in self.mlp]
+        return [[p.get_value() for p in self._mlp_get_layer_params(l)] for l in self.mlp]
 
     def _array_to_mlp(self, array, nn):
         for layer, data in zip(nn, array):
-            if data is None: continue
-            weights, biases = data
+            if data is None:
+                continue
 
-            while not hasattr(layer, 'W') and not hasattr(layer, 'b'):
-                layer = layer.input_layer
+            params = self._mlp_get_layer_params(layer)
+            assert len(data) == len(params),\
+                            "Mismatch in network configuration for layer `%s`. %i != %i"\
+                            % (layer.name, len(data), len(params))
 
-            ws = tuple(layer.W.shape.eval())
-            assert ws == weights.shape, "Layer weights shape mismatch: %r != %r" %\
-                                        (ws, weights.shape)
-            layer.W.set_value(weights.astype(theano.config.floatX))
-
-            # if layer.b: continue
-            bs = tuple(layer.b.shape.eval())
-            assert bs == biases.shape, "Layer biases shape mismatch: %r != %r" %\
-                                       (bs, biases.shape)
-            layer.b.set_value(biases.astype(theano.config.floatX))
+            for p, d in zip(params, data):
+                ps = tuple(p.shape.eval())
+                assert ps == d.shape, "Layer parameter shape mismatch: %r != %r" % (ps, d.shape)
+                p.set_value(d.astype(theano.config.floatX))
