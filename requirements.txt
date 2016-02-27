@@ -1,3 +1,3 @@
 scikit-learn>=0.17
-git+https://github.com/Theano/Theano.git@a85a44fc#egg=Theano==0.8-dev
-git+https://github.com/Lasagne/Lasagne.git@358d9f4#egg=Lasagne==0.2-dev
+git+https://github.com/Theano/Theano.git@e7f6b32#egg=Theano==0.8-dev
+git+https://github.com/Lasagne/Lasagne.git@664b8a4#egg=Lasagne==0.2-dev
