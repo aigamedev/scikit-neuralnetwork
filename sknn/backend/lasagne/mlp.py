@@ -24,7 +24,7 @@ import theano.tensor as T
 import lasagne.layers
 import lasagne.nonlinearities as nl
 
-from ..base import BaseBackend
+from ..base import BaseBackend, StringOption
 from ...nn import Layer, Convolution, ansi
 
 
@@ -57,11 +57,14 @@ class MultiLayerPerceptronBackend(BaseBackend):
 
         if len(layer_decay) > 0:
             if self.regularize is None:
-                self.regularize = 'L2'
+                self.regularize = StringOption('L2')
             penalty = getattr(lasagne.regularization, self.regularize.lower())
             regularize = lasagne.regularization.apply_penalty
             self.regularizer = sum(layer_decay[s.name] * regularize(l.get_params(regularizable=True), penalty)
                                    for s, l in zip(self.layers, self.mlp))
+
+        if any([l.normalize != None for l in self.layers]):
+            self.normalize = StringOption('batch')
 
         cost_functions = {'mse': 'squared_error', 'mcc': 'categorical_crossentropy'}
         loss_type = self.loss_type or ('mcc' if self.is_classifier else 'mse')
@@ -142,12 +145,18 @@ class MultiLayerPerceptronBackend(BaseBackend):
             network = lasagne.layers.dropout(network, dropout)
 
         if isinstance(layer, Convolution):
-            return self._create_convolution_layer(name, layer, network)
+            network = self._create_convolution_layer(name, layer, network)
+        else:
+            self._check_layer(layer, required=['units'])
+            network = lasagne.layers.DenseLayer(network,
+                                                num_units=layer.units,
+                                                nonlinearity=self._get_activation(layer))
 
-        self._check_layer(layer, required=['units'])
-        return lasagne.layers.DenseLayer(network,
-                                         num_units=layer.units,
-                                         nonlinearity=self._get_activation(layer))
+        normalize = layer.normalize or self.normalize
+        if normalize == 'batch':
+            network = lasagne.layers.batch_norm(network)
+
+        return network
 
     def _create_mlp(self, X, w=None):
         self.data_input = T.tensor4('X') if self.is_convolution(input=True) else T.matrix('X')

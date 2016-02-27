@@ -3,6 +3,10 @@ from __future__ import (absolute_import, unicode_literals, print_function)
 
 
 class BaseBackend(object):
+    """Base class that all backends should inherit from.  This provides
+    helper functions to make it easy to access all configuration from
+    the user.
+    """
 
     def __init__(self, spec):
         self.spec = spec
@@ -15,3 +19,13 @@ class BaseBackend(object):
             self.spec.__setattr__(key, value)
         else:
             super(BaseBackend, self).__setattr__(key, value)
+
+
+class StringOption(str):
+    """Custom string to store additional information with options.
+    """
+
+    def __new__(cls, value):
+        obj = str.__new__(cls, value)
+        obj.auto = True
+        return obj

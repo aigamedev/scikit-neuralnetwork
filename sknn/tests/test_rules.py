@@ -80,6 +80,21 @@ class TestRegularization(LoggingTestCase):
         super(TestRegularization, self).tearDown()
         sknn.mlp.log.removeHandler(self.hnd2)
 
+    def test_BatchNormExplicit(self):
+        nn = MLPR(layers=[L("Sigmoid", units=8), L("Linear",)],
+                  normalize='batch',
+                  n_iter=1)
+        assert_equal(nn.normalize, 'batch')
+        self._run(nn)
+        assert_in('Using `batch` normalization.', self.output.getvalue())
+
+    def test_BatchNormPerLayer(self):
+        nn = MLPR(layers=[L("Rectifier", normalize='batch', units=8), L("Linear",)],
+                  n_iter=1)
+        self._run(nn)
+        assert_in('Using `batch` normalization, auto-enabled from layers.',
+                  self.output.getvalue())
+
     def test_DropoutExplicit(self):
         nn = MLPR(layers=[L("Tanh", units=8), L("Linear",)],
                   regularize='dropout',
@@ -133,9 +148,11 @@ class TestRegularization(LoggingTestCase):
         nn = MLPR(layers=[L("Rectifier", units=8, weight_decay=0.01), L("Linear", weight_decay=0.001)],
                   n_iter=1)
         self._run(nn)
-        assert_in('Using `L2` for regularization.', self.output.getvalue())
+        assert_in('Using `L2` for regularization, auto-enabled from layers.',
+                  self.output.getvalue())
 
     def test_AutomaticRegularize(self):
         nn = MLPR(layers=[L("Tanh", units=8, weight_decay=0.0001), L("Linear")], n_iter=1)
         self._run(nn)
-        assert_in('Using `L2` for regularization.', self.output.getvalue())
+        assert_in('Using `L2` for regularization, auto-enabled from layers.',
+                  self.output.getvalue())
