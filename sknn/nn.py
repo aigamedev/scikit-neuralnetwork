@@ -27,6 +27,7 @@ class ansi:
     ENDC = '\033[0m'
 
 
+
 class Layer(object):
     """
     Specification for a layer to be passed to the neural network during construction.  This
@@ -38,7 +39,7 @@ class Layer(object):
     type: str
         Select which activation function this layer should use, as a string.  Specifically,
         options are ``Rectifier``, ``Sigmoid``, ``Tanh``, and ``ExpLin`` for non-linear layers
-        and ``Linear``, ``Softmax`` or ``Gaussian`` for linear layers.
+        and ``Linear`` or ``Softmax`` for output layers.
 
     name: str, optional
         You optionally can specify a name for this layer, and its parameters
@@ -116,6 +117,40 @@ class Layer(object):
         del copy['type']
         params = ", ".join(["%s=%r" % (k, v) for k, v in copy.items() if v is not None])
         return "<sknn.nn.%s `%s`: %s>" % (self.__class__.__name__, self.type, params)
+
+
+class Native(object):
+    """Special type of layer that is handled directly to the backend (e.g. Lasagne). This
+    can be used to construct more advanced networks that are not yet supported by the
+    default interface.
+    
+    Note that using this as a layer type means your code may not be compatible with future
+    revisions or other backends, and that serialization may be affected.
+    
+    Parameters
+    ----------
+    
+    constructor: class or callable
+        The layer type usable directly by the backend (e.g. Lasagne). This can also
+        be a callable function that acts as a layer constructor.
+    
+    *args: list of arguments
+        All positional arguments are passed directly to the constructor when the 
+        neural network is initialized.
+    
+    **kwargs: dictionary of named arguments
+        All named arguments are passed to the constructor directly also, with the exception
+        of the parameters ``name``, ``units``, ``frozen``, ``weight_decay``, ``normalize``
+        which take on the same role as in :class:`sknn.nn.Layer`.
+    """
+
+    def __init__(self, constructor, *args, **keywords):
+        for attr in ['name', 'units', 'frozen', 'weight_decay', 'normalize']:
+            setattr(self, attr, keywords.pop(attr, None))
+
+        self.type = constructor
+        self.args = args
+        self.keywords = keywords
 
 
 class Convolution(Layer):
@@ -426,7 +461,7 @@ class NeuralNetwork(object):
 
         self.layers = []
         for i, layer in enumerate(layers):
-            assert isinstance(layer, Layer),\
+            assert isinstance(layer, Layer) or isinstance(layer, Native),\
                 "Specify each layer as an instance of a `sknn.mlp.Layer` object."
 
             # Layer names are optional, if not specified then generate one.

@@ -21,7 +21,7 @@ import sklearn.pipeline
 import sklearn.preprocessing
 import sklearn.cross_validation
 
-from .nn import NeuralNetwork, Layer, Convolution, ansi
+from .nn import NeuralNetwork, Layer, Convolution, Native, ansi
 from . import backend
 
 
