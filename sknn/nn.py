@@ -29,13 +29,9 @@ class ansi:
 
 class Native(object):
 
-    def __init__(self, constructor, *args, name=None, units=None, **keywords):
-        self.name = name
-        self.units = units
-
-        self.frozen = None
-        self.weight_decay = None
-        self.normalize = None
+    def __init__(self, constructor, *args, **keywords):
+        for attr in ['name', 'units', 'frozen', 'weight_decay', 'normalize']:
+            setattr(self, attr, keywords.pop(attr, None))
 
         self.type = constructor
         self.args = args
