@@ -255,7 +255,7 @@ class MultiLayerPerceptron(NeuralNetwork, sklearn.base.BaseEstimator):
         if self._backend is None:
             assert self.layers[-1].units is not None,\
                 "You must specify the number of units to predict without fitting."
-            if self.parameters is None:
+            if self.weights is None:
                 log.warning("WARNING: Computing estimates with an untrained network.")
             self._initialize(X)
 

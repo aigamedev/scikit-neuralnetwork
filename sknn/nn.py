@@ -451,7 +451,7 @@ class NeuralNetwork(object):
         assert loss_type in ('mse', 'mae', 'mcc', None),\
             "Unknown loss function type specified: %s." % loss_type
 
-        self.parameters = parameters
+        self.weights = parameters
         self.random_state = random_state
         self.learning_rule = learning_rule
         self.learning_rate = learning_rate
@@ -565,7 +565,7 @@ class NeuralNetwork(object):
 
         # In case the class is not initialized, store the parameters for later during _initialize. 
         if self._backend is None:
-            self.parameters = storage
+            self.weights = storage
             return
 
         if isinstance(storage, dict):
