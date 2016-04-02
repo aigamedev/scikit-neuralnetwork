@@ -116,7 +116,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
     def _create_convolution_layer(self, name, layer, network):
         self._check_layer(layer,
                           required=['channels', 'kernel_shape'],
-                          optional=['kernel_stride', 'border_mode',
+                          optional=['units', 'kernel_stride', 'border_mode',
                                     'pool_shape', 'pool_type', 'scale_factor'])
 
         if layer.scale_factor != (1, 1):
