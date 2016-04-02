@@ -27,16 +27,6 @@ class ansi:
     ENDC = '\033[0m'
 
 
-class Native(object):
-
-    def __init__(self, constructor, *args, **keywords):
-        for attr in ['name', 'units', 'frozen', 'weight_decay', 'normalize']:
-            setattr(self, attr, keywords.pop(attr, None))
-
-        self.type = constructor
-        self.args = args
-        self.keywords = keywords
-
 
 class Layer(object):
     """
@@ -127,6 +117,40 @@ class Layer(object):
         del copy['type']
         params = ", ".join(["%s=%r" % (k, v) for k, v in copy.items() if v is not None])
         return "<sknn.nn.%s `%s`: %s>" % (self.__class__.__name__, self.type, params)
+
+
+class Native(object):
+    """Special type of layer that is handled directly to the backend (e.g. Lasagne). This
+    can be used to construct more advanced networks that are not yet supported by the
+    default interface.
+    
+    Note that using this as a layer type means your code may not be compatible with future
+    revisions or other backends, and that serialization may be affected.
+    
+    Parameters
+    ----------
+    
+    constructor: class or callable
+        The layer type usable directly by the backend (e.g. Lasagne). This can also
+        be a callable function that acts as a layer constructor.
+    
+    *args: list of arguments
+        All positional arguments are passed directly to the constructor when the 
+        neural network is initialized.
+    
+    **kwargs: dictionary of named arguments
+        All named arguments are passed to the constructor directly also, with the exception
+        of the parameters ``name``, ``units``, ``frozen``, ``weight_decay``, ``normalize``
+        which take on the same role as in :class:`sknn.nn.Layer`.
+    """
+
+    def __init__(self, constructor, *args, **keywords):
+        for attr in ['name', 'units', 'frozen', 'weight_decay', 'normalize']:
+            setattr(self, attr, keywords.pop(attr, None))
+
+        self.type = constructor
+        self.args = args
+        self.keywords = keywords
 
 
 class Convolution(Layer):
