@@ -274,7 +274,7 @@ class NeuralNetwork(object):
         Seed for the initialization of the neural network parameters (e.g.
         weights and biases).  This is fully deterministic.
 
-    weights: list of tuple of array-like, optional
+    parameters: list of tuple of array-like, optional
         A list of ``(weights, biases)`` tuples to be reloaded for each layer, in the same
         order as ``layers`` was specified.  Useful for initializing with pre-trained
         networks.
@@ -400,7 +400,7 @@ class NeuralNetwork(object):
             self,
             layers,
             warning=None,
-            weights=None,
+            parameters=None,
             random_state=None,
             learning_rule='sgd',
             learning_rate=0.01,
@@ -451,7 +451,7 @@ class NeuralNetwork(object):
         assert loss_type in ('mse', 'mae', 'mcc', None),\
             "Unknown loss function type specified: %s." % loss_type
 
-        self.weights = weights
+        self.parameters = parameters
         self.random_state = random_state
         self.learning_rule = learning_rule
         self.learning_rate = learning_rate
@@ -534,7 +534,7 @@ class NeuralNetwork(object):
     def get_parameters(self):
         """Extract the neural networks weights and biases layer by layer.  Only valid
         once the neural network has been initialized, for example via `fit()` function.
-        
+
         Returns
         -------
         params : list of tuples
@@ -562,8 +562,11 @@ class NeuralNetwork(object):
             to tuple mapping for each layer also storing `weights` and `biases` but not necessarily
             for all layers.
         """
-        assert self._backend is not None,\
-            "Backend was not initialized; could not store network parameters."
+
+        # In case the class is not initialized, store the parameters for later during _initialize. 
+        if self._backend is None:
+            self.parameters = storage
+            return
 
         if isinstance(storage, dict):
             layers = [storage.get(l.name, None) for l in self.layers]

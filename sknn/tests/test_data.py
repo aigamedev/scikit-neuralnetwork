@@ -1,7 +1,9 @@
 import random
 import unittest
-from nose.tools import (assert_greater, assert_less, assert_raises, assert_equals, assert_true)
+from nose.tools import (assert_greater, assert_less, assert_raises,\
+                        assert_equals, assert_in, assert_true)
 
+import io
 import logging
 
 import numpy
@@ -38,6 +40,14 @@ class TestDataAugmentation(unittest.TestCase):
 
 class TestNetworkParameters(unittest.TestCase):
     
+    def setUp(self):
+        self.buf = io.StringIO()
+        self.hnd = logging.StreamHandler(self.buf)
+        logging.getLogger('sknn').addHandler(self.hnd)
+
+    def tearDown(self):
+        logging.getLogger('sknn').removeHandler(self.hnd)
+
     def test_GetLayerParams(self):
         nn = MLPR(layers=[L("Linear")], n_iter=1)
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
@@ -50,6 +60,25 @@ class TestNetworkParameters(unittest.TestCase):
         assert_equals(p[0].layer, 'output')
         assert_equals(p[0].weights.shape, (16, 4))
         assert_equals(p[0].biases.shape, (4,))
+
+    def test_SetParametersBeforeInit(self):
+        nn = MLPR(layers=[L("Linear")])
+        weights = numpy.random.uniform(-1.0, +1.0, (16,4))
+        biases = numpy.random.uniform(-1.0, +1.0, (4,))
+        nn.set_parameters([(weights, biases)])
+
+        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
+        nn._initialize(a_in, a_out)
+        assert_in('Reloading parameters for 1 layer weights and biases.', self.buf.getvalue())
+
+    def test_SetParametersConstructor(self):
+        weights = numpy.random.uniform(-1.0, +1.0, (16,4))
+        biases = numpy.random.uniform(-1.0, +1.0, (4,))
+        nn = MLPR(layers=[L("Linear")], parameters=[(weights, biases)])
+
+        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
+        nn._initialize(a_in, a_out)
+        assert_in('Reloading parameters for 1 layer weights and biases.', self.buf.getvalue())
 
     def test_SetLayerParamsList(self):
         nn = MLPR(layers=[L("Linear")])

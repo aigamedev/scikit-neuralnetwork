@@ -203,11 +203,11 @@ class MultiLayerPerceptronBackend(BaseBackend):
                 assert count == space[1],\
                     "Mismatch in the calculated number of dense layer outputs."
 
-        if self.weights is not None:
-            l  = min(len(self.weights), len(self.mlp))
+        if self.parameters is not None:
+            l  = min(len(self.parameters), len(self.mlp))
             log.info("Reloading parameters for %i layer weights and biases." % (l,))
-            self._array_to_mlp(self.weights, self.mlp)
-            self.weights = None
+            self._array_to_mlp(self.parameters, self.mlp)
+            self.parameters = None
 
         log.debug("")
 
