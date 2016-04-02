@@ -145,6 +145,8 @@ class MultiLayerPerceptronBackend(BaseBackend):
         return network
 
     def _create_native_layer(self, name, layer, network):
+        if layer.units and 'num_units' not in layer.keywords:
+            layer.keywords['num_units'] = layer.units
         return layer.type(network, *layer.args, **layer.keywords)
 
     def _create_layer(self, name, layer, network):

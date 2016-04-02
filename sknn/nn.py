@@ -29,9 +29,9 @@ class ansi:
 
 class Native(object):
 
-    def __init__(self, constructor, *args, **keywords):
-        self.name = None
-        self.units = None
+    def __init__(self, constructor, *args, name=None, units=None, **keywords):
+        self.name = name
+        self.units = units
 
         self.frozen = None
         self.weight_decay = None
