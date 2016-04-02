@@ -27,6 +27,21 @@ class ansi:
     ENDC = '\033[0m'
 
 
+class Native(object):
+
+    def __init__(self, constructor, *args, **keywords):
+        self.name = None
+        self.units = None
+
+        self.frozen = None
+        self.weight_decay = None
+        self.normalize = None
+
+        self.type = constructor
+        self.args = args
+        self.keywords = keywords
+
+
 class Layer(object):
     """
     Specification for a layer to be passed to the neural network during construction.  This
@@ -38,7 +53,7 @@ class Layer(object):
     type: str
         Select which activation function this layer should use, as a string.  Specifically,
         options are ``Rectifier``, ``Sigmoid``, ``Tanh``, and ``ExpLin`` for non-linear layers
-        and ``Linear``, ``Softmax`` or ``Gaussian`` for linear layers.
+        and ``Linear`` or ``Softmax`` for output layers.
 
     name: str, optional
         You optionally can specify a name for this layer, and its parameters
@@ -426,7 +441,7 @@ class NeuralNetwork(object):
 
         self.layers = []
         for i, layer in enumerate(layers):
-            assert isinstance(layer, Layer),\
+            assert isinstance(layer, Layer) or isinstance(layer, Native),\
                 "Specify each layer as an instance of a `sknn.mlp.Layer` object."
 
             # Layer names are optional, if not specified then generate one.

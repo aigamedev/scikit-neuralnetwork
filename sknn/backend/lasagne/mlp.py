@@ -25,7 +25,7 @@ import lasagne.layers
 import lasagne.nonlinearities as nl
 
 from ..base import BaseBackend
-from ...nn import Layer, Convolution, ansi
+from ...nn import Layer, Convolution, Native, ansi
 
 
 def explin(x):
@@ -142,10 +142,15 @@ class MultiLayerPerceptronBackend(BaseBackend):
                             pool_size=layer.pool_shape,
                             stride=layer.pool_shape)
 
-        network.name = layer.name
         return network
 
+    def _create_native_layer(self, name, layer, network):
+        return layer.type(network, *layer.args, **layer.keywords)
+
     def _create_layer(self, name, layer, network):
+        if isinstance(layer, Native):
+            return self._create_native_layer(name, layer, network)
+
         dropout = layer.dropout or self.dropout_rate
         if dropout is not None:
             network = lasagne.layers.dropout(network, dropout)
@@ -161,8 +166,6 @@ class MultiLayerPerceptronBackend(BaseBackend):
         normalize = layer.normalize or self.normalize
         if normalize == 'batch':
             network = lasagne.layers.batch_norm(network)
-            
-        network.name = layer.name
         return network
 
     def _create_mlp(self, X, w=None):
@@ -180,6 +183,7 @@ class MultiLayerPerceptronBackend(BaseBackend):
         self.mlp = []
         for i, layer in enumerate(self.layers):
             network = self._create_layer(layer.name, layer, network)
+            network.name = layer.name
             self.mlp.append(network)
 
         log.info(
@@ -197,11 +201,16 @@ class MultiLayerPerceptronBackend(BaseBackend):
                 # NOTE: Numbers don't match up exactly for pooling; one off. The logic is convoluted!
                 # assert count == numpy.product(space.shape) * space.num_channels,\
                 #     "Mismatch in the calculated number of convolution layer outputs."
+            elif isinstance(l, Native):
+                log.debug("  - Nativ: {}{: <10}{} Output: {}{: <10}{} Channels: {}{}{}".format(
+                    ansi.BOLD, l.type.__name__, ansi.ENDC,
+                    ansi.BOLD, repr(space[2:]), ansi.ENDC,
+                    ansi.BOLD, space[1], ansi.ENDC))
             else:
                 log.debug("  - Dense: {}{: <10}{} Units:  {}{: <4}{}".format(
                     ansi.BOLD, l.type, ansi.ENDC, ansi.BOLD, l.units, ansi.ENDC))
                 assert count == space[1],\
-                    "Mismatch in the calculated number of dense layer outputs."
+                    "Mismatch in the calculated number of dense layer outputs. {} != {}".format(count, space[1])
 
         if self.weights is not None:
             l  = min(len(self.weights), len(self.mlp))
