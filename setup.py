@@ -20,7 +20,7 @@ except ImportError:
 
 install_requires = [
     'scikit-learn>=0.17',
-    'Theano>=0.7',
+    'Theano>=0.8',
     'Lasagne>=0.1',
     'colorama' if sys.platform == 'win32' else '',
 ]
@@ -41,6 +41,7 @@ setup(name='scikit-neuralnetwork',
           "Development Status :: 3 - Alpha",
           "Programming Language :: Python :: 2.7",
           "Programming Language :: Python :: 3.4",
+          "Programming Language :: Python :: 3.5",
           ],
       keywords='deep learning, neural networks',
       url='https://github.com/aigamedev/scikit-neuralnetwork',
