@@ -21,8 +21,8 @@ Thanks to the underlying ``Lasagne`` implementation, the code supports the follo
 * **Activation Functions —** ``Sigmoid``, ``Tanh``, ``Rectifier``, ``Softmax``, ``Linear``.
 * **Layer Types —** ``Convolution`` (greyscale and color, 2D), ``Dense`` (standard, 1D).
 * **Learning Rules —** ``sgd``, ``momentum``, ``nesterov``, ``adadelta``, ``adagrad``, ``rmsprop``, ``adam``.
-* **Regularization —** ``L1``, ``L2``, ``dropout``, and soon batch normalization.
-* **Dataset Formats —** ``numpy.ndarray``, ``scipy.sparse``, and iterators (via ``callback``).
+* **Regularization —** ``L1``, ``L2``, ``dropout``, and batch normalization.
+* **Dataset Formats —** ``numpy.ndarray``, ``scipy.sparse``, ``pandas.DataFrame`` and iterators (via ``callback``).
 
 If a feature you need is missing, consider opening a `GitHub Issue <https://github.com/aigamedev/scikit-neuralnetwork/issues>`_ with a detailed explanation about the use case and we'll see what we can do.
 

@@ -27,9 +27,11 @@ User Guide
     :maxdepth: 2
 
     guide_installation
-    guide_beginners
-    guide_intermediate
-    guide_advanced
+    guide_model
+    guide_config
+    guide_io
+    guide_sklearn
+    guide_learning
 
 
 Indices & Search

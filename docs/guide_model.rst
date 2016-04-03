@@ -1,5 +1,5 @@
-Simple Examples
-===============
+Model Setup & Training
+======================
 
 .. _example-regression:
 
@@ -97,3 +97,22 @@ When training a classifier with data that has unbalanced labels, it's useful to 
     nn.fit(X_train, y_train, w_train)
 
 In this case, there are two classes ``0`` given weight ``1.2``, and ``1`` with weighting ``0.8``.  This feature also works for regressors as well.
+
+
+Native & Custom Layers
+----------------------
+
+In case you want to use more advanced features not directly supported by ``scikit-neuralnetwork``, you can use so-called :class:`sknn.nn.Native` layers that are handled directly by the backend.  This allows you to use all features from the Lasagne library, for example.
+
+.. code:: python
+    
+    from lasagne import layers as lasagne, nonlinearities as nl
+    from sknn.mlp import Classifier, Layer, Native
+    
+    nn = Classifier(layers=[
+            Native(lasagne.DenseLayer, num_units=256, nonlinearity=nl.leaky_rectify),
+            Layer("Linear")])
+
+When you insert a ``Native`` specification into the ``layers`` list, the first parameter is a constructor or class type that builds an object to insert into the network. In the example above, it's a ``lasagne.layers.DenseLayer``. The keyword parameters (e.g. ``nonlinearity``) are passed to this constructor dynamically when the network is initialized.
+
+You can use this feature to implement recurrent layers like LSTM or GRU, and any other features not directly supported.  Keep in mind that this may affect compatibility in future releases, and also may expose edge cases in the code (e.g. serialization, determinism).
