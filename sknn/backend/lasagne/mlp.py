@@ -367,9 +367,13 @@ class MultiLayerPerceptronBackend(BaseBackend):
             if data is None:
                 continue
 
+            # Handle namedtuple format returned by get_parameters() as special case.
+            # Must remove the last `name` item in the tuple since it's not a parameter.
+            data = tuple([d for d in data if type(d) != str])
+
             params = self._mlp_get_layer_params(layer)
             assert len(data) == len(params),\
-                            "Mismatch in network configuration for layer `%s`. %i != %i"\
+                            "Mismatch in data size for layer `%s`. %i != %i"\
                             % (layer.name, len(data), len(params))
 
             for p, d in zip(params, data):

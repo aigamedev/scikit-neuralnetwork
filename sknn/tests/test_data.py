@@ -80,6 +80,21 @@ class TestNetworkParameters(unittest.TestCase):
         nn._initialize(a_in, a_out)
         assert_in('Reloading parameters for 1 layer weights and biases.', self.buf.getvalue())
 
+    def test_GetParamsThenConstructor(self):
+        nn1 = MLPR(layers=[L("Linear")], n_iter=1)
+        a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
+        nn1._initialize(a_in, a_out)
+        
+        p1 = nn1.get_parameters()
+        print(len(p1))
+        nn2 = MLPR(layers=[L("Linear")], n_iter=1, parameters=p1)
+        nn2._initialize(a_in, a_out)
+        p2 = nn2.get_parameters()
+        print(len(p2))
+        
+        assert_true((p1[0].weights.astype('float32') == p2[0].weights.astype('float32')).all())
+        assert_true((p1[0].biases.astype('float32') == p2[0].biases.astype('float32')).all())
+
     def test_SetLayerParamsList(self):
         nn = MLPR(layers=[L("Linear")])
         a_in, a_out = numpy.zeros((8,16)), numpy.zeros((8,4))
