@@ -7,6 +7,7 @@ import os
 import sys
 import math
 import time
+import types
 import logging
 import itertools
 
@@ -369,7 +370,8 @@ class MultiLayerPerceptronBackend(BaseBackend):
 
             # Handle namedtuple format returned by get_parameters() as special case.
             # Must remove the last `name` item in the tuple since it's not a parameter.
-            data = tuple([d for d in data if type(d) != str])
+            string_types = getattr(types, 'StringTypes', tuple([str]))
+            data = tuple([d for d in data if not isinstance(d, string_types)])
 
             params = self._mlp_get_layer_params(layer)
             assert len(data) == len(params),\
