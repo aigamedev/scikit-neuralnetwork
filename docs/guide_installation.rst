@@ -3,33 +3,27 @@ Installation
 
 You have multiple options to get up and running, though using ``pip`` is by far the easiest and most reliable.
 
+A) Download Latest Release [Recommended]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Downloading Package
--------------------
-
-**Recommended.** To download and setup the last officially released package, you can do so from PYPI directly::
+If you want to use the latest official release, you can do so from PYPI directly::
 
     > pip install scikit-neuralnetwork
 
-This contains its own packaged version of ``pylearn2`` from the date of the release (and tag) but will use any globally installed version if available.
+This will install the latest official ``Lasagne`` and ``Theano`` as well as other minor packages too as a dependency.  We strongly suggest you use a `virtualenv <https://virtualenv.pypa.io/en/latest/>`_ for Python.
 
-If you want to install the very latest from source, please visit the `Project Page <http://github.com/aigamedev/scikit-neuralnetwork>`_ on GitHub for details.
+B) Pulling Repositories [Optional]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+If you want to use the more advanced features like convolution, pooling or upscaling, these depend on the latest code from ``Lasagne`` and ``Theano`` master branches.  You can install them manually as follows::
 
-Pulling Repositories
---------------------
-
-**Optional.** To setup a developer version of the project, you'll need to first install some dependencies manually.  Unfortunately, ``pylearn2`` isn't yet installable via PyPI and recommends an editable (``pip -e``) installation::
-
-    > pip install numpy scipy theano
-    > pip install -e git+https://github.com/lisa-lab/pylearn2.git#egg=Package
+    > pip install -r https://raw.githubusercontent.com/aigamedev/scikit-neuralnetwork/master/requirements.txt
 
 Once that's done, you can grab this repository and install from ``setup.py`` in the exact same way::
 
     > git clone https://github.com/aigamedev/scikit-neuralnetwork.git
-    > cd scikit-neuralnetwork
-    > python setup.py develop
-
+    > cd scikit-neuralnetwork; python setup.py develop
+    
 This will make the ``sknn`` package globally available within Python as a reference to the current directory.
 
 
@@ -45,4 +39,4 @@ Use the additional command-line parameters in the test runner ``--processes=8`` 
 
 .. image:: console_tests.png
 
-We strive to maintain 100% test coverage for all code-paths, to ensure that rapid changes in the underlying ``pylearn2`` library are caught automatically.
+We strive to maintain 100% test coverage for all code-paths, to ensure that rapid changes in the underlying ``Lasagne`` and ``Theano`` libraries are caught automatically.

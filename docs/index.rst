@@ -17,7 +17,6 @@ Module Reference
     :maxdepth: 2
 
     module_mlp
-    module_ae
 
 
 User Guide
