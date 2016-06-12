@@ -431,7 +431,6 @@ class Classifier(MultiLayerPerceptron, sklearn.base.ClassifierMixin):
             p = proba[:,index:index+sz]
             yp.append(p / p.sum(1, keepdims=True))
             index += sz
-        print([p.shape for p in yp])
         return yp[0] if (len(yp) == 1 and collapse) else yp
 
     def predict(self, X):
